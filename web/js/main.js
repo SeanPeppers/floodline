@@ -1,144 +1,115 @@
-// Floodline 3D backdrop. Three.js is loaded lazily (idle callback, after
-// first paint) so it never blocks the initial render. One renderer/camera
-// per scene-layer, but each pauses its own rAF loop via IntersectionObserver
-// when scrolled off-screen, and nothing loads at all under
-// prefers-reduced-motion or Save-Data — the page is fully readable without it.
+// Floodline hero: a scroll-free "intro" that crossfades a wide Gulf-of-
+// Mexico/Florida still into a close Key West still (two static images
+// stitched from downloaded OpenStreetMap tiles — see CREDITS.md; this is
+// pure CSS opacity/transform, no live map library and no runtime tile
+// requests), then an animated canvas overlay suggests flood water rising
+// across the island. Everything here is progressive enhancement: if it
+// fails or is skipped, the <noscript> fallback and the reduced-motion CSS
+// rule in style.css both already make the page fully readable without it.
 
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const saveData = navigator.connection && navigator.connection.saveData;
 
-if (!reduceMotion && !saveData) {
-  onIdle(() => initScenes());
+initHeroStats();
+initHeroMap();
+
+// Hero stat cards stagger in on load (CSS transition-delay does the
+// staggering; this just flips the trigger class). The hero is always above
+// the fold, so this runs unconditionally on load rather than waiting on an
+// IntersectionObserver that could, in theory, never fire.
+function initHeroStats() {
+  const group = document.querySelector(".reveal-group");
+  if (group) requestAnimationFrame(() => group.classList.add("is-visible"));
 }
 
-function onIdle(fn) {
-  if ("requestIdleCallback" in window) requestIdleCallback(fn, { timeout: 2000 });
-  else window.addEventListener("load", () => setTimeout(fn, 200));
-}
+// --- hero map crossfade + flood water canvas ---
+function initHeroMap() {
+  const heroMap = document.querySelector(".hero-map");
+  if (!heroMap) return;
 
-async function initScenes() {
-  const THREE = await import("three");
-  const { GLTFLoader } = await import("three/addons/loaders/GLTFLoader.js");
-
-  const loader = new GLTFLoader();
-  const dpr = Math.min(window.devicePixelRatio || 1, 2); // set once; never resized adaptively
-
-  const waterVertexShader = `
-    uniform float uTime;
-    varying vec2 vUv;
-    varying float vWave;
-    void main() {
-      vUv = uv;
-      vec3 pos = position;
-      float wave = sin(pos.x * 1.4 + uTime * 0.6) * 0.08
-                 + sin(pos.y * 2.1 - uTime * 0.4) * 0.05;
-      pos.z += wave;
-      vWave = wave;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-    }
-  `;
-  const waterFragmentShader = `
-    precision mediump float;
-    varying vec2 vUv;
-    varying float vWave;
-    uniform vec3 uDeep;
-    uniform vec3 uShallow;
-    void main() {
-      vec3 color = mix(uDeep, uShallow, smoothstep(-0.1, 0.12, vWave));
-      gl_FragColor = vec4(color, 0.9);
-    }
-  `;
-
-  const layers = document.querySelectorAll(".scene-layer");
-  layers.forEach((layer) => setupScene(layer));
-
-  function setupScene(layer) {
-    const canvas = layer.querySelector(".scene-canvas");
-    const modelName = layer.dataset.scene;
-    const section = layer.closest(".section");
-
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: "low-power" });
-    renderer.setPixelRatio(dpr);
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 50);
-    camera.position.set(0, 1.4, 6);
-    camera.lookAt(0, 0.3, 0);
-
-    scene.add(new THREE.AmbientLight(0x6fa7c9, 0.9));
-    const sun = new THREE.DirectionalLight(0xfff2d6, 1.1);
-    sun.position.set(3, 5, 4);
-    scene.add(sun);
-
-    // Water plane — hand-written shader + scene composition, not a sourced
-    // asset, representing the "ocean surface" theme per the brief's own
-    // allowance for procedural effects.
-    const waterGeo = new THREE.PlaneGeometry(14, 10, 48, 36);
-    const waterMat = new THREE.ShaderMaterial({
-      uniforms: {
-        uTime: { value: 0 },
-        uDeep: { value: new THREE.Color(0x0a2a3a) },
-        uShallow: { value: new THREE.Color(0x2dd4bf) },
-      },
-      vertexShader: waterVertexShader,
-      fragmentShader: waterFragmentShader,
-      transparent: true,
-    });
-    const water = new THREE.Mesh(waterGeo, waterMat);
-    water.rotation.x = -Math.PI / 2.3;
-    water.position.y = -0.6;
-    scene.add(water);
-
-    let model = null;
-    loader.load(
-      `assets/models/${modelName}/${modelName}_1k.gltf`,
-      (gltf) => {
-        model = gltf.scene;
-        model.scale.setScalar(modelName === "ocean_buoy" ? 1.1 : 1.6);
-        model.position.y = 0.1;
-        scene.add(model);
-      },
-      undefined,
-      (err) => console.warn("Floodline: model load failed for", modelName, err)
-    );
-
-    function resize() {
-      const rect = canvas.getBoundingClientRect();
-      const w = Math.max(1, rect.width), h = Math.max(1, rect.height);
-      renderer.setSize(w, h, false);
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-    }
-    resize();
-    new ResizeObserver(resize).observe(canvas);
-
-    let running = false;
-    let raf = null;
-    const clock = new THREE.Clock();
-
-    function frame() {
-      if (!running) return;
-      const t = clock.getElapsedTime();
-      waterMat.uniforms.uTime.value = t;
-      if (model) model.rotation.y = Math.sin(t * 0.25) * 0.3 + t * 0.08;
-      renderer.render(scene, camera);
-      raf = requestAnimationFrame(frame);
-    }
-
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && !running) {
-            running = true;
-            raf = requestAnimationFrame(frame);
-          } else if (!entry.isIntersecting && running) {
-            running = false;
-            if (raf) cancelAnimationFrame(raf);
-          }
-        });
-      },
-      { threshold: 0.05 }
-    );
-    io.observe(section);
+  if (saveData) {
+    // Keep the wide still (already in the HTML, already requested by the
+    // browser preloader) and skip everything animated.
+    return;
   }
+
+  // Trigger the region -> Key West crossfade once, shortly after first
+  // paint so the wide establishing shot actually registers before it zooms.
+  // Under reduced motion the CSS transition is forced to ~0ms anyway
+  // (global rule in style.css), so this still lands on the right end state.
+  const zoomDelay = reduceMotion ? 0 : 900;
+  setTimeout(() => heroMap.classList.add("is-zoomed"), zoomDelay);
+
+  const canvas = heroMap.querySelector(".flood-canvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+  function resize() {
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = Math.max(1, rect.width * dpr);
+    canvas.height = Math.max(1, rect.height * dpr);
+  }
+  resize();
+  new ResizeObserver(resize).observe(canvas);
+
+  const restLevel = 0.34; // fraction of canvas height the water rests at
+  let running = false;
+  let raf = null;
+  const start = performance.now();
+  const riseDelay = zoomDelay + 1600; // let the zoom read before water rises
+  const riseDuration = reduceMotion ? 1 : 2400;
+
+  function easeOutCubic(x) { return 1 - Math.pow(1 - x, 3); }
+
+  function draw(now) {
+    const w = canvas.width, h = canvas.height;
+    const t = (now - start) / 1000;
+    const riseT = Math.min(1, Math.max(0, (now - start - riseDelay) / riseDuration));
+    const level = restLevel * easeOutCubic(riseT);
+    const baseY = h * (1 - level);
+
+    ctx.clearRect(0, 0, w, h);
+    drawWaveLayer(ctx, w, h, baseY, t * 0.5, 14, "rgba(45, 212, 191, 0.34)");
+    drawWaveLayer(ctx, w, h, baseY + h * 0.012, -t * 0.35, 20, "rgba(94, 184, 255, 0.24)");
+
+    if (running) raf = requestAnimationFrame(draw);
+  }
+
+  function drawWaveLayer(ctx, w, h, baseY, phase, amp, fill) {
+    ctx.beginPath();
+    ctx.moveTo(0, h);
+    ctx.lineTo(0, baseY);
+    const step = w / 48;
+    for (let x = 0; x <= w; x += step) {
+      const y = baseY + Math.sin(x * 0.012 + phase) * amp * (window.devicePixelRatio || 1);
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(w, h);
+    ctx.closePath();
+    ctx.fillStyle = fill;
+    ctx.fill();
+  }
+
+  if (reduceMotion) {
+    draw(performance.now() + riseDelay + riseDuration); // single static end-state frame
+    return;
+  }
+
+  const section = heroMap.closest(".section") || heroMap;
+  const io = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting && !running) {
+          running = true;
+          raf = requestAnimationFrame(draw);
+        } else if (!entry.isIntersecting && running) {
+          running = false;
+          if (raf) cancelAnimationFrame(raf);
+        }
+      });
+    },
+    { threshold: 0.05 }
+  );
+  io.observe(section);
 }

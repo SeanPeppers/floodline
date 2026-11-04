@@ -16,6 +16,10 @@
 
 <link rel="stylesheet" href="css/style.css">
 <link rel="icon" href="data:,">
+<!-- Safety net: .stat (hero stat cards) start hidden and are revealed by JS
+     (main.js), staggered in on load. If JS fails to load or run, don't hide
+     real content behind it. -->
+<noscript><style>.reveal-group .stat { opacity: 1 !important; transform: none !important; }</style></noscript>
 </head>
 <body>
 
@@ -37,8 +41,14 @@
 
   <!-- HERO -->
   <section class="section hero" id="hero" aria-label="Introduction">
-    <div class="scene-layer" data-scene="ocean_buoy" aria-hidden="true">
-      <canvas class="scene-canvas"></canvas>
+    <div class="hero-map">
+      <div class="hero-map__decor" aria-hidden="true">
+        <img class="hero-map__img hero-map__img--wide" src="assets/map/region-wide.jpg" alt="" width="768" height="768" fetchpriority="high">
+        <img class="hero-map__img hero-map__img--close" src="assets/map/keywest-close.jpg" alt="" width="768" height="768">
+        <div class="hero-map__scrim"></div>
+        <canvas class="flood-canvas"></canvas>
+      </div>
+      <p class="map-credit">Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>, ODbL</p>
     </div>
     <div class="section__content hero__content">
       <p class="eyebrow">FGCU Quantum Hackathon 2026</p>
@@ -49,7 +59,7 @@
         number? We measured it on 110 years of Key West tide data instead of
         assuming the answer.
       </p>
-      <div class="hero__stats" role="list">
+      <div class="hero__stats reveal-group" role="list">
         <div class="stat" role="listitem">
           <span class="stat__value">11&ndash;94&times;</span>
           <span class="stat__label">fewer queries than plain Monte&nbsp;Carlo, depending on target precision</span>
@@ -69,9 +79,6 @@
 
   <!-- PROBLEM -->
   <section class="section" id="problem" aria-label="The problem">
-    <div class="scene-layer" data-scene="lateral_sea_marker" aria-hidden="true">
-      <canvas class="scene-canvas"></canvas>
-    </div>
     <div class="section__content">
       <p class="eyebrow">The question</p>
       <h2>In a given year, at today's sea level, what's the odds Key West hits major flood stage?</h2>
@@ -170,9 +177,6 @@
 
   <!-- VERDICT -->
   <section class="section" id="verdict" aria-label="Honest verdict">
-    <div class="scene-layer" data-scene="lifebuoy" aria-hidden="true">
-      <canvas class="scene-canvas"></canvas>
-    </div>
     <div class="section__content">
       <p class="eyebrow">The honest verdict</p>
       <h2>A real, measured speedup &mdash; over the wrong baseline to call it an advantage.</h2>
@@ -215,7 +219,7 @@ uv run python experiment.py   # ~6 min — writes results.json and results.png
 uv run python demo.py         # live animated convergence demo (needs a display)</code></pre>
       <p>
         Source: <a href="https://github.com/SeanPeppers/floodline">github.com/SeanPeppers/floodline</a>.
-        3D model credits and licenses for this page: <a href="CREDITS.md">CREDITS.md</a>.
+        Map and asset credits and licenses for this page: <a href="CREDITS.md">CREDITS.md</a>.
       </p>
     </div>
   </section>
@@ -226,15 +230,7 @@ uv run python demo.py         # live animated convergence demo (needs a display)
   <p>Floodline — FGCU Quantum Hackathon 2026. Simulator-only (<code>RUN_ON_HARDWARE = False</code>).</p>
 </footer>
 
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-  }
-}
-</script>
 <script src="js/chart.js" defer></script>
-<script type="module" src="js/main.js"></script>
+<script src="js/main.js" defer></script>
 </body>
 </html>

@@ -1,55 +1,66 @@
-# 3D asset credits
+# Asset credits
 
-None of the 3D models used in this site were modeled by hand for this project.
-All are real, freely-licensed model files from other creators, downloaded and
-only re-compressed (resized textures, recompressed JPEGs — same geometry and
-same artwork) for web performance.
+## Map imagery
 
-## Models
+The hero's "zoom from the Gulf of Mexico into Key West" is two static JPEG
+stills — not a live map widget. Each is stitched from a small, fixed grid of
+real OpenStreetMap raster tiles (`tile.openstreetmap.org`), fetched **once**
+while building this page and committed as static assets
+(`web/assets/map/region-wide.jpg`, `web/assets/map/keywest-close.jpg`). The
+page itself never calls the tile server — every visitor's browser just loads
+our own JPEGs from our own static hosting, the same way the rest of the site
+works.
 
-| Asset | Source | Author | License | Used for |
-|---|---|---|---|---|
-| Ocean Buoy | [Poly Haven](https://polyhaven.com/a/ocean_buoy) | Mateusz Sadek | CC0 1.0 | Hero section — storm/flood hazard marker |
-| Lateral Sea Marker | [Poly Haven](https://polyhaven.com/a/lateral_sea_marker) | Kuutti Siitonen (additional texture wear: James Ray Cock) | CC0 1.0 | Problem section — tide/navigation marker |
-| Lifebuoy | [Poly Haven](https://polyhaven.com/a/lifebuoy) | Hank Kaamura | CC0 1.0 | Verdict section — safety/risk accent |
+This, rather than a live Leaflet map doing the zoom at runtime, is a
+deliberate reading of the OSM tile usage policy
+(operations.osmfoundation.org/policies/tiles/): it explicitly flags
+"headless automated panning or zooming to force rendering" of tiles nobody
+is actually looking at as against policy. An animated fly-to on every page
+load, for every visitor, is exactly that. A one-time, polite, rate-limited
+fetch (25 tile requests total, one pass, proper `User-Agent`) followed by
+serving our own static images at runtime is not.
 
-All three ship from Poly Haven at polyhaven.com under the CC0 1.0 Universal
-dedication (https://creativecommons.org/publicdomain/zero/1.0/) — public
-domain, no attribution legally required. Credited above anyway.
+- **Data**: &copy; OpenStreetMap contributors, Open Database License (ODbL)
+  1.0 &mdash; openstreetmap.org/copyright. Attribution shown on-page (bottom-right
+  of the hero), as the license requires.
+- **Tiles**: standard OSM "Carto" raster tile style, `tile.openstreetmap.org`,
+  fetched directly (no API key or account needed).
+- **Region-wide still**: 3&times;3 grid of z6 tiles centered near 27&deg;N,
+  84&deg;W (Gulf of Mexico / Florida peninsula).
+- **Key West still**: 4&times;4 grid of z13 tiles centered on Key West,
+  24.5565&deg;N, 81.78&deg;W.
+- Both re-encoded as JPEG (quality 82) after stitching; no other edits.
 
-Downloaded at the "1k" texture resolution directly from Poly Haven's file API
-(`api.polyhaven.com`), then the JPEG textures were resized to 512x512 and
-recompressed (mozjpeg, quality 72) with `sharp` to cut page weight; geometry
-was not modified.
+## The flood water
 
-## Why not a Sketchfab "qubit sphere"
+The rising-water overlay on top of the map is a hand-drawn canvas 2D
+animation (sine-wave bands, eased rise, idle bob) &mdash; our own code, not a
+downloaded asset or model. It's a mood effect, not a to-scale flood model;
+the actual quantified flood-stage numbers live in the Method section's chart
+and tables, driven by real `results.json` data.
 
-The brief suggested an abstract qubit/network-sphere model (common on
-Sketchfab under CC0/CC-BY). Sketchfab's download endpoint requires an
+## Why not 3D models
+
+An earlier version of this page used three downloaded CC0 Poly Haven glTF
+models (a buoy, a sea marker, a lifebuoy) floating on a shader water plane.
+User feedback was that the composition didn't land &mdash; disconnected
+objects over a generic gradient, no sense of a real place. They've been
+removed in favor of the map treatment above, which ties the page directly to
+the actual place (Key West) the flood-risk number is about.
+
+### Why not a Sketchfab "qubit sphere" either
+
+The brief also floated an abstract qubit/network-sphere model, common on
+Sketchfab under CC0/CC-BY. Sketchfab's download endpoint requires an
 authenticated account for every model, including CC0 ones (confirmed: both
-`sketchfab.com/i/models/.../download` and the `api.sketchfab.com/v3` download
-endpoint return `401` with no session/token). Creating an account to clear
-that gate is outside what this build does unattended.
-
-Rather than hand-model a substitute sphere (explicitly against the brief's
-hard constraint — no hand-authored 3D geometry as content), the quantum/method
-section uses a 2D canvas chart instead of a 3D object: it animates the three
-estimators' real convergence curves straight from `results.json` (the same
-numbers in the README's scaling table), which is both compliant and more
-honest than an invented decorative sphere. The only 3D content on the page is
-the three real downloaded models credited above, placed on a shader-animated
-water plane (the plane and its motion are our own code — an effect/surface,
-not modeled "content" — consistent with the brief's explicit allowance for
-hand-written shaders, particles, and scene composition).
+`sketchfab.com/i/models/.../download` and the `api.sketchfab.com/v3`
+download endpoint return `401` with no session/token) &mdash; outside what this
+build does unattended. Rather than hand-model a substitute (against the
+brief's hard constraint on hand-authored 3D content), the Method section
+uses a 2D canvas chart instead, animating the three estimators' real
+convergence curves straight from `results.json`.
 
 ## Fonts
 
-- **Space Grotesk** (headings) — Google Fonts, OFL.
-- **Inter** (body) — Google Fonts, OFL.
-
-## Water
-
-The ocean surface is a plain procedural plane with a GLSL wave-displacement
-and Fresnel shader (our own code, not a downloaded asset) — shaders and
-procedural motion are explicitly allowed by the brief; only pre-made content
-geometry is restricted to sourced files.
+- **Space Grotesk** (headings) &mdash; Google Fonts, OFL.
+- **Inter** (body) &mdash; Google Fonts, OFL.

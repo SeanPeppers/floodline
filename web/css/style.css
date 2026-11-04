@@ -94,14 +94,57 @@ code { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 0.9
 .section--compact { min-height: auto; padding: 4rem 1.5rem; }
 .hero { min-height: 92vh; }
 
-.scene-layer {
+/* hero map: two stitched-from-OSM-tiles stills crossfade/zoom (CSS only,
+   no runtime map-tile requests — see CREDITS.md) from a region view down to
+   Key West, with a canvas flood-water rise animation layered on top. */
+.hero-map {
   position: absolute;
   inset: 0;
   z-index: 0;
-  opacity: 0.55;
-  pointer-events: none;
+  overflow: hidden;
+  background: var(--bg);
 }
-.scene-canvas { width: 100%; height: 100%; display: block; }
+.hero-map__decor { position: absolute; inset: 0; pointer-events: none; }
+.hero-map__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.6) brightness(0.48) sepia(0.12) hue-rotate(155deg) contrast(1.05);
+  transition: opacity 3.2s ease, transform 3.6s cubic-bezier(.22,.61,.36,1);
+}
+.hero-map__img--wide { opacity: 1; transform: scale(1); }
+.hero-map__img--close { opacity: 0; transform: scale(1.14); }
+.hero-map.is-zoomed .hero-map__img--wide { opacity: 0; transform: scale(1.08); }
+.hero-map.is-zoomed .hero-map__img--close { opacity: 1; transform: scale(1); }
+.flood-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.hero-map__scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, rgba(10,22,40,0.94) 0%, rgba(10,22,40,0.82) 40%, rgba(10,22,40,0.45) 75%, rgba(10,22,40,0.25) 100%),
+              linear-gradient(to top, rgba(10,22,40,0.65) 0%, transparent 25%);
+}
+.map-credit {
+  position: absolute;
+  right: 0.6rem;
+  bottom: 0.5rem;
+  margin: 0;
+  font-size: 0.7rem;
+  color: rgba(238, 243, 247, 0.75);
+  background: rgba(10, 22, 40, 0.55);
+  padding: 0.15rem 0.5rem;
+  border-radius: 0.3rem;
+}
+.map-credit a { color: inherit; }
+@media (max-width: 760px) {
+  /* Darkest behind the headline/lede at top (no opaque box behind that
+     text); lighter lower down, where the stat cards' own solid background
+     already carries contrast and the flood-water animation should read. */
+  .hero-map__scrim {
+    background: linear-gradient(to bottom, rgba(10,22,40,0.88) 0%, rgba(10,22,40,0.7) 40%, rgba(10,22,40,0.35) 70%, rgba(10,22,40,0.3) 100%);
+  }
+}
 
 .section__content {
   position: relative;
@@ -130,7 +173,22 @@ code { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 0.9
   gap: 1.5rem;
   margin: 2.5rem 0 2rem;
 }
-.stat { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 0.75rem; padding: 1.1rem; }
+.stat {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1.1rem;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.5s ease, transform 0.5s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.stat:nth-child(2) { transition-delay: 0.1s; }
+.stat:nth-child(3) { transition-delay: 0.2s; }
+.reveal-group.is-visible .stat { opacity: 1; transform: translateY(0); }
+.reveal-group.is-visible .stat:hover, .reveal-group.is-visible .stat:focus-within {
+  border-color: var(--teal);
+  box-shadow: 0 10px 28px -12px rgba(45, 212, 191, 0.4);
+}
 .stat__value { display: block; font-family: var(--font-head); font-size: 1.8rem; font-weight: 700; color: var(--amber); }
 .stat__label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-top: 0.3rem; }
 
