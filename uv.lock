@@ -475,6 +475,45 @@ wheels = [
 ]
 
 [[package]]
+name = "floodline"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "matplotlib" },
+    { name = "numpy" },
+    { name = "python-dotenv" },
+    { name = "qiskit" },
+    { name = "qiskit-aer" },
+    { name = "qiskit-ibm-runtime" },
+    { name = "requests" },
+    { name = "scipy" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "mypy" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "matplotlib", specifier = ">=3.11.2" },
+    { name = "numpy", specifier = ">=2.5.4" },
+    { name = "python-dotenv", specifier = ">=1.2.4" },
+    { name = "qiskit", specifier = ">=2.0,<3" },
+    { name = "qiskit-aer", specifier = ">=0.18.2" },
+    { name = "qiskit-ibm-runtime", specifier = ">=0.40" },
+    { name = "requests", specifier = ">=2.34.2" },
+    { name = "scipy", specifier = ">=1.18.1" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "mypy", specifier = ">=2.4.1" },
+    { name = "ruff", specifier = ">=0.17.3" },
+]
+
+[[package]]
 name = "fonttools"
 version = "4.68.0"
 source = { registry = "https://pypi.org/simple" }
@@ -588,45 +627,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/f5/08/8eea9d4b8302028f3abb2c0813953f7aec26d33b7a8960ed760e65ff29fa/idna-3.20.tar.gz", hash = "sha256:a7db850025b95ded1eae8a46181a1a6c56c92c96f0e2b005d9ff8dc0210cab44", size = 216463, upload-time = "2026-09-17T14:11:04.752Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/58/a2/bb081bab032533a855d44de1d56f8e8426114ff1ba5d1f07a438a0a654f8/idna-3.20-py3-none-any.whl", hash = "sha256:ab7ae7122974553370f0bdb919e1a960b2cd1bc1ef0276416d896db81c14582c", size = 69583, upload-time = "2026-09-17T14:11:03.168Z" },
-]
-
-[[package]]
-name = "keywest-flood-qae"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "matplotlib" },
-    { name = "numpy" },
-    { name = "python-dotenv" },
-    { name = "qiskit" },
-    { name = "qiskit-aer" },
-    { name = "qiskit-ibm-runtime" },
-    { name = "requests" },
-    { name = "scipy" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "mypy" },
-    { name = "ruff" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "matplotlib", specifier = ">=3.11.2" },
-    { name = "numpy", specifier = ">=2.5.4" },
-    { name = "python-dotenv", specifier = ">=1.2.4" },
-    { name = "qiskit", specifier = ">=2.0,<3" },
-    { name = "qiskit-aer", specifier = ">=0.18.2" },
-    { name = "qiskit-ibm-runtime", specifier = ">=0.40" },
-    { name = "requests", specifier = ">=2.34.2" },
-    { name = "scipy", specifier = ">=1.18.1" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "mypy", specifier = ">=2.4.1" },
-    { name = "ruff", specifier = ">=0.17.3" },
 ]
 
 [[package]]

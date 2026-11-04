@@ -107,6 +107,29 @@ RMSE is sensitive to it.
 The plain-MC queries at ε = 1e-4 are extrapolated from the fit, beyond the largest
 budget we ran. The analytic value a(1-a)/ε² = 4.37M agrees with it.
 
+## Demo
+
+`results.png` is a static log-log plot; a judge at a table needs the convergence
+itself, not a chart of it. `demo.py` animates one live run of all three estimators
+against the same real Key West GEV, stepping through the same geometric query
+budgets as the benchmark:
+
+- Three colored dots/lines climb toward a dashed horizontal line (the true tail
+  probability, a = 0.0458) as the query count (shown live, top-left) grows.
+- A vertical marker drops in for each method the moment it reaches the exact
+  queries-to-converge number already reported above (ε = 1e-3 row): quantum
+  MLAE at **3.7k**, stratified sampling at **489**, plain Monte Carlo at **42.6k**.
+  Those numbers come straight from `results.json`'s `matched_eps` table, not from
+  the single animated run, so an unlucky draw on demo day can't contradict the
+  measured result.
+- In about 30-40 seconds a judge watches the quantum line settle in a few thousand
+  queries, the smart classical control (stratified sampling) settle even sooner,
+  and plain Monte Carlo still wandering until the very end -- the same honest
+  verdict as above, just visible instead of read off a table.
+
+Run: `uv run python demo.py` (precompute ~10s, then a looping animated window;
+needs a display, so run it locally rather than over SSH).
+
 ## Hardware realism (the big caveat)
 
 Each circuit was transpiled to IBM Heron (`FakeFez`, heavy-hex, CZ basis, opt level 3):
@@ -181,6 +204,7 @@ and identified exactly what is missing", not as "quantum beats classical".
 - `experiment.py`: the three-arm benchmark, scaling fits, hardware cost, noisy run, plot.
 - `smoke_test.py`: circuit vs closed form vs `StatevectorSampler`, MC equivalence, and a
   tiny end-to-end run.
+- `demo.py`: live animated convergence demo for the hackathon table (see Demo above).
 
 ## Run
 
@@ -188,6 +212,7 @@ and identified exactly what is missing", not as "quantum beats classical".
 uv sync
 uv run python smoke_test.py   # ~3 min
 uv run python experiment.py   # ~6 min, writes results.json and results.png
+uv run python demo.py         # ~10s precompute, then an animated window (needs a display)
 uv run ruff check . && uv run mypy .
 ```
 
