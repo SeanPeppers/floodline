@@ -14,9 +14,9 @@ over theta. No QPE, no controlled-Q, so it is the shallowest-width QAE variant.
 """
 
 import numpy as np
-from qiskit import QuantumCircuit, transpile
+from qiskit import QuantumCircuit
 from qiskit.circuit.library import IntegerComparatorGate, StatePreparation, grover_operator
-from qiskit.quantum_info import Operator, Statevector
+from qiskit_aer import AerSimulator
 from scipy.optimize import minimize_scalar
 
 
@@ -49,21 +49,38 @@ def schedule(k: int) -> list[int]:
 
 
 def exact_hit_probs(a_circ: QuantumCircuit, q_circ: QuantumCircuit, ms: list[int]) -> np.ndarray:
-    """P(objective = 1) after Q^m A for each m, by exact statevector evolution of the circuit's
-    own unitaries (Q as a dense operator on all 2n qubits, applied m times). Q is lowered to
-    CX+U first: same action on the clean-ancilla subspace, and ~50x faster to build than
-    Operator() on the ancilla-free high-level definition."""
+    """P(objective = 1) after Q^m A for each m, exact to double precision: one circuit (A then
+    Q repeated up to max(ms), with a save_probabilities checkpoint spliced in at every m) run
+    once on Aer's statevector backend. Earlier attempts and why they're not used here:
+      - Operator(Q) as a dense 2**n x 2**n matrix: O(4**n) memory, impossible past ~n=12
+        (the compound joint circuit uses ~17).
+      - qiskit.quantum_info.Statevector.evolve(q_circ) gate-by-gate in pure Python: exact and
+        low memory, but its per-gate dispatch overhead makes even one Q application on a
+        17-qubit, ~4500-gate circuit take ~50s -- Aer's C++ simulator does the same exact
+        linear-algebra for about 3 orders of magnitude less wall time.
+      - transpile(q_circ, basis_gates=["cx", "u"]) on Q in isolation, then composing the
+        flattened piece repeatedly: fast, but WRONG for this circuit -- confirmed by comparing
+        against the closed-form sin^2 law, basis_translator silently changes Q's action when
+        it flattens grover_operator's definition out of the context it was built in. Composing
+        the ORIGINAL (un-flattened) gates first and decomposing the whole assembled circuit
+        once, afterward, is the version that matches the law to ~1e-13.
+    `.decompose()`, not `transpile(..., basis_gates=...)`, is used to flatten: Aer's
+    save_probabilities is a native instruction with no `.definition`, so decompose() passes it
+    through untouched, while basis_translator rejects it outright (it's in neither the target
+    basis nor the equivalence library)."""
     obj = a_circ.metadata["obj"]
-    q_op = Operator(transpile(q_circ, basis_gates=["cx", "u"], optimization_level=1)).data
-    vec = Statevector(a_circ).data
-    out, cur = [], 0
-    for m in sorted(ms):
+    qc, cur = a_circ.copy(), 0
+    qc.save_probabilities(qubits=[obj], label="m0")
+    for m in sorted(set(ms)):
+        if m == 0:
+            continue
         for _ in range(m - cur):
-            vec = q_op @ vec
+            qc.compose(q_circ, inplace=True)
         cur = m
-        out.append(Statevector(vec).probabilities([obj])[1])
-    order = np.argsort(np.argsort(ms))
-    return np.array(out)[order]
+        qc.save_probabilities(qubits=[obj], label=f"m{m}")
+    flat = qc.decompose(reps=6)  # deep enough to clear every high-level op down to {u, cx, p, r}
+    data = AerSimulator(method="statevector").run(flat, shots=1).result().data(0)
+    return np.array([data[f"m{m}"][1] for m in ms])
 
 
 def mlae(hits: np.ndarray, shots: int, ms: list[int]) -> float:
