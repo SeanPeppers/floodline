@@ -1,0 +1,19 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Secrets
+.env
+
+# Generated outputs (data/ and results.* are kept: small, and the provenance matters)
+smoke_results.json
+
+.ruff_cache/
+.mypy_cache/
