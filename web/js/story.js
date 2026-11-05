@@ -1,6 +1,6 @@
 // Scroll story: turns native scroll position into a chapter coordinate u
-// (chapter i spans [i, i+1)), derives the water level and rain from each
-// chapter's data-* attributes, and drives either the 3-D stage (scene.js,
+// (chapter i spans [i, i+1)), derives the water level from each chapter's
+// data-* attributes, and drives either the 3-D stage (scene.js,
 // lazy-loaded after first paint) or a set of pre-rendered stills. Nothing
 // here listens to wheel or touch, so scrolling can never get trapped.
 (function () {
@@ -22,12 +22,11 @@
   const STAGE_NAMES = { mhhw: "mean higher-high water", nws_minor: "NWS minor flood stage", nws_moderate: "NWS moderate flood stage", nws_major: "NWS major flood stage" };
 
   // Shared with scene.js, which reads it every frame.
-  const state = { u: 0, N, firstKeyWest, level: 0, rain: 0, visible: true, exaggeration: EXAGGERATION, reduceMotion };
+  const state = { u: 0, N, firstKeyWest, level: 0, visible: true, exaggeration: EXAGGERATION, reduceMotion };
   if (/[?&]debug\b/.test(location.search)) window.floodlineState = state; // QA hook: debugU, debugCam
   // Until results.json supplies the thresholds, hold the water at MHHW rather
   // than easing toward the one level the HTML knows on its own.
   let levels = chapters.map(() => null);
-  const rains = chapters.map((c) => Number(c.dataset.rain || 0));
 
   FloodlineData.derived.then((d) => {
     levels = chapters.map((c) => (c.dataset.levelM ? Number(c.dataset.levelM) : c.dataset.level ? d.levels[c.dataset.level] ?? null : null));
@@ -86,7 +85,6 @@
     const u = chapterCoord();
     state.u = u;
     state.level = easeBetween(levels, u);
-    state.rain = easeBetween(rains, u, 0.3);
 
     const inKeyWest = u > firstKeyWest - 0.05;
     hud.hidden = !inKeyWest;
