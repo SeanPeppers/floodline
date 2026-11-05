@@ -1,7 +1,9 @@
 # Floodline: Key West Compound Flood Probability with Quantum Amplitude Estimation
 
-FGCU Quantum Hackathon 2026 candidate build. Self-contained, simulator-only
-(`RUN_ON_HARDWARE = False` in `experiment.py`).
+FGCU Quantum Hackathon 2026 build. Live site: https://floodline-keywest.vercel.app
+
+The experiments run on a simulator (`RUN_ON_HARDWARE = False` in `experiment.py`); `hw_demo.py`
+ran a 3-qubit version on IBM's `ibm_fez` (results in `results_hw.json`).
 
 Reference docs: [FINDINGS.md](FINDINGS.md) (where quantum wins and loses), [NOVELTIES.md](NOVELTIES.md) (what is new), [CITATIONS.md](CITATIONS.md) (every source), [PITCH.md](PITCH.md) (pitch and video brief), [FAILED.md](FAILED.md) (everything that failed or was dropped).
 
