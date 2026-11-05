@@ -341,5 +341,6 @@ uv sync
 uv run python smoke_test.py   # ~3 min
 uv run python experiment.py   # ~45 min, writes results.json, results_rectangle.json, results.png
 uv run python demo.py
+uv run python hw_demo.py dry  # 3-qubit demo, noisy sim; `run` uses a real IBM QPU, writes results_hw.json
 uv run ruff check . && uv run mypy .
 ```

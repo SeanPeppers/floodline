@@ -217,6 +217,20 @@
         </p>
       </figure>
 
+      <div class="hw">
+        <h3 class="hw__title">It runs on a real quantum computer</h3>
+        <figure class="chart-figure">
+          <figcaption class="chart-figure__title" id="hw-title">P(flood qubit = 1) vs Grover depth m</figcaption>
+          <div class="chart" id="hw-chart" aria-describedby="hw-note"></div>
+          <p class="chart-figure__note" id="hw-note">Key West compound flood, 3 qubits, IBM ibm_fez, 2026-11-05, 4,000 shots per depth, 10&nbsp;s of QPU time.</p>
+        </figure>
+        <p>
+          The hardware follows the Grover oscillation that QAE relies on, and noise damps it as circuits deepen
+          (<span data-bind="hwGates">12 to 192</span> two-qubit gates); the noisy estimate is
+          <span data-bind="hwA">0.074</span> vs exact <span data-bind="hwExact">0.096</span>, which is why today's hardware can't beat classical.
+        </p>
+      </div>
+
       <div class="losses">
         <h3 class="losses__title">Where classical still wins</h3>
         <div class="table-wrap" tabindex="0" role="region" aria-label="Where classical still wins, scrollable on narrow screens">
@@ -547,7 +561,7 @@
           <ul>
             <li>A win at 5 factors (<span data-bind="winLow">0.65</span>&times;), or at &epsilon;&nbsp;=&nbsp;1e-3 at any d.</li>
             <li>A circuit for the 8 extra parameters.</li>
-            <li>Hardware speedup. Simulator only; IBM Heron noise turns the readout into a coin flip (<span data-bind="pNoisy0">0.50</span> vs ideal <span data-bind="pIdeal0">0.64</span>).</li>
+            <li>Hardware speedup. On IBM ibm_fez the 3-qubit demo estimates <span data-bind="hwA">0.074</span> vs exact <span data-bind="hwExact">0.096</span>; the full street circuit turns into a coin flip (<span data-bind="pNoisy0">0.50</span> vs ideal <span data-bind="pIdeal0">0.64</span>, noisy simulation).</li>
             <li>Wall-clock gains: a quantum query costs far more than a sample.</li>
             <li>A calibrated forecast.</li>
           </ul>
@@ -631,12 +645,13 @@
   <section class="section section--compact" id="run" aria-label="Run it yourself">
     <div class="section__content">
       <p class="eyebrow">Run it</p>
-      <h2>Simulator only, no quantum account.</h2>
+      <h2>Everything runs on a simulator; only the hardware demo needs an IBM account.</h2>
       <pre class="code-block" tabindex="0" role="region" aria-label="Run commands, scrollable on narrow screens"><code>uv sync
 uv run python experiment.py        # two-driver benchmark
 uv run python experiment_multi.py  # five-driver benchmark
 uv run python experiment_wins.py dim  # 5-13 uncertain factors
-uv run python floodline_cli.py --year 2050 --elevation 3.0 --exposure</code></pre>
+uv run python floodline_cli.py --year 2050 --elevation 3.0 --exposure
+uv run python hw_demo.py dry       # 3-qubit demo, noisy sim; "run" uses a real IBM QPU</code></pre>
       <p>
         Source: <a href="https://github.com/SeanPeppers/floodline">github.com/SeanPeppers/floodline</a>.
       </p>
@@ -646,7 +661,7 @@ uv run python floodline_cli.py --year 2050 --elevation 3.0 --exposure</code></pr
 </main>
 
 <footer class="site-footer">
-  <p>Floodline — FGCU Quantum Hackathon 2026. Simulator only.</p>
+  <p>Floodline — FGCU Quantum Hackathon 2026. Simulator, plus one 3-qubit run on IBM ibm_fez.</p>
   <p class="site-footer__credit">
     Imagery: NASA GIBS (ESDIS). Track: NOAA NHC. Terrain: NOAA NCEI, USDA
     NAIP. Coastline: Natural Earth. Roads: &copy; OpenStreetMap contributors.

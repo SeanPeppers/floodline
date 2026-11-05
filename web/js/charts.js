@@ -37,6 +37,7 @@
       const key = document.createElement("span");
       key.className = "chart__key";
       key.style.background = s.color;
+      if (s.line === false) key.classList.add("chart__key--dot");
       li.append(key, document.createTextNode(s.name));
       legend.appendChild(li);
     }
@@ -59,7 +60,8 @@
 
     const xs = [...new Set(cfg.series.flatMap((s) => s.points.map((p) => p.x)))].sort((a, b) => a - b);
     const ys = cfg.series.flatMap((s) => s.points.flatMap((p) => [p.y, p.lo, p.hi].filter((v) => v !== undefined))).concat(cfg.ref ? [cfg.ref.y] : []);
-    const yLo = Math.min(...ys) / 1.4, yHi = Math.max(...ys) * 1.4;
+    // yDomain switches the y axis from log to linear over a fixed range.
+    const [yLo, yHi] = cfg.yDomain || [Math.min(...ys) / 1.4, Math.max(...ys) * 1.4];
     let paths = [], svg, X, Y, idx = -1;
 
     function draw() {
@@ -69,7 +71,8 @@
       const pad = { l: narrow ? 44 : 56, r: narrow ? 58 : 110, t: 14, b: 44 };
       const x0 = cfg.xLog ? Math.log10(xs[0]) : xs[0], x1 = cfg.xLog ? Math.log10(xs[xs.length - 1]) : xs[xs.length - 1];
       X = (v) => pad.l + (((cfg.xLog ? Math.log10(v) : v) - x0) / (x1 - x0)) * (W - pad.l - pad.r);
-      Y = (v) => pad.t + (1 - (Math.log10(v) - Math.log10(yLo)) / (Math.log10(yHi) - Math.log10(yLo))) * (H - pad.t - pad.b);
+      const ty = cfg.yDomain ? (v) => v : Math.log10;
+      Y = (v) => pad.t + (1 - (ty(v) - ty(yLo)) / (ty(yHi) - ty(yLo))) * (H - pad.t - pad.b);
 
       svg?.remove();
       svg = el("svg", { width: W, height: H, viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": cfg.ariaLabel });
@@ -108,10 +111,11 @@
         // dx nudges a series sideways so CI bars at the same x don't overlap.
         const sx = (p) => X(p.x) + (s.dx || 0);
         const d = (pts) => pts.map((p, i) => `${i ? "L" : "M"}${sx(p).toFixed(1)},${Y(p.y).toFixed(1)}`).join("");
-        paths.push(el("path", { d: d(solid), stroke: s.color, class: "chart__line" }, g));
+        // curve: a dense path drawn instead of point-to-point segments (a closed-form law).
+        if (s.line !== false) paths.push(el("path", { d: d(s.curve || solid), stroke: s.color, class: "chart__line" }, g));
         const firstHollow = s.points.findIndex((p) => p.hollow);
         if (firstHollow > 0) el("path", { d: d(s.points.slice(firstHollow - 1)), stroke: s.color, class: "chart__line chart__line--extrap" }, g);
-        for (const p of s.points) {
+        for (const p of s.dots === false ? [] : s.points) {
           if (p.lo !== undefined) {
             el("line", { x1: sx(p), x2: sx(p), y1: Y(p.lo), y2: Y(p.hi), stroke: s.color, class: "chart__ci" }, g);
             for (const v of [p.lo, p.hi]) el("line", { x1: sx(p) - 4, x2: sx(p) + 4, y1: Y(v), y2: Y(v), stroke: s.color, class: "chart__ci" }, g);
@@ -469,6 +473,35 @@
     });
   }).catch(() => {
     document.getElementById("wins-chart").textContent = "Wins data unavailable.";
+  });
+
+  // Real ibm_fez run: P(flood qubit = 1) after Q^m A. Ideal law sin²((2m+1)θ), a = sin²θ.
+  FloodlineData.hw.then((h) => {
+    const theta = Math.asin(Math.sqrt(h.model.a));
+    const law = (m) => Math.sin((2 * m + 1) * theta) ** 2;
+    const mMax = h.ms[h.ms.length - 1];
+    const curve = Array.from({ length: mMax * 20 + 1 }, (_, i) => ({ x: i / 20, y: law(i / 20) }));
+    const pts = (ys) => h.ms.map((m, i) => ({ x: m, y: ys[i] }));
+    const series = [
+      { name: "Ideal law", short: "ideal", color: "#8a95a5", curve, dots: false, points: pts(h.ideal_p_obj) },
+      { name: "Noisy simulation of ibm_fez", short: "noisy sim", color: C.mc, line: false, dx: -4, points: pts(h.noisy_sim.p_obj) },
+      { name: `Real ${h.backend} hardware`, short: h.backend, color: C.qae, line: false, dx: 4, points: pts(h.hardware.p_obj) },
+    ];
+    const f2 = (v) => v.toFixed(2);
+    lineChart(document.getElementById("hw-chart"), {
+      series,
+      xLog: false,
+      xLabel: "Grover depth m",
+      yLabel: "P(flood qubit = 1)",
+      xName: (m) => `m = ${m}, ${h.two_qubit_gates[h.ms.indexOf(m)]} two-qubit gates`,
+      yFmt: f2,
+      yDomain: [0, 1],
+      yTicks: [0, 0.25, 0.5, 0.75, 1],
+      yTick: (v) => String(v),
+      ariaLabel: `Chart of P(flood qubit = 1) against Grover depth m from ${h.ms[0]} to ${mMax}. ${series.map((s) => `${s.name}: ${s.points.map((p) => f2(p.y)).join(", ")}`).join(". ")}.`,
+    });
+  }).catch(() => {
+    document.getElementById("hw-chart").textContent = "Hardware data unavailable.";
   });
 
   FloodlineData.crossover.then((x) => {

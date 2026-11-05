@@ -233,6 +233,7 @@ code { font-family: var(--font-mono); font-size: 0.92em; }
 .chart__val--hero { font: 700 14px var(--font-mono); }
 .chart__key--ref { background: none; border-top: 1.5px dashed #8a95a5; height: 0; }
 .chart__key--bar { height: 0.7rem; width: 0.7rem; border-radius: 2px; }
+.chart__key--dot { height: 0.6rem; width: 0.6rem; border-radius: 50%; }
 .chart__ci--bar { stroke: var(--text); }
 .chart-figure__num {
   display: inline-grid; place-items: center; width: 1.5rem; height: 1.5rem; margin-right: 0.5rem;
@@ -240,7 +241,8 @@ code { font-family: var(--font-mono); font-size: 0.92em; }
 }
 .chart--short { min-height: 0; }
 .chart-figure--hero .chart-figure__title { font-size: 1.2rem; }
-.losses { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+.losses, .hw { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+.hw__title { font-size: 1.1rem; }
 .losses__title { font-size: 1.1rem; color: var(--amber); }
 .table--compact th, .table--compact td { padding: 0.4rem 0.6rem; font-size: 0.8em; }
 .chart__reflabel { fill: #b6c0cc; font: 12px var(--font-body); }

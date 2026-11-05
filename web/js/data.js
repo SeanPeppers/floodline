@@ -13,6 +13,7 @@
   const crossover = get("assets/data/crossover.json");
   const wins = get("assets/data/results_wins.json");
   const cli = get("assets/data/cli-example.txt", "text");
+  const hw = get("assets/data/results_hw.json");
 
   const round = (x, n) => Number(x.toFixed(n));
   const minMax = (xs) => [Math.min(...xs), Math.max(...xs)];
@@ -144,6 +145,11 @@
   Promise.all([multi, derived]).then(([m, r]) => bind(deriveMulti(m, r))).catch(warn);
   crossover.then(deriveCrossover).then(bind).catch(warn);
   wins.then(deriveWins).then(bind).catch(warn);
+  hw.then((h) => bind({
+    hwA: h.hardware.mlae_a.toFixed(3),
+    hwExact: h.model.a.toFixed(3),
+    hwGates: `${h.two_qubit_gates[0]} to ${h.two_qubit_gates[h.two_qubit_gates.length - 1]}`,
+  })).catch(warn);
   cli.then((t) => {
     bind(deriveCli(t));
     const pre = document.getElementById("cli-output");
@@ -173,5 +179,5 @@
     }));
   }).catch(warn);
 
-  window.FloodlineData = { results, multi, wins, crossover, derived, roads };
+  window.FloodlineData = { results, multi, wins, crossover, hw, derived, roads };
 })();

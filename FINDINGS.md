@@ -39,7 +39,7 @@ Every win, with the exact conditions under which it holds:
 | Rare events | **Classical wins** except one cell. h = 0.5 / 1 ft: 0.20, 0.36. h = 3 / 5 ft: 0.043, 0.008. h = 2 ft: 1.34 [1.19, 1.51] | Relative ε = 3e-3; QAE given its ideal law because 100-shot MLAE stalls for a < 1e-2; tide-CMC dominates the deep tail | `README_wins.md` |
 | Nested expectation | Not a measured result. Model QAE α = 1.14 vs nested CMC+QMC 2.6 [2.3, 3.1], MLMC 2.5 [2.2, 2.9] | Classical numbers extrapolated 30-10⁴× past the data; reference SE exceeds the 1% target | `README_wins.md` |
 | Many streets / memory | **Classical wins** (analysis, not run) | One classical sample answers every street (rule is monotone in elevation); enumeration streams in O(chunk) memory | `README_wins.md` |
-| Real hardware | **Fails.** 2-driver A is 11,384 CZ, about 44× the noise budget; noisy P(obj = 1) = 0.50 at m = 0 and 1 vs ideal 0.640 and 0.124 | FakeFez snapshot, median CZ error 3.9e-3. d = 5, ε = 1e-4 needs two-qubit error ≈ 9e-9 | `README.md`, `README_multidriver.md` |
+| Real hardware | **Fails.** 2-driver A is 11,384 CZ, about 44× the noise budget; noisy P(obj = 1) = 0.50 at m = 0 and 1 vs ideal 0.640 and 0.124 | FakeFez snapshot, median CZ error 3.9e-3. d = 5, ε = 1e-4 needs two-qubit error ≈ 9e-9. 3-qubit demo on real ibm_fez: Grover oscillation visible to m = 6 but damped (P = 0.842 at m = 2 vs ideal 1.000); MLAE a = 0.0738 vs exact 0.0959 | `README.md`, `README_multidriver.md`, `hw_demo.py`, `results_hw.json` |
 | Wall clock | **Classical wins at any usable precision.** Hybrid break-even near ε ≈ 1e-24 at d = 5 (≈1e18 years of QPU time) | 170 µs per Toffoli (arXiv:2011.04149) vs 1.8 µs per classical sample. The CLI's resource backend reports 511.6 fault-tolerant hours where CMC+QMC takes 1.4 s | `README_hybrid.md` |
 
 ## The headline win
@@ -87,7 +87,7 @@ The full log of failed, rejected and abandoned attempts is in [FAILED.md](FAILED
 - **Nested expectation.** The model favours quantum by 3e3-1e5×, but every classical number is extrapolated 30-10⁴× past the largest budget and the classical designs were not tuned. Not a pitch number.
 - **Importance sampling.** Useless for events with a ≈ 0.1-0.7, and worse than CMC+QMC at every depth in the rare-event study because its weights blow up in the tail.
 - **Tide-alone split in the hybrid.** Measured before keeping it: the residual's sd was 0.14756 with and without it. Dropped.
-- **Real hardware run.** Not attempted at full scale. The 10-QPU-minute toy demo (1-bit drivers) needs an IBM account; no repo file records a hardware run yet.
+- **Real hardware run.** Only the 3-qubit demo ran (`hw_demo.py`, one qubit per driver, exact coarsening of the rectangle rule, a = 0.0959). On ibm_fez (2026-11-05, job `dbmbikl8mdtc73d7m170`, 4,000 shots per depth, 10 s of QPU time) P(obj = 1) follows the Grover oscillation for m = 0-6 (peak 0.842 at m = 2 vs ideal 1.000), and noise damps it as circuits grow from 12 to 192 two-qubit gates. MLAE on the hardware counts gives a = 0.0738 vs exact 0.0959; the noisy simulation gives 0.0779. The full street circuit was not attempted.
 
 ## Known tensions
 

@@ -166,8 +166,9 @@ Tabarraei (arXiv:2607.18996, 2602.09847) and Woerner & Egger VaR/CVaR (1806.0689
 
 - **Tried:** noisy simulation of the 19-qubit two-driver circuit on a FakeFez calibration snapshot (median CZ error 3.9e-3).
 - **What happened:** A alone is 11,384 CZ, about 44× the noise budget. Noisy P(obj = 1) was 0.50 at m = 0 and 1 against ideal 0.640 and 0.124, a coin flip. At d = 5 and ε = 1e-4 the deepest circuit has 7.7e7 CX and needs two-qubit error near 9e-9 (the hybrid ≤ 1e-9), about 4e5-4e6 times cleaner than the snapshot.
-- **What still fits:** a 3-qubit demo with 1-bit tide and 1-bit rain (a = 0.1728, A = 12 CZ). Noisy simulation shows Grover oscillations through m = 6 and noise-aware MLAE reaches RMSE 1.39e-3, better than MC per shot but worse per query. It needs an IBM account and has not been run on hardware.
-- **Evidence:** `README.md`, `README_multidriver.md`, FINDINGS.md; scratchpad `perf/report.md` and `perf/tiny_hw.py`.
+- **What still fits:** a 3-qubit demo with 1-bit tide and 1-bit rain (a = 0.1728, A = 12 CZ). Noisy simulation shows Grover oscillations through m = 6 and noise-aware MLAE reaches RMSE 1.39e-3, better than MC per shot but worse per query.
+- **Hardware run (2026-11-05):** `hw_demo.py` ran a 3-qubit version (exact coarsening of the rectangle rule, a = 0.0959) on ibm_fez, 4,000 shots per depth, m = 0-6, 10 s of QPU time. The oscillation survives but damps (P = 0.842 at m = 2 vs ideal 1.000; 12 to 192 two-qubit gates), and MLAE gives a = 0.0738 vs exact 0.0959. It runs; it does not beat classical.
+- **Evidence:** `README.md`, `README_multidriver.md`, FINDINGS.md, `hw_demo.py`, `results_hw.json`; scratchpad `perf/report.md` and `perf/tiny_hw.py`.
 
 ### D2. Large-GPU validation on Colab
 
