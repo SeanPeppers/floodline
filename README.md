@@ -3,7 +3,7 @@
 FGCU Quantum Hackathon 2026 candidate build. Self-contained, simulator-only
 (`RUN_ON_HARDWARE = False` in `experiment.py`).
 
-Reference docs: [FINDINGS.md](FINDINGS.md) (where quantum wins and loses), [NOVELTIES.md](NOVELTIES.md) (what is new), [CITATIONS.md](CITATIONS.md) (every source), [PITCH.md](PITCH.md) (pitch and video brief).
+Reference docs: [FINDINGS.md](FINDINGS.md) (where quantum wins and loses), [NOVELTIES.md](NOVELTIES.md) (what is new), [CITATIONS.md](CITATIONS.md) (every source), [PITCH.md](PITCH.md) (pitch and video brief), [FAILED.md](FAILED.md) (everything that failed or was dropped).
 
 ## Verdict first
 
