@@ -6,31 +6,32 @@
 number of drivers, every precision and both streets we tested.**
 
 - **The toy's crossover reproduces, but only against plain Sobol QMC.** On the real, discretized
-  five-driver model, QMC's exponent grows with the number of random drivers d: α = 1.10, 1.27,
-  1.32, 1.49 for d = 2, 3, 4, 5 (street at 3.0 ft). Ideal QAE stays at α ≈ 1.0. QAE needs fewer
-  queries than plain QMC from d* ≈ 4.3 at ε = 3e-4 and d* ≈ 3.7 at ε = 1e-4. At d = 5 and
-  ε = 1e-4, QMC needs 2.7× [2.4, 3.0] more queries than QAE. The 6.0 ft street gives d* = 4.9 /
-  4.3 / 3.9 at ε = 1e-3 / 3e-4 / 1e-4.
+  five-driver model, QMC's exponent grows with the number of random drivers d: α = 1.09, 1.20,
+  1.31, 1.47 for d = 2, 3, 4, 5 (street at 3.0 ft). Ideal QAE stays at α ≈ 1.0. QAE needs fewer
+  queries than plain QMC from d* ≈ 4.7 at ε = 1e-3, 4.0 at ε = 3e-4 and 3.5 at ε = 1e-4. At d = 5
+  and ε = 1e-4, QMC needs 3.5× [3.1, 3.9] more queries than QAE. The 6.0 ft street gives d* = 4.9 /
+  4.1 / 3.6 at ε = 1e-3 / 3e-4 / 1e-4.
 - **The smart classical opponent removes it.** Conditional Monte Carlo integrates the rain
   burst exactly, because the flood rule is monotone in it, and runs Sobol points over the other
-  d - 1 drivers. That needs **0.12-0.34× QAE's queries at d = 5** (95% CIs exclude 1), and 0.02-0.06×
+  d - 1 drivers. That needs **0.18-0.55× QAE's queries at d = 5** (95% CIs exclude 1), and 0.014-0.11×
   at d ≤ 4. It is the best classical arm in all 24 (street, d, ε) cells, and QAE never beats it.
 - **Exact enumeration beats both on cost.** At d = 5 the discretized model has 2^23 cells.
   Enumerating the other drivers with the rain burst integrated exactly takes 2.6e5 rule
   evaluations and gives a with zero sampling error. One application of the QAE circuit A is
-  already 149k CX (18k Toffoli), and QAE needs about 9e4 of them for ε = 1e-4. **Every
+  already 149k CX (18k Toffoli), and QAE needs about 1e5 of them for ε = 1e-4. **Every
   crossover in this study exists only in query count.** In total work, exact enumeration of the
   discretized model wins outright at every resolution we tested (13 to 38 data qubits).
 - **Discretization does not explain away QMC's penalty at realistic resolution.** QMC's d = 5
-  exponent is 1.26 on a coarse grid, 1.51 on the benchmark grid and 1.62 on a fine one, close to
+  exponent is 1.21 on a coarse grid, 1.40 on the benchmark grid and 1.58 on a fine one, close to
   the continuous He-Owen 1.67. Coarse grids soften the penalty, which matches the 2-driver
   branch's finding on 32 bins. Fine grids do not.
 - **The one place QAE leads is black-box accounting.** If the flood model were a black-box
   simulator, conditional MC would have to find each rain threshold by bisection: 6 runs per
-  sample instead of 1. Then QAE needs fewer queries at d = 5 and ε ≤ 3e-4: 1.4-2.0× fewer at the
-  3.0 ft street (at ε = 1e-4, CMC+QMC needs 3.1e4 × 6 = 1.9e5 against QAE's 9.2e4), and 1.0-1.4×
-  at 6.0 ft, where ε = 3e-4 is a tie. At d ≤ 4 the classical method still wins even with the ×6. That is a query-count win of under 2× which
-  disappears once a query's cost is counted. A smarter threshold search (warm starts, secant
+  sample instead of 1. Then QAE needs fewer queries at d = 5: 1.6-3.3× fewer at the 3.0 ft
+  street at every ε (at ε = 1e-4, CMC+QMC needs 5.3e4 × 6 = 3.2e5 against QAE's 9.6e4), and
+  1.5-2.1× at 6.0 ft for ε ≤ 3e-4, where ε = 1e-3 is a tie (1.08× [0.95, 1.20]). At d ≤ 4 the
+  classical method still wins even with the ×6 (at most 0.66×). That is a query-count win of at
+  most 3.3× which disappears once a query's cost is counted. A smarter threshold search (warm starts, secant
   steps) would also shrink it.
 - **Hardware.** At d = 5 and ε = 1e-4 the deepest MLAE circuit, Q^256 A, has 7.7e7 CX (9.2e6
   Toffoli) on 52 logical qubits. For it to succeed even half the time, each two-qubit gate needs
@@ -44,6 +45,40 @@ removes the crossover on real data." The toy's own caveat holds on the real mode
 compound-flood boundary is monotone in the rain driver, so a classical method can integrate
 that dimension out analytically. That is the dimension where QMC's penalty came from.
 
+## What changed: Gumbel to GEV rain (rerun on master after the 2-driver merge)
+
+The 2-driver branch replaced `rainfall.fit_gumbel` with `rainfall.fit_gev`, because the Gumbel
+fit missed NOAA Atlas 14's 2-yr 24-h depth by 42% (2.57 in vs 4.40 in). This model now uses the
+same least-squares GEV fit for both rain durations. Fit against the nine published AMS depths
+(2 to 1000 yr): 24 h within 5.2% (0.23 in), 3 h within 3.3% (0.09 in), both worst at 2 yr. The
+Gumbel fit was off by up to 42% (24 h) and 26% (3 h). We also tried Pearson III and a
+three-parameter lognormal on the 3-h series: 4.1% and 1.7%. GEV is adequate for 3 h and we kept
+it so both durations and both models share one fit. `test_multidriver.py` asserts the 6% bound.
+The drainage calibration and the N3210 cross-check read the published depths directly, so
+they did not move. Everything below was rerun end to end.
+
+| headline (3.0 ft street, 2050 Intermediate unless noted) | Gumbel (old) | GEV (now) |
+|---|---|---|
+| a, d = 5 | 0.3250 | 0.6148 |
+| 4 ft street today (5-yr LOS anchor implies 0.20) | 0.17 | 0.195 |
+| QMC α at d = 5 | 1.49 | 1.47 |
+| QMC crossover d*, ε = 1e-3 / 3e-4 / 1e-4, 3.0 ft | none / 4.3 / 3.7 | 4.7 / 4.0 / 3.5 |
+| same, 6.0 ft | 4.9 / 4.3 / 3.9 | 4.9 / 4.1 / 3.6 |
+| QMC ÷ QAE queries, d = 5, ε = 1e-4 | 2.7× | 3.5× |
+| CMC+QMC ÷ QAE queries, d = 5, ε = 3e-4 / 1e-4 | 0.24× / 0.34× | 0.39× / 0.55× |
+| CMC+QMC ÷ QAE, d = 5, range over both streets and all ε | 0.12-0.34× | 0.18-0.55× |
+| black-box CMC+QMC (×6) ÷ QAE, d = 5, 3.0 ft, ε = 1e-3 / 3e-4 / 1e-4 | QAE wins 1.4-2.0× at ε ≤ 3e-4 | 1.6× / 2.3× / 3.3× |
+| same, 6.0 ft | 1.0-1.4× (tie at 3e-4) | tie / 1.5× / 2.1× |
+| QMC α at d = 5, coarse / benchmark / fine grid | 1.26 / 1.51 / 1.62 | 1.21 / 1.40 / 1.58 |
+| city exposure, share of road points flooding per year | 36.9% | 55.8% |
+
+No verdict changed: conditional MC + Sobol is still the best arm in all 24 cells and QAE never
+beats it, and enumeration still wins on total work. Two things moved. Because a nearly doubled,
+the skeptic's margin shrank (it needs up to 0.55× QAE's queries, not 0.34×). The black-box
+query-count win for QAE grew from under 2× to up to 3.3×, and it now holds at every ε on the
+3.0 ft street. Absolute probabilities rose a lot. The old Gumbel undershot the 2-10 year depths
+that decide this rule, so the old a understated flooding.
+
 ## The model (`multidriver.py`)
 
 A compound flood model for one Key West street. Five random drivers, a nonlinear drainage
@@ -54,8 +89,8 @@ rule, and the same discretized joint distribution for every estimator.
 | driver | what | source | discretization (benchmark) |
 |---|---|---|---|
 | W | annual-max still water level (tide + surge) | NOAA CO-OPS 8724580, 110 usable years 1913-2025, GEV fit, detrended to 2025 (`flood.py`, unchanged) | 64 nodes, 1/8 ft apart, 0.3-8.2 ft NAVD88 |
-| P24 | 24-h rain depth | NOAA Atlas 14 AMS, Gumbel fit to the 9 published depths (`rainfall.py`) | 32 bins, 0-24 in |
-| P3 | 3-h burst inside that storm | NOAA Atlas 14 AMS 3-h depths, same PFDS query, Gumbel fit | 32 bins, 0-12 in |
+| P24 | 24-h rain depth | NOAA Atlas 14 AMS, GEV fit to the 9 published depths (`rainfall.fit_gev`, same fit as the 2-driver model); max error 5.2% (0.23 in, at 2 yr) | 32 bins, 0-24 in |
+| P3 | 3-h burst inside that storm | NOAA Atlas 14 AMS 3-h depths, same PFDS query, same GEV fit; max error 3.3% (0.09 in, at 2 yr) | 32 bins, 0-12 in |
 | S | sea-level rise from 2025 to the target year | NOAA 2022 Sea Level Rise Technical Report projections for 8724580, CO-OPS API; split normal through (low, central, high) | 16 nodes, 1/8 ft apart, centred on the median |
 | O | groundwater offset above the normal high tide | City of Key West 2024 Stormwater Master Plan (SMP) sec 2.1.2: "0.5 foot to 1.5 feet above the tide levels" | 8 nodes, Uniform(0.5, 1.5) ft |
 
@@ -107,8 +142,10 @@ remaining tolerance) and `R_int[p24, p3, g >> 2]` (burst runoff), and the indica
 | copula discretization | top 3 bits | P24 depends on W's top-3-bit regime and P3 on P24's (exact Gaussian-copula block averages). A modeling discretization, shared by every arm |
 
 Sanity checks against the SMP's qualitative statements: a 1.0 ft street floods past 6 in with
-probability 0.77 per year today (tide alone: 0.35), consistent with "frequently flooded". A 4 ft
-street floods with probability 0.17 per year today, consistent with the anchor. The absolute
+probability 0.99 per year today (tide alone: 0.35), consistent with "frequently flooded". A 4 ft
+street floods with probability 0.195 per year today, against the 0.20 the 5-year LOS anchor
+implies (the Gumbel build gave 0.17, because its rain marginal undershot the Atlas 14 depths the
+anchor was calibrated on). The absolute
 probabilities are only as good as the flagged assumptions, the drainage calibration above all.
 The model is built to test estimators on a realistic structure; it is not a calibrated
 engineering model of any particular street.
@@ -117,28 +154,42 @@ Cross-check against the City's own hydraulic model (thanks to the 2-driver branc
 `drainage.py` for finding it): SMP Table 3-4 gives a peak stage of 2.06 ft at node N3210
 (Patterson Ave, roadway low point 1.12 ft) for the 10-yr 24-h storm with a 1.0-ft tide
 boundary. Our model, calibrated independently from the LOS anchor above, gives 2.07 ft for the
-same storm, tide and elevation, using Atlas 14's 10-yr 3-h burst. With the 2.7-ft boundary the
+same storm, tide and elevation, using Atlas 14's 10-yr 24-h and 3-h depths (7.46 in, 4.05 in).
+The cross-check reads the published Atlas 14 depths directly, as the drainage calibration does,
+so the switch from Gumbel to GEV rain marginals leaves both it and k_out, k_well unchanged; we
+reran it and got the same 2.07 ft and 3.71 ft. No recalibration was needed. With the 2.7-ft boundary the
 SMP gives 2.37 ft and we give 3.71 ft. The SMP model puts flap gates on every outfall, so the
 tide never enters the street. We let tide above the street stand in it (porous limestone,
 unvalved drains). That is a deliberate structural difference.
+
+Relation to the 2-driver model (`README.md`, `drainage.py`): same tide GEV, same Atlas 14 GEV
+rain fit, same SMP sources and the same tide-in-the-street assumption. Different on purpose: tau
+0.2 here against 0.3 there (both inside the 0.1-0.3 prior; a moves by 0.0015 across it), and a
+different drainage rule (LOS-anchored outfalls plus gravity wells and groundwater here, a storage
+coefficient fitted to the SMP's N3210 runs there). At N3210's 1.12 ft today the two agree on the
+tide-only probability (0.210 here, 0.217 there) but not on a (0.97 here, 0.640 there). The two
+drainage calibrations bracket how uncertain the rain-driven part is; neither is measured.
 
 What drives the answer at the 3.0 ft benchmark street (2050, exact; holding one driver at its median):
 
 | held at median | P(flood) | change |
 |---|---|---|
-| none (full model) | 0.3250 | |
-| W, peak water level | 0.3462 | +0.021 |
-| P24, 24-h rain | 0.0396 | -0.285 |
-| P3, 3-h burst (locked to the 24-h return period instead) | 0.3960 | +0.071 |
-| S, sea-level rise | 0.3183 | -0.007 |
-| O, groundwater | 0.3275 | +0.003 |
+| none (full model) | 0.6148 | |
+| W, peak water level | 0.6432 | +0.028 |
+| P24, 24-h rain | 0.7194 | +0.105 |
+| P3, 3-h burst (locked to the 24-h return period instead) | 0.6446 | +0.030 |
+| S, sea-level rise | 0.6027 | -0.012 |
+| O, groundwater | 0.6251 | +0.010 |
 | no rain at all | 0.0133 | |
 
-At 3 ft the event is rain-driven, and tide, SLR and groundwater act by shrinking drainage
-capacity. Lower streets are tide-driven: at 1 ft in 2050 the probability is 0.99 with no rain at
-all. The tide-rain tau prior barely matters here: a = 0.3274 / 0.3263 / 0.3250 / 0.3236 for
-tau = 0 / 0.1 / 0.2 / 0.3. The benchmark grid is close to a finer one: a = 0.3250 against 0.3280
-at twice the resolution per driver.
+At 3 ft the event is rain-driven (0.013 with no rain), and tide, SLR and groundwater act by
+shrinking drainage capacity. Holding 24-h rain at its median *raises* a, because a > 0.5: the
+median year's storm (4.2 in) already floods this street under most tides. Lower streets are
+tide-driven: at 1 ft in 2050 the probability is 0.98 with no rain at all. The tide-rain tau
+prior barely matters here: a = 0.6190 / 0.6167 / 0.6148 / 0.6133 for tau = 0 / 0.1 / 0.2 / 0.3.
+The benchmark grid is close to a finer one: a = 0.6148 against 0.6307 at twice the resolution
+per driver (the Gumbel build's gap was 0.3250 vs 0.3280; the GEV's heavier mass near the 2-yr
+depth puts more probability near the staircase boundary, so the grid matters more).
 
 ## The quantum side (`multidriver_circuit.py`)
 
@@ -175,9 +226,9 @@ optimization_level=1)`, Toffoli = CCX in our construction before synthesis):
 
 | d | drivers | data qubits | total qubits | A: CX | A: Toffoli | Q: CX | Q: Toffoli (excl. S0) | full-joint cells | enumeration evals (rain burst exact) |
 |---|---|---|---|---|---|---|---|---|---|
-| 2 | W, P24 | 11 | 31 | 1,284 | 120 | 2,850 | 240 | 2,048 | 64 |
-| 3 | + S | 15 | 41 | 10,250 | 1,266 | 20,842 | 2,532 | 32,768 | 1,024 |
-| 4 | + O | 18 | 46 | 17,307 | 2,154 | 35,004 | 4,308 | 262,144 | 8,192 |
+| 2 | W, P24 | 11 | 31 | 1,288 | 120 | 2,858 | 240 | 2,048 | 64 |
+| 3 | + S | 15 | 41 | 10,254 | 1,266 | 20,850 | 2,532 | 32,768 | 1,024 |
+| 4 | + O | 18 | 46 | 17,304 | 2,154 | 34,998 | 4,308 | 262,144 | 8,192 |
 | 5 | + P3 | 23 | 52 | 148,813 | 18,026 | 298,076 | 36,052 | 8,388,608 | 262,144 |
 
 **Fidelity needed** (3.0 ft street; MLAE with 100 shots per Grover power):
@@ -198,7 +249,7 @@ cheap here, but it is the same order as the 2.6e5-evaluation enumeration that so
 problem outright. Query count is the right metric only when A is a cheap circuit wrapped around
 an expensive simulator. Here A is a lookup table of a cheap-to-enumerate grid, and the honest
 comparison is total work. On total work, enumeration wins by orders of magnitude: 2.6e5 rule
-evaluations against 9e4 queries × 1.5e5 CX.
+evaluations against 1e5 queries × 1.5e5 CX.
 
 ## The classical side and the crossover (`experiment_multi.py`)
 
@@ -219,10 +270,10 @@ points; **qae** MLAE (ideal).
 
 | d | drivers | a | QAE | plain MC | Sobol QMC | IS | cond. MC | cond. MC + Sobol |
 |---|---|---|---|---|---|---|---|---|
-| 2 | W, P24 | 0.3779 | 0.98 [0.96, 0.99] | 1.98 [1.94, 2.03] | 1.10 [1.08, 1.13] | 1.94 [1.85, 2.05] | 1.93 [1.85, 2.02] | 1.02 [0.99, 1.04] |
-| 3 | + S | 0.3828 | 1.02 [1.00, 1.04] | 1.97 [1.93, 2.01] | 1.27 [1.23, 1.30] | 2.06 [1.96, 2.16] | 1.99 [1.91, 2.08] | 1.15 [1.12, 1.17] |
-| 4 | + O | 0.3960 | 1.00 [0.99, 1.02] | 2.01 [1.96, 2.06] | 1.32 [1.28, 1.36] | 1.97 [1.88, 2.08] | 1.95 [1.87, 2.04] | 1.13 [1.11, 1.16] |
-| 5 | + P3 | 0.3250 | 0.99 [0.97, 1.01] | 2.01 [1.96, 2.06] | 1.49 [1.45, 1.54] | 2.05 [1.95, 2.15] | 1.99 [1.91, 2.08] | 1.32 [1.29, 1.35] |
+| 2 | W, P24 | 0.6054 | 1.00 [0.99, 1.01] | 1.96 [1.92, 2.01] | 1.09 [1.06, 1.11] | 1.99 [1.91, 2.09] | 1.97 [1.89, 2.07] | 1.04 [1.02, 1.06] |
+| 3 | + S | 0.6660 | 1.00 [0.98, 1.01] | 2.01 [1.96, 2.06] | 1.20 [1.17, 1.23] | 2.02 [1.93, 2.13] | 1.99 [1.91, 2.06] | 1.07 [1.05, 1.10] |
+| 4 | + O | 0.6446 | 0.99 [0.98, 1.00] | 1.98 [1.93, 2.03] | 1.31 [1.27, 1.35] | 2.05 [1.95, 2.16] | 2.01 [1.91, 2.11] | 1.13 [1.11, 1.15] |
+| 5 | + P3 | 0.6148 | 1.01 [1.00, 1.02] | 1.98 [1.94, 2.03] | 1.47 [1.42, 1.52] | 2.07 [1.97, 2.18] | 1.95 [1.85, 2.07] | 1.33 [1.30, 1.37] |
 
 The He-Owen rate for an indicator with a smooth boundary is 2d/(d+1) = 1.33 / 1.50 / 1.60 / 1.67.
 The measured QMC exponents sit below it but rise with d the same way. Discretization does not
@@ -234,33 +285,34 @@ hide the penalty on this model (see the resolution check below).
 
 | d | QAE | plain MC | Sobol QMC | IS | cond. MC | cond. MC + Sobol | enumeration |
 |---|---|---|---|---|---|---|---|
-| 2 | 30.1k | 2.55M* (85×) | 5.5k (0.18× [0.17, 0.20]) | 1.5M* (51×) | 141k (4.7×) | **520 (0.017×)** | 64 |
-| 3 | 30.4k | 2.54M* (84×) | 16.3k (0.54× [0.50, 0.58]) | 2.2M* (71×) | 182k (6.0×) | **1.06k (0.035×)** | 1,024 |
-| 4 | 32.4k | 2.64M* (81×) | 26.6k (0.82× [0.76, 0.89]) | 2.4M* (73×) | 200k (6.2×) | **1.69k (0.052×)** | 8,192 |
-| 5 | 30.9k | 2.52M* (82×) | 48.0k (**1.6×** [1.4, 1.7]) | 2.6M* (84×) | 1.57M* (51×) | **7.3k (0.24× [0.21, 0.26])** | 262,144 |
+| 2 | 29.9k | 2.51M* (84×) | 4.8k (0.16× [0.15, 0.17]) | 2.28M* (76×) | 148k (5.0×) | **429 (0.014×)** | 64 |
+| 3 | 31.2k | 2.52M* (80×) | 18.3k (0.59× [0.55, 0.63]) | 2.27M* (73×) | 254k (8.1×) | **1.5k (0.047×)** | 1,024 |
+| 4 | 30.9k | 2.37M* (76×) | 30.5k (0.99× [0.92, 1.06], tie) | 2.40M* (78×) | 312k (10×) | **2.9k (0.094×)** | 8,192 |
+| 5 | 31.5k | 2.63M* (83×) | 65.8k (**2.1×** [1.9, 2.3]) | 2.82M* (90×) | 1.30M* (41×) | **12.2k (0.39× [0.36, 0.42])** | 262,144 |
 
 ε = 1e-4 (about 0.03% relative):
 
 | d | QAE | plain MC | Sobol QMC | IS | cond. MC | cond. MC + Sobol | enumeration |
 |---|---|---|---|---|---|---|---|
-| 2 | 87.8k | 22.5M* (256×) | 18.6k (0.21× [0.20, 0.22]) | 13.1M* | 1.18M* (13×) | **1.6k (0.018×)** | 64 |
-| 3 | 93.4k | 22.2M* (238×) | 65.7k (0.70× [0.65, 0.76]) | 20.8M* | 1.62M* (17×) | **3.7k (0.040×)** | 1,024 |
-| 4 | 97.6k | 24.0M* (246×) | 113k (**1.2×** [1.1, 1.3]) | 20.6M* | 1.72M* (18×) | **5.9k (0.060×)** | 8,192 |
-| 5 | 91.8k | 22.9M* (249×) | 247k (**2.7×** [2.4, 3.0]) | 24.5M* | 14.0M* (152×) | **31.0k (0.34× [0.31, 0.37])** | 262,144 |
+| 2 | 89.5k | 21.7M* (242×) | 16.0k (0.18× [0.17, 0.19]) | 20.3M* | 1.30M* (15×) | **1.3k (0.015×)** | 64 |
+| 3 | 93.2k | 22.8M* (246×) | 68.2k (0.73× [0.68, 0.79]) | 21.1M* | 2.24M* (24×) | **4.8k (0.052×)** | 1,024 |
+| 4 | 92.1k | 20.7M* (225×) | 129k (**1.4×** [1.3, 1.5]) | 22.7M* | 2.83M* (31×) | **10.1k (0.11×)** | 8,192 |
+| 5 | 95.5k | 23.2M* (243×) | 332k (**3.5×** [3.1, 3.9]) | 27.4M* | 11.1M* (117×) | **52.9k (0.55× [0.52, 0.59])** | 262,144 |
 
-At ε = 1e-3, conditional MC + Sobol needs 0.017-0.16× QAE's queries, and plain QMC 0.16-0.85×.
+At ε = 1e-3, conditional MC + Sobol needs 0.014-0.26× QAE's queries, and plain QMC 0.15-1.2×
+(QMC loses to QAE at d = 5 on both streets: 1.20× [1.10, 1.31] at 3.0 ft, a tie at 6.0 ft).
 All 24 cells for both streets are in `results_multi.json`.
 
 **Crossover d\*** (interpolated d where the arm first needs more queries than QAE):
 
 | street | arm | ε = 1e-3 | ε = 3e-4 | ε = 1e-4 |
 |---|---|---|---|---|
-| 3.0 ft (a ≈ 0.33-0.40) | Sobol QMC | none up to d = 5 | 4.3 | 3.7 |
-| 6.0 ft (a ≈ 0.10-0.13) | Sobol QMC | 4.9 | 4.3 | 3.9 |
+| 3.0 ft (a ≈ 0.61-0.67) | Sobol QMC | 4.7 | 4.0 | 3.5 |
+| 6.0 ft (a ≈ 0.09-0.12) | Sobol QMC | 4.9 | 4.1 | 3.6 |
 | both | conditional MC + Sobol | none | none | none |
 
 Two things stand out. Importance sampling is useless here: these events are not rare (a ≈ 0.1
-to 0.4), and IS is a rare-event tool. Plain conditional MC with iid draws loses badly at d = 5,
+to 0.7), and IS is a rare-event tool. Plain conditional MC with iid draws loses badly at d = 5,
 because integrating P3 leaves P24's variance in place. It is the Sobol points over the
 remaining low-dimensional, nearly smooth conditional integrand that make the skeptic's method
 strong.
@@ -274,25 +326,27 @@ Sobol replicates each:
 
 | grid | data qubits | QMC α | cond. MC + Sobol α | QAE α | queries at ε = 1e-4: QMC / CMC+QMC / QAE | one A (CX-equiv / Toffoli) | enumeration, rain burst exact / full joint |
 |---|---|---|---|---|---|---|---|
-| coarse (1/2 ft, 3-bit rain) | 13 | 1.26 [1.21, 1.31] | 1.18 [1.14, 1.22] | 1.02 | 70k / 22k / 79k | 5.2k / 650 | 1.0e3 / 8.2e3 |
-| benchmark (1/8 ft, 5-bit rain) | 23 | 1.51 [1.44, 1.59] | 1.34 [1.29, 1.39] | 0.99 | 250k / 33k / 93k | 149k / 18k | 2.6e5 / 8.4e6 |
-| fine (1/32 ft, 7-bit rain) | 33 | 1.62 [1.54, 1.71] | 1.39 [1.32, 1.48] | 1.01 | 330k / 35k / 96k | 9.1M / 1.1M | 6.7e7 / 8.6e9 |
+| coarse (1/2 ft, 3-bit rain) | 13 | 1.21 [1.17, 1.26] | 1.25 [1.21, 1.29] | 1.00 | 54k / 27k / 93k | 5.2k / 650 | 1.0e3 / 8.2e3 |
+| benchmark (1/8 ft, 5-bit rain) | 23 | 1.40 [1.34, 1.47] | 1.33 [1.28, 1.39] | 1.01 | 317k / 56k / 96k | 149k / 18k | 2.6e5 / 8.4e6 |
+| fine (1/32 ft, 7-bit rain) | 33 | 1.58 [1.50, 1.68] | 1.38 [1.33, 1.45] | 0.99 | 567k / 44k / 101k | 9.1M / 1.1M | 6.7e7 / 8.6e9 |
 | finer (1/64 ft, 8-bit rain), counted only | 38 | | | | | 37.7M / 4.3M | 1.1e9 / 2.7e11 |
 
 - **The hypothesis holds at coarse resolution only.** QMC's exponent climbs with resolution
   toward the continuous He-Owen value 1.67 for d = 5. A coarse grid does soften the dimension
   penalty, which fits the 2-driver result on 32 bins. At realistic resolution the penalty is
   real, and it is what produces the QMC crossover above.
-- **Conditional MC + Sobol does not depend on resolution in practice.** It needs about 3.4e4
-  queries at ε = 1e-4 at every grid. It stays 0.28-0.37× QAE's queries.
+- **Conditional MC + Sobol does not grow with resolution.** It needs 2.7e4-5.6e4 queries at
+  ε = 1e-4 on every grid, with no trend from coarse to fine. It stays 0.29-0.58× QAE's queries.
+  (The coarse grid's a is 0.36, not 0.61: its 3-in rain bins and 1/2-ft stage steps move the
+  boundary. The benchmark and fine grids agree to 0.016.)
 - **Enumeration vs the circuit.** One A grows as roughly bins³ (the runoff table is indexed by
   three driver bit-groups). Enumeration with the rain burst integrated grows as bins⁴. One A
   therefore becomes cheaper than the whole classical enumeration from the benchmark grid
-  upward. QAE still needs ~1e5 applications of A, so in total gate operations (9.6e4 × 9.1e6 ≈
+  upward. QAE still needs ~1e5 applications of A, so in total gate operations (1.0e5 × 9.1e6 ≈
   9e11 at the fine grid) it loses to enumeration (6.7e7 rule evaluations) by four orders of
-  magnitude, and to conditional MC + Sobol (3.5e4 × 6 evaluations) by more.
+  magnitude, and to conditional MC + Sobol (4.4e4 × 6 evaluations) by more.
 - **Where QAE could honestly win.** QAE beats exact enumeration *in query count* from the fine
-  grid on (9.6e4 < 6.7e7), and A stays polynomial in grid size. That is the state-preparation
+  grid on (1.0e5 < 6.7e7), and A stays polynomial in grid size. That is the state-preparation
   critique in numbers: the win exists against enumeration, not against a sampler that never
   enumerates. A coherent arithmetic oracle would remove the tables and make A independent of
   the grid (limitation 4 below). Even then, the classical opponent to beat is conditional MC +
@@ -308,21 +362,21 @@ uv run python floodline_cli.py --year 2050 --scenario intermediate --elevation 3
 
 ```
 Key West street at 3.00 ft NAVD88, 2050, NOAA 2022 intermediate SLR (+0.66 ft vs 2025)
-  P(flood > 6 in, any given year) = 0.3249 +- 5.8e-05 (95%, estimator)  ~ 1 in 3.1 yr
-  model uncertainty: GEV fit 90% [0.3188, 0.3760];  tide-rain tau 0.1..0.3 -> [0.3263, 0.3237]
+  P(flood > 6 in, any given year) = 0.6149 +- 1.8e-04 (95%, estimator)  ~ 1 in 1.6 yr
+  model uncertainty: GEV fit 90% [0.6088, 0.6409];  tide-rain tau 0.1..0.3 -> [0.6167, 0.6134]
   drivers: probability if this one driver is held at its median (the 3-h burst is instead
   locked to the 24-h depth's return period):
-    peak water level (tide + surge)     0.3462  (+0.0213)
-    24-h rainfall                       0.0396  (-0.2853)
-    3-h rain burst                      0.3960  (+0.0711)
-    sea-level rise to target year       0.3183  (-0.0066)
-    groundwater offset                  0.3275  (+0.0026)
+    peak water level (tide + surge)     0.6432  (+0.0283)
+    24-h rainfall                       0.7194  (+0.1045)
+    3-h rain burst                      0.6446  (+0.0298)
+    sea-level rise to target year       0.6027  (-0.0122)
+    groundwater offset                  0.6251  (+0.0102)
     no rain (tide + groundwater only)   0.0134
-  city exposure (6054 road points, median 3.05 ft): expected 36.9% of road points flood per year; 23.4% flood at least every 2 yr
-  QAE (ideal, fault-free) to match +-5.8e-05: ~309,271 oracle queries, deepest circuit Q^1024 A = 52 logical qubits, 305,378,637 CX (36,935,274 Toffoli). Classical used 262,144 conditional samples (a ~6-step bisection of the flood rule each), seconds on a laptop.
+  city exposure (6054 road points, median 3.05 ft): expected 55.8% of road points flood per year; 58.5% flood at least every 2 yr
+  QAE (ideal, fault-free) to match +-1.8e-04: ~105,350 oracle queries, deepest circuit Q^512 A = 52 logical qubits, 152,763,725 CX (18,476,650 Toffoli). Classical used 262,144 conditional samples (a ~6-step bisection of the flood rule each), seconds on a laptop.
 ```
 
-That run took about a minute, most of it the GEV bootstrap and the exposure sweep. "36.9% of
+That run took about 20 s, most of it the GEV bootstrap and the exposure sweep. "55.8% of
 road points flood per year" is the model's answer under its assumptions. Treat it as a ranking
 tool across years and scenarios, not as a forecast.
 
@@ -368,8 +422,8 @@ wherever the drainage calibration is too pessimistic for that street.
 
 ```
 uv run python test_multidriver.py        # ~3 min
-uv run python experiment_multi.py        # ~2.5 h on 4 shared cores
-uv run python experiment_resolution.py   # ~1 h
+uv run python experiment_multi.py        # ~1.3 h on 4 shared cores
+uv run python experiment_resolution.py   # ~20 min
 uv run python floodline_cli.py --elevation 3.0
 ```
 
