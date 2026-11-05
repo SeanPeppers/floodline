@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" class="paper">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The short version — Floodline</title>
+<meta name="description" content="Key West flooding and a quantum shortcut, in two minutes.">
+<meta name="theme-color" content="#05080f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"></noscript>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/paper.css">
+<link rel="icon" href="data:,">
+</head>
+<body class="page-sub">
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="site-header__inner">
+    <a class="brand" href="index.html"><span class="brand__dot" aria-hidden="true"></span>Floodline</a>
+    <nav aria-label="Pages">
+      <a href="index.html">Story</a>
+      <a href="simple.html" aria-current="page">Short version</a>
+      <a href="deep.html">Deep dive</a>
+      <a href="tool.html">Your street</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="read">
+    <header class="read-hero">
+      <p class="eyebrow">The short version &middot; about 2 minutes</p>
+      <h1>Key West floods. The hard part is knowing which streets, and when.</h1>
+      <p class="lede">We built a tool that answers that, then tested whether a quantum computer could answer it faster.</p>
+      <p class="byline">FGCU Quantum Hackathon 2026 &middot; Key West, Florida</p>
+    </header>
+
+    <section class="beat" aria-labelledby="b1">
+      <p class="beat__n">01 &middot; How often</p>
+      <p class="big-num"><span id="mortgage-n">3 in 4</span></p>
+      <h2 id="b1">That&rsquo;s the chance high tide alone pushes Key West past major flood stage during a 30-year mortgage.</h2>
+      <div class="icons" id="icons" role="img" aria-label="100 squares, one per household; the shaded ones see a major tidal flood within 30 years"></div>
+      <p class="icons-key">Each square is one household. Shaded: sees it within 30 years. Tide gauge 8724580, 110 years of data.</p>
+    </section>
+
+    <section class="beat" aria-labelledby="b2">
+      <p class="beat__n">02 &middot; Why it&rsquo;s hard</p>
+      <h2 id="b2">To get one street&rsquo;s odds, you run the flood model thousands of times.</h2>
+      <p>Random tide, random rain. Count how often the street goes under. More runs, <mark class="hl">sharper answer</mark>. That&rsquo;s called Monte Carlo.</p>
+    </section>
+
+    <section class="beat" aria-labelledby="race-h">
+      <p class="beat__n">03 &middot; The race</p>
+      <h2 id="race-h">Same question, two methods. Watch how many tries each one needs.</h2>
+      <p>It starts on its own when you scroll here.</p>
+    </section>
+  </div>
+
+  <div class="read read--wide">
+      <div class="race" id="race" aria-labelledby="race-h">
+        <div class="race__panels">
+          <div class="race__panel race__panel--mc">
+            <div class="race__head"><h4>Monte Carlo</h4><span class="race__state" data-race="mc-state"></span></div>
+            <canvas class="race__mc" aria-hidden="true"></canvas>
+            <dl class="race__stats">
+              <div><dt>Tries</dt><dd data-race="mc-n">0</dd></div>
+              <div><dt>Estimate</dt><dd data-race="mc-est">&ndash;</dd></div>
+              <div><dt>How far off</dt><dd data-race="mc-err">&ndash;</dd></div>
+            </dl>
+            <p class="race__lock" data-race="mc-lock">&nbsp;</p>
+          </div>
+          <div class="race__panel race__panel--q">
+            <div class="race__head"><h4>Quantum (QAE)</h4><span class="race__state" data-race="q-state"></span></div>
+            <canvas class="race__qae" aria-hidden="true"></canvas>
+            <dl class="race__stats">
+              <div><dt>Tries</dt><dd data-race="q-n">0</dd></div>
+              <div><dt>Estimate</dt><dd data-race="q-est">&ndash;</dd></div>
+              <div><dt>How far off</dt><dd data-race="q-err">&ndash;</dd></div>
+            </dl>
+            <p class="race__lock" data-race="q-lock">&nbsp;</p>
+          </div>
+        </div>
+        <figure class="chart-figure race__figure">
+          <figcaption class="chart-figure__title">How far off each method is, as the tries pile up</figcaption>
+          <canvas class="race__chart" aria-label="Error versus tries for Monte Carlo and quantum amplitude estimation, updated live"></canvas>
+          <p class="chart-figure__note">
+            <button type="button" class="button button--small race__play" aria-pressed="false">&#9654; Play the race</button>
+            True share of flooding storms: <span data-race="truth">0.6391</span>. <span class="race__key race__key--mc">Monte Carlo</span> <span class="race__key race__key--q">quantum</span>. Runs live in your browser; quantum is an exact simulation of an ideal, error-free machine.
+          </p>
+        </figure>
+        <div class="race__verdict" hidden aria-live="polite">
+          <p class="plain__tag">This run&rsquo;s result</p>
+          <p class="race__headline" data-race="v-head"></p>
+          <div class="race__times">
+            <label class="race__per-try-label">If one try were a flood-model run taking
+              <select class="race__per-try">
+                <option value="0.1">0.1 second</option>
+                <option value="1" selected>1 second</option>
+                <option value="10">10 seconds</option>
+                <option value="60">1 minute</option>
+              </select>
+            </label>
+            <dl>
+              <div><dt class="race__key race__key--mc">Monte Carlo</dt><dd data-race="v-mc-time"></dd></div>
+              <div><dt class="race__key race__key--q">Quantum</dt><dd data-race="v-q-time"></dd></div>
+            </dl>
+          </div>
+          <p class="race__means-title">What that means</p>
+          <ul class="race__means">
+            <li><strong>People in flood zones:</strong> street-level odds refreshed with every forecast, so you know to move the car or leave while roads are open.</li>
+            <li><strong>First responders:</strong> rescue trucks, closures and shelters placed before the water, not after the 911 calls.</li>
+          </ul>
+          <p class="caption-note">Honest fine print: this counts tries on an ideal, error-free quantum computer that doesn&rsquo;t exist yet. Monte Carlo can also be split across many computers at once, and today&rsquo;s quantum chips are far too noisy to win. See <a href="deep.html#losses">where classical still wins</a>.</p>
+        </div>
+      </div>
+  </div>
+
+  <div class="read">
+    <section class="beat" aria-labelledby="b4">
+      <p class="beat__n">04 &middot; How big the win is</p>
+      <h2 id="b4">Quantum wins big against brute force, and smaller against the best tricks.</h2>
+      <ul class="score">
+        <li><b><span data-bind="mcTop">351</span>&times;</b><span>fewer tries than plain Monte Carlo, for a very precise answer</span></li>
+        <li><b><span data-bind="winTop">4.3</span>&times;</b><span>fewer than the best normal method, once all <span data-bind="winTopD">13</span> uncertain factors are in play</span></li>
+        <li class="lose"><b><span data-bind="winLow">0.65</span>&times;</b><span>with only 5 factors: <mark class="hl">quantum loses</mark></span></li>
+      </ul>
+      <p class="aside-note">We expected quantum to win everywhere. It didn&rsquo;t, and we kept the losses in.</p>
+    </section>
+
+    <section class="beat" aria-labelledby="b5">
+      <p class="beat__n">05 &middot; The catch</p>
+      <h2 id="b5">No quantum computer can do this yet.</h2>
+      <p>We ran a tiny version on a real IBM machine. Noise blurred the answer: <span data-bind="hwA">0.074</span> instead of <span data-bind="hwExact">0.096</span>. It needs chips about <mark class="hl">a million times cleaner</mark>.</p>
+    </section>
+
+    <section class="beat" aria-labelledby="b6">
+      <p class="beat__n">06 &middot; Where next</p>
+      <h2 id="b6">Pick one.</h2>
+      <ul class="next">
+        <li><a href="tool.html">Check your street</a><small>Flood odds for a Key West street, today and in 2050.</small></li>
+        <li><a href="deep.html">Read the deep dive</a><small>Every chart, method and loss, with the numbers.</small></li>
+        <li><a href="index.html">Watch Irma again</a><small>The 3-D story from space down to the island.</small></li>
+      </ul>
+    </section>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <p>Floodline &middot; FGCU Quantum Hackathon 2026. Simulator, plus one 3-qubit run on IBM ibm_fez.</p>
+  <p class="site-footer__credit">
+    Imagery: NASA GIBS (ESDIS). Track: NOAA NHC. Terrain: NOAA NCEI, USDA
+    NAIP. Coastline: Natural Earth. Roads: &copy; OpenStreetMap contributors.
+    <a href="CREDITS.md">Credits</a>.
+  </p>
+</footer>
+
+<script src="js/data.js"></script>
+<script src="js/race.js" defer></script>
+<script src="js/simple.js" defer></script>
+</body>
+</html>

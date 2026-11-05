@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en" class="paper">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deep dive — Floodline</title>
+<meta name="description" content="Where quantum amplitude estimation beats classical sampling for Key West flood risk, where it loses, and how we measured it.">
+<meta name="theme-color" content="#05080f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"></noscript>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/paper.css">
+<link rel="icon" href="data:,">
+</head>
+<body class="page-sub">
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="site-header__inner">
+    <a class="brand" href="index.html"><span class="brand__dot" aria-hidden="true"></span>Floodline</a>
+    <nav aria-label="Pages">
+      <a href="index.html">Story</a>
+      <a href="simple.html">Short version</a>
+      <a href="deep.html" aria-current="page">Deep dive</a>
+      <a href="tool.html">Your street</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="read read--wide">
+    <header class="read-hero">
+      <p class="eyebrow">Deep dive &middot; technical, but readable</p>
+      <h1>What we measured, how, and where it breaks.</h1>
+      <div class="abstract">
+        <p>We estimate a Key West street&rsquo;s annual flood probability and count the model queries each method needs to hit a target error &epsilon;. On ideal hardware, maximum-likelihood QAE needs <strong><span data-bind="winTop">4.3</span>&times; [<span data-bind="winTopCi">3.5, 5.4</span>]</strong> fewer queries than the best classical method we found (conditional MC on Sobol points) at <span data-bind="winTopD">13</span> uncertain factors, &epsilon;&nbsp;=&nbsp;1e-4. With the 5 physical drivers alone, it loses.</p>
+        <ul>
+          <li>Query counts only. Wall-clock time and today&rsquo;s noisy hardware both favour classical.</li>
+          <li>Every ratio carries a 95% bootstrap interval; an interval containing 1 is a tie.</li>
+        </ul>
+      </div>
+      <ul class="toc" aria-label="Contents">
+        <li><a href="#wins">1 Wins</a></li><li><a href="#losses">2 Losses</a></li><li><a href="#hardware">3 Hardware</a></li>
+        <li><a href="#verdict">4 Verdict</a></li><li><a href="#methods">5 Methods</a></li><li><a href="#stakes">6 Stakes</a></li>
+        <li><a href="#toy">7 Toy model</a></li><li><a href="#run">8 Run it</a></li>
+      </ul>
+    </header>
+
+    <section class="dsec" id="wins" aria-labelledby="wins-h">
+      <h2 id="wins-h"><span class="n">1</span>Where QAE wins</h2>
+      
+
+      <p>Live version: <a href="simple.html#race">watch Monte Carlo and QAE race</a> on the short-version page.</p>
+      <figure class="chart-figure chart-figure--hero">
+        <figcaption class="chart-figure__title" id="wins-title"><span class="chart-figure__num">1</span> vs the best classical method, model uncertainty included</figcaption>
+        <div class="chart chart--hero" id="wins-chart" aria-describedby="wins-note"></div>
+        <p class="chart-figure__note" id="wins-note">
+          &times; fewer queries than CMC+QMC: <strong><span data-bind="winTop">4.3</span>&times; [<span data-bind="winTopCi">3.5, 5.4</span>]</strong> at <span data-bind="winTopD">13</span> factors, &epsilon;&nbsp;=&nbsp;1e-4. Query count, ideal hardware, 95% CI.
+        </p>
+      </figure>
+      <details class="more">
+        <summary>Method: what the 13 factors are</summary>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Uncertain factor table, scrollable on narrow screens">
+          <table>
+            <caption>Factors added to the 5 flood drivers</caption>
+            <thead><tr><th scope="col">d</th><th scope="col">Added</th><th scope="col">Range</th><th scope="col">Source</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">5</th><td>tide, 24-h rain, 3-h burst, sea-level rise, groundwater</td><td>see five-driver model</td><td>NOAA, Master Plan</td></tr>
+              <tr><th scope="row">7</th><td>curve number, soil depth</td><td>88&ndash;95, 3&ndash;5&nbsp;ft</td><td>Master Plan</td></tr>
+              <tr><th scope="row">9</th><td>outfall share, catchment ratio</td><td>0.25&ndash;0.75, 2&ndash;4</td><td>our judgment</td></tr>
+              <tr><th scope="row">10</th><td>gravity-well start</td><td>1.4&ndash;1.8&nbsp;ft</td><td>our judgment</td></tr>
+              <tr><th scope="row">13</th><td>tide GEV shape, location, scale</td><td>200-refit bootstrap</td><td>NOAA 8724580, 110 yr</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <ul>
+          <li>Best classical: conditional MC on Sobol points (CMC+QMC). Its exponent climbs from <span data-bind="winAlphaCmc">1.31 to 1.68</span>; QAE's stays at <span data-bind="winAlphaQae">0.97&ndash;1.01</span>.</li>
+          <li>One query is one flood-rule run at one input vector, or one application of A or A&dagger;. Classical counted white-box (1 query per sample).</li>
+          <li>QAE is ideal, fault-free MLAE. 64 replicates per arm, OLS fit of log error on log queries, 2,000 bootstrap resamples. A CI containing 1 is a tie.</li>
+          <li>Truth per d: 32 &times; 2<sup>21</sup> CMC+QMC samples. A control variate doesn't help CMC+QMC at 13 factors (RMSE 1.21e-4 vs 1.18e-4).</li>
+          <li>At 3e-4, 13 factors: <span data-bind="winTop3e4">2.1</span>&times;. Details: <code>README_wins.md</code>, <code>results_wins.json</code>.</li>
+        </ul>
+      </details>
+      <figure class="chart-figure">
+        <figcaption class="chart-figure__title" id="mc-title"><span class="chart-figure__num">2</span> vs plain Monte Carlo</figcaption>
+        <div class="chart" id="mc-chart" aria-describedby="mc-note"></div>
+        <p class="chart-figure__note" id="mc-note">
+          Two drivers: <strong><span data-bind="mcOverQae">27.7 / 105 / 351</span>&times;</strong> fewer at &epsilon;&nbsp;=&nbsp;1e-3 / 3e-4 / 1e-4. Five-driver model, every d: <span data-bind="mcMulti">76&ndash;246</span>&times; at &epsilon;&nbsp;&le;&nbsp;3e-4. Query count, ideal hardware.
+        </p>
+      </figure>
+      <figure class="chart-figure">
+        <figcaption class="chart-figure__title" id="qmc-title"><span class="chart-figure__num">3</span> vs Sobol quasi-Monte Carlo, by number of drivers</figcaption>
+        <div class="chart" id="qmc-chart" aria-describedby="qmc-note"></div>
+        <p class="chart-figure__note" id="qmc-note">
+          QAE overtakes Sobol at d&nbsp;&asymp;&nbsp;<span data-bind="qmcDStar">3.5&ndash;4.9</span> (shaded, both streets); <strong><span data-bind="qmcOverQae5">3.5</span>&times;</strong> at d&nbsp;=&nbsp;5, &epsilon;&nbsp;=&nbsp;1e-4. Query count, ideal hardware, 3.0&nbsp;ft street.
+        </p>
+      </figure>
+      <figure class="chart-figure">
+        <figcaption class="chart-figure__title" id="bb-title"><span class="chart-figure__num">4</span> vs a black-box simulator, the way NOAA and FEMA surge models run</figcaption>
+        <div class="chart chart--short" id="bb-chart" aria-describedby="bb-note"></div>
+        <p class="chart-figure__note" id="bb-note">
+          <strong><span data-bind="bbWin">1.6 / 2.3 / 3.3</span>&times;</strong> fewer simulator runs at &epsilon;&nbsp;=&nbsp;1e-3 / 3e-4 / 1e-4. Classical bisects each sample (<span data-bind="bisect">6</span> runs). Simulator runs, ideal hardware, 5 drivers.
+        </p>
+      </figure>
+
+      
+
+      
+    
+    </section>
+
+    <section class="dsec" id="losses" aria-labelledby="losses-h">
+      <h2 id="losses-h"><span class="n">2</span>Where classical still wins</h2>
+      <div class="losses" id="losses-inner">
+        
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Where classical still wins, scrollable on narrow screens">
+          <table class="table--compact table--fit">
+            <caption>Every loss we measured</caption>
+            <thead><tr><th scope="col">Against</th><th scope="col">Result</th><th scope="col">When</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">CMC+QMC, physical drivers only</th><td><span data-bind="cmcAt5">0.18&ndash;0.55</span>&times; at d&nbsp;=&nbsp;5</td><td><span data-bind="cmcAlways">every</span> one of <span data-bind="nCells">24</span> cells, d&nbsp;&le;&nbsp;5</td></tr>
+              <tr><th scope="row">CMC+QMC, &epsilon;&nbsp;=&nbsp;1e-3</th><td>tie or loss at every d</td><td>the precision the model's own uncertainty (&plusmn;0.016) supports</td></tr>
+              <tr><th scope="row">Sobol QMC, 2 drivers</th><td>QMC <span data-bind="qmcWins">2.3&ndash;4.0</span>&times; cheaper</td><td>all &epsilon;</td></tr>
+              <tr><th scope="row">Exact enumeration</th><td><span data-bind="enumEvals">2.6e5</span> evaluations, zero error</td><td>total work; QAE: <span data-bind="qaeQueries4">9.6e4</span> queries &times; <span data-bind="aCx">1.5e5</span> CX</td></tr>
+              <tr><th scope="row">Hybrid QAE vs CMC+QMC</th><td>CMC+QMC 2.0&ndash;16&times; less work</td><td>table reads, both streets</td></tr>
+              <tr><th scope="row">Today's hardware</th><td>needs gate error <span data-bind="pNeed">9.1e-9</span>; today <span data-bind="czErr">0.0039</span></td><td>about a million times cleaner</td></tr>
+              <tr><th scope="row">Wall clock</th><td>511.6 fault-tolerant hours vs 1.4&nbsp;s</td><td>any usable &epsilon;</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="caption-note">
+          Below 1&times;, classical is cheaper. The 13-factor win needs an oracle circuit nobody has built, and 3 of its 8 parameter ranges are judgment calls.
+          Full ledger: <a href="https://github.com/SeanPeppers/floodline">FINDINGS.md and FAILED.md in the repo</a>.
+        </p>
+
+        <details class="more">
+          <summary>Error vs. queries, two drivers</summary>
+          <figure class="chart-figure">
+            <figcaption class="chart-figure__title" id="conv-title">Error vs. queries, two-driver street model (log&ndash;log)</figcaption>
+            <div class="chart" id="convergence-chart" aria-describedby="conv-note"></div>
+            <p class="chart-figure__note" id="conv-note">
+              <span data-bind="trials">500</span> trials per point. Steeper is faster. Patterson Ave, 2024 Stormwater Master Plan drains.
+              <button id="simulate-btn" class="button button--ghost button--small" type="button">Replay</button>
+            </p>
+          </figure>
+          <p class="caption-note">
+            The curved drainage boundary left QMC's exponent unchanged:
+            &Delta;&alpha;&nbsp;=&nbsp;<span data-bind="dAlphaQmc">&minus;0.04 [&minus;0.09, +0.02]</span>.
+          </p>
+          <div class="table-wrap" tabindex="0" role="region" aria-label="Fitted scaling exponent table, scrollable on narrow screens">
+            <table>
+              <caption>Fitted exponent &alpha; (queries &prop; &epsilon;<sup>-&alpha;</sup>), 95% bootstrap CI</caption>
+              <thead>
+                <tr><th scope="col">Arm</th><th scope="col">&alpha;</th><th scope="col">95% CI</th><th scope="col">Textbook</th></tr>
+              </thead>
+              <tbody id="alpha-rows"><tr><td colspan="4">Loading&hellip;</td></tr></tbody>
+            </table>
+          </div>
+          <div class="table-wrap" tabindex="0" role="region" aria-label="Queries at matched error table, scrollable on narrow screens">
+            <table>
+              <caption>Queries to reach error &epsilon; (median of bootstrap fits)</caption>
+              <thead>
+                <tr><th scope="col">&epsilon;</th><th scope="col">QAE</th><th scope="col">Plain MC</th><th scope="col">MC &divide; QAE</th><th scope="col">Sobol QMC</th></tr>
+              </thead>
+              <tbody id="eps-rows"><tr><td colspan="5">Loading&hellip;</td></tr></tbody>
+            </table>
+          </div>
+          <p class="caption-note">QAE's 3e-4 and 1e-4 rows extrapolate past its smallest measured error.</p>
+        </details>
+
+        <details class="more">
+          <summary>Every classical method vs QAE, five-driver model</summary>
+          <figure class="chart-figure">
+            <figcaption class="chart-figure__title" id="multi-title">Classical queries &divide; QAE queries at &epsilon;&nbsp;=&nbsp;1e-4, by number of drivers</figcaption>
+            <div class="chart" id="multi-chart" aria-describedby="multi-note"></div>
+            <p class="chart-figure__note" id="multi-note">Above 1, QAE is cheaper. 3.0&nbsp;ft street, 2050. Drivers: tide, 24-hour rain, 3-hour burst, sea-level rise, groundwater.</p>
+          </figure>
+          <div class="table-wrap" tabindex="0" role="region" aria-label="Five-driver ratio table, scrollable on narrow screens">
+            <table>
+              <caption>Classical &divide; QAE queries at matched &epsilon; (below 1: classical cheaper)</caption>
+              <thead><tr><th scope="col">Street, d</th><th scope="col">&epsilon;</th><th scope="col">Sobol QMC</th><th scope="col">Cond. MC + Sobol</th><th scope="col">Same, black box</th><th scope="col">Plain MC</th></tr></thead>
+              <tbody id="multi-rows"><tr><td colspan="6">Loading&hellip;</td></tr></tbody>
+            </table>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section class="dsec" id="hardware" aria-labelledby="hw-h">
+      <h2 id="hw-h"><span class="n">3</span>On a real quantum computer</h2>
+      <div class="hw">
+        
+        <figure class="chart-figure">
+          <figcaption class="chart-figure__title" id="hw-title">P(flood qubit = 1) vs Grover depth m</figcaption>
+          <div class="chart" id="hw-chart" aria-describedby="hw-note"></div>
+          <p class="chart-figure__note" id="hw-note">Key West compound flood, 3 qubits, IBM ibm_fez, 2026-11-05, 4,000 shots per depth, 10&nbsp;s of QPU time.</p>
+        </figure>
+        <p>
+          The hardware follows the Grover oscillation that QAE relies on, and noise damps it as circuits deepen
+          (<span data-bind="hwGates">12 to 192</span> two-qubit gates); the noisy estimate is
+          <span data-bind="hwA">0.074</span> vs exact <span data-bind="hwExact">0.096</span>, which is why today's hardware can't beat classical.
+        </p>
+      </div>
+    </section>
+
+    <section class="dsec" id="verdict" aria-labelledby="verdict-h">
+      <h2 id="verdict-h"><span class="n">4</span>Verdict: wins from 9 factors, in query count. Loses at 5.</h2>
+      
+      <div class="verdict-grid">
+        <div class="verdict-card verdict-card--good">
+          <h3>Shown</h3>
+          <ul>
+            <li><span data-bind="winTop">4.3</span>&times; fewer queries than CMC+QMC at 13 factors, <span data-bind="winMid">3.0</span>&times; at 9&ndash;10 (&epsilon;&nbsp;=&nbsp;1e-4, ideal hardware).</li>
+            <li>Quadratic edge over plain MC: &alpha;&nbsp;=&nbsp;<span data-bind="alphaQae">0.91</span> vs <span data-bind="alphaMc">2.01</span>.</li>
+            <li>QAE passes Sobol QMC near 4 drivers.</li>
+            <li>A working street and city flood tool.</li>
+          </ul>
+        </div>
+        <div class="verdict-card verdict-card--warn">
+          <h3>Not shown</h3>
+          <ul>
+            <li>A win at 5 factors (<span data-bind="winLow">0.65</span>&times;), or at &epsilon;&nbsp;=&nbsp;1e-3 at any d.</li>
+            <li>A circuit for the 8 extra parameters.</li>
+            <li>Hardware speedup. On IBM ibm_fez the 3-qubit demo estimates <span data-bind="hwA">0.074</span> vs exact <span data-bind="hwExact">0.096</span>; the full street circuit turns into a coin flip (<span data-bind="pNoisy0">0.50</span> vs ideal <span data-bind="pIdeal0">0.64</span>, noisy simulation).</li>
+            <li>Wall-clock gains: a quantum query costs far more than a sample.</li>
+            <li>A calibrated forecast.</li>
+          </ul>
+        </div>
+      </div>
+    
+    </section>
+
+    <section class="dsec" id="methods" aria-labelledby="methods-h">
+      <h2 id="methods-h"><span class="n">5</span>Methods and assumptions</h2>
+      
+
+      <details class="more">
+        <summary>Two-driver street model</summary>
+        <p>
+          Tide: <span data-bind="nYears">110</span> annual maxima from NOAA
+          gauge 8724580, shifted to 2025 sea level, GEV fit. Rain: NOAA
+          Atlas&nbsp;14 24-hour depths, GEV fit. The Patterson Ave rule uses
+          the Master Plan's curve number and tide runs. Annual flood chance:
+          <span data-bind="a2">0.640</span>.
+        </p>
+        <p>
+          Tide and rain share a Gaussian copula with
+          &tau;&nbsp;=&nbsp;<span data-bind="tau">0.3</span>, our assumption.
+          Wahl et&nbsp;al. (2015) report significant surge&ndash;rain dependence
+          at virtually all Gulf and east-coast sites; Key West appears only in
+          their Fig.&nbsp;1b, and they used daily surge and rain, not annual maxima.
+        </p>
+        <p>Also assumed: linear storage, square-root drainage, and annual tide and rain peaks counted as one event.</p>
+      </details>
+
+      <details class="more">
+        <summary>Five-driver model</summary>
+        <p>
+          Adds a 3-hour burst, NOAA 2022 sea-level rise and groundwater
+          (Master Plan range). Assumed: drainage calibration, catchment ratio,
+          tide&ndash;rain &tau;&nbsp;=&nbsp;0.2, burst &rho;&nbsp;=&nbsp;0.8.
+          The circuit matches the closed form at 20 qubits; full-scale QAE uses
+          the ideal law. See <code>README_multidriver.md</code>.
+        </p>
+      </details>
+
+      <details class="more">
+        <summary>Estimators and hardware</summary>
+        <p>
+          QAE is maximum-likelihood amplitude estimation. One query is one
+          circuit call or one classical sample. Exponents and ratios carry 95%
+          bootstrap intervals; an interval containing 1 is a tie.
+        </p>
+        <p>
+          The deepest 5-driver circuit, Q<sup><span data-bind="mDeep">256</span></sup>A,
+          has <span data-bind="deepCx">7.6e7</span> CX gates on
+          <span data-bind="qubits5">52</span> logical qubits. Half-time success
+          needs gate error near <span data-bind="pNeed">9.1e-9</span>; IBM
+          Heron's snapshot median is <span data-bind="czErr">0.0039</span>.
+        </p>
+      </details>
+
+      <details class="more">
+        <summary>Imagery and terrain</summary>
+        <p>
+          Clouds: NASA MODIS Terra, 10 Sep 2017, ~15:50 UTC, brightest tones
+          stretched so the eye shows; VIIRS of the same day fills Terra's
+          swath gaps. The cloud turn on scroll, the cloud layers on the
+          descent (toned from the same Terra tile) and the rain are ours.
+          Track: NHC HURDAT2.
+          Coastline: Natural Earth.
+        </p>
+        <p>
+          Terrain: NOAA CUDEM topobathy (MHHW = NAVD88 + 0.013&nbsp;m) under
+          USDA NAIP imagery; bathtub fill, heights &times;25.
+          <a href="CREDITS.md">Licenses</a>.
+        </p>
+      </details>
+    
+    </section>
+
+    <section class="dsec" id="stakes" aria-labelledby="stakes-h">
+      <h2 id="stakes-h"><span class="n">6</span>What&rsquo;s at stake</h2>
+      
+      
+      <h3 id="stakes-title">Four Florida hurricanes, flood claims alone: $13.5B.</h3>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Hurricane cost table, scrollable on narrow screens">
+        <table class="table--fit">
+          <caption>Federal flood insurance (NFIP) paid on Florida claims, and surge deaths in Florida</caption>
+          <thead><tr><th scope="col">Storm</th><th scope="col">NFIP paid, FL</th><th scope="col">Total US damage</th><th scope="col">Surge deaths, FL</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Irma 2017 (Keys)</th><td>$986M</td><td>$64.0B</td><td>3 drownings, Keys</td></tr>
+            <tr><th scope="row">Ian 2022</th><td>$4.87B</td><td>$119.6B</td><td>41</td></tr>
+            <tr><th scope="row">Helene 2024 (Tampa Bay)</th><td>$6.49B</td><td>$78.7B</td><td>14</td></tr>
+            <tr><th scope="row">Milton 2024 (Tampa Bay)</th><td>$1.21B</td><td>$34.3B</td><td>0</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Irma: NFIP paid $290M in Monroe County alone. Helene: $3.2B in Pinellas, where 12 people drowned in the surge. Milton's surge missed Tampa Bay; NHC says a track shift under 30&nbsp;n&nbsp;mi north would have sent a significant surge into the bay.</p>
+      <details class="more">
+        <summary>Sources and caveats</summary>
+        <ul>
+          <li>NFIP: OpenFEMA <code>NfipClaims</code> v3, Florida claims tagged to each storm, building + contents + ICC paid, data as of 2026-09-08. <a href="https://www.fema.gov/api/open/v3/NfipClaims?$top=1">OpenFEMA API</a></li>
+          <li>Total damage: NOAA NCEI Billion-Dollar Disasters, CPI-adjusted, all states. <a href="https://www.ncei.noaa.gov/access/billions/">NCEI</a></li>
+          <li>Deaths: NHC Tropical Cyclone Reports (Irma: Monroe County Medical Examiner, as quoted by NHC). <a href="https://www.nhc.noaa.gov/data/tcr/">NHC TCRs</a></li>
+          <li>Don't add the columns: NCEI's total already includes insured and NFIP losses. Total damage covers wind as well as flood.</li>
+          <li>Floodline is a planning tool. It did not prevent, and doesn't claim to prevent, any of these losses.</li>
+        </ul>
+      </details>
+
+      <p class="eyebrow eyebrow--gap">Where the quantum result applies</p>
+      <h3 id="savings-title">Real flood models are black boxes.</h3>
+      <ul class="hero__stats" aria-label="Black-box flood models">
+        <li class="stat">
+          <span class="stat__value">~630</span>
+          <span class="stat__label">SLOSH runs per NOAA P-Surge advisory, due within 1 hour</span>
+        </li>
+        <li class="stat">
+          <span class="stat__value">~2,000</span>
+          <span class="stat__label">core-hours per ADCIRC storm-surge run</span>
+        </li>
+        <li class="stat">
+          <span class="stat__value"><span data-bind="bbWin">1.6 / 2.3 / 3.3</span>&times;</span>
+          <span class="stat__label">fewer simulator runs for quantum than the best classical method, &epsilon;&nbsp;=&nbsp;1e-3 / 3e-4 / 1e-4</span>
+        </li>
+      </ul>
+      <p>Inside a black box, our best classical method has to bisect for each sample: <span data-bind="bisect">6</span> simulator runs. That is where QAE wins at five drivers.</p>
+
+      <h3 class="eyebrow--gap">What it could save</h3>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Compute savings table, scrollable on narrow screens">
+        <table class="table--fit">
+          <caption>Compute dollars saved per study, on hardware that does not exist yet</caption>
+          <thead><tr><th scope="col">Study</th><th scope="col">Low</th><th scope="col">Central</th><th scope="col">High</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">FEMA-style study, 446 storms</th><td>$15.8k</td><td>$23.8k</td><td>$42.0k</td></tr>
+            <tr><th scope="row">Louisiana 2017 suite, 7,712 runs</th><td>$177k</td><td>$267k</td><td>$330k</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>One P-Surge advisory: $11&ndash;$21. Its real limit is the 1-hour deadline, not money.</p>
+      <p><strong>We don't estimate lives saved: no source links forecast speed to casualties.</strong></p>
+
+      <details class="more">
+        <summary>How we calculated this</summary>
+        <p>
+          <code>runs saved = N &times; (1 &minus; 1/r)</code>, then
+          <code>$ = runs saved &times; CPU-hours per run &times; $0.0473</code>.
+          Low / central / high use r&nbsp;=&nbsp;1.6 / 2.3 / 3.3, our measured
+          black-box ratios at &epsilon;&nbsp;=&nbsp;1e-3 / 3e-4 / 1e-4 (5 drivers, 3.0&nbsp;ft street).
+        </p>
+        <p>Inputs:</p>
+        <ul>
+          <li>P-Surge: ~630 SLOSH runs per advisory, results due within an hour. <a href="https://slosh.nws.noaa.gov/docs/data/SLOSH_MPI_AMS-2020.pdf">NOAA SLOSH MPI paper (AMS 2020)</a></li>
+          <li>FEMA Louisiana study: 446 synthetic storms. Louisiana 2017 suite: 7,712 simulations, ~10M CPU-hours. <a href="https://hpcuserforum.com/presentations/colorado-sept2015/LouisianaCoastalMasterPlan.pdf">Louisiana Coastal Master Plan slides</a></li>
+          <li>ADCIRC+SWAN: ~2,000 core-hours per run. <a href="https://arxiv.org/abs/1909.01836">arXiv 1909.01836</a></li>
+          <li>Hurricane Ike run: 1,064 cores &times; 2.683&nbsp;h = 2,855 core-hours (FEMA high case). <a href="https://arxiv.org/abs/2310.06199">arXiv 2310.06199</a></li>
+          <li>Price: AWS hpc7a.96xlarge, $9.0793/h &divide; 192 vCPU = $0.0473 per CPU-hour (region unstated). <a href="https://instances.vantage.sh/aws/ec2/hpc7a.96xlarge">Vantage</a></li>
+        </ul>
+        <p>Assumptions:</p>
+        <ol>
+          <li>Our 5-driver ratios carry over to SLOSH and ADCIRC. Untested.</li>
+          <li>The classical method finds each threshold by bisection. Smarter search shrinks the win.</li>
+          <li>Fault-tolerant hardware about a million times cleaner than today's: two-qubit error 1e-8&ndash;1e-9 vs ~4e-3, with the simulator compiled to a reversible circuit.</li>
+          <li>Quantum machine cost is not counted. It is likely larger than the savings.</li>
+          <li>QAE queries run one after another; P-Surge's 630 runs run in parallel. QAE may lose on wall-clock time.</li>
+        </ol>
+      </details>
+    
+    </section>
+
+    <section class="dsec" id="toy" aria-labelledby="toy-h">
+      <h2 id="toy-h"><span class="n">7</span>The toy crossover (superseded)</h2>
+      
+      <p>
+        With <em>d</em> Gaussian drivers, QAE passed Sobol QMC near
+        <em>d</em>&nbsp;=&nbsp;<span data-bind="xo.dStar.0.001">3.4</span> /
+        <span data-bind="xo.dStar.0.0003">2.7</span> /
+        <span data-bind="xo.dStar.0.0001">2.4</span> at
+        &epsilon;&nbsp;=&nbsp;1e-3 / 3e-4 / 1e-4. The real model puts it near 4.
+      </p>
+      <figure class="chart-figure">
+        <figcaption class="chart-figure__title" id="xo-title">Toy model: Sobol QMC queries &divide; QAE queries, by drivers <em>d</em></figcaption>
+        <div class="chart" id="crossover-chart" aria-describedby="xo-note"></div>
+        <p class="chart-figure__note" id="xo-note">Toy model, superseded. Hollow points are extrapolated.</p>
+      </figure>
+      <details class="more">
+        <summary>Toy table and caveats</summary>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Toy crossover ratio table, scrollable on narrow screens">
+          <table>
+            <caption>Toy: QMC &divide; QAE queries (&ldquo;extrap.&rdquo; = extrapolated)</caption>
+            <thead id="xo-head"><tr><th scope="col">Drivers d</th><th scope="col">&epsilon; = 1e-3</th><th scope="col">&epsilon; = 3e-4</th><th scope="col">&epsilon; = 1e-4</th></tr></thead>
+            <tbody id="xo-rows"><tr><td colspan="4">Loading&hellip;</td></tr></tbody>
+          </table>
+        </div>
+        <ul>
+          <li>A weighted-sum event, which a classical method can reduce to one dimension.</li>
+          <li>At &epsilon;&nbsp;=&nbsp;1e-4, QMC costs for <em>d</em>&nbsp;&ge;&nbsp;7 are extrapolated.</li>
+          <li>Query counts ignore circuit size and noise.</li>
+        </ul>
+      </details>
+    
+    </section>
+
+    <section class="dsec" id="run" aria-labelledby="run-h">
+      <h2 id="run-h"><span class="n">8</span>Run it yourself</h2>
+      
+      <pre class="code-block" tabindex="0" role="region" aria-label="Run commands, scrollable on narrow screens"><code>uv sync
+uv run python experiment.py        # two-driver benchmark
+uv run python experiment_multi.py  # five-driver benchmark
+uv run python experiment_wins.py dim  # 5-13 uncertain factors
+uv run python floodline_cli.py --year 2050 --elevation 3.0 --exposure
+uv run python hw_demo.py dry       # 3-qubit demo, noisy sim; "run" uses a real IBM QPU</code></pre>
+      <p>
+        Source: <a href="https://github.com/SeanPeppers/floodline">github.com/SeanPeppers/floodline</a>.
+      </p>
+    
+    </section>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <p>Floodline &middot; FGCU Quantum Hackathon 2026. Simulator, plus one 3-qubit run on IBM ibm_fez.</p>
+  <p class="site-footer__credit">
+    Imagery: NASA GIBS (ESDIS). Track: NOAA NHC. Terrain: NOAA NCEI, USDA
+    NAIP. Coastline: Natural Earth. Roads: &copy; OpenStreetMap contributors.
+    <a href="CREDITS.md">Credits</a>.
+  </p>
+</footer>
+
+<script src="js/data.js"></script>
+<script src="js/charts.js" defer></script>
+<script src="js/main.js" defer></script>
+</body>
+</html>

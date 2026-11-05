@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" class="paper">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The flood tool — Floodline</title>
+<meta name="description" content="A compound-flood risk tool for Key West, and a measured answer to where quantum amplitude estimation beats classical sampling: with 13 uncertain factors, ideal QAE needs 4.3x fewer queries than the best classical method; with 5, it loses.">
+<meta name="theme-color" content="#05080f">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Non-render-blocking font load (media="print" swap); system fonts show until then. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"></noscript>
+
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/paper.css">
+<link rel="stylesheet" href="css/tonight.css">
+<link rel="icon" href="data:,">
+</head>
+<body class="page-sub">
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="site-header__inner">
+    <a class="brand" href="index.html"><span class="brand__dot" aria-hidden="true"></span>Floodline</a>
+    <nav aria-label="Pages">
+      <a href="index.html">Story</a>
+      <a href="simple.html">Short version</a>
+      <a href="deep.html">Deep dive</a>
+      <a href="tool.html" aria-current="page">Your street</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- TOOL -->
+  <section class="section" id="tool" aria-label="The flood tool">
+    <div class="section__content section__content--wide">
+      <p class="eyebrow">Result 3 &middot; the tool</p>
+      <h2>P(flood) for any Key West street, by year, scenario and elevation.</h2>
+      <p>
+        A 3.0&nbsp;ft street in 2050: <strong><span data-bind="cliP">0.6149</span></strong>
+        a year, about 1 in <span data-bind="cliYears">1.6</span>. City-wide,
+        <strong><span data-bind="cliExposure">55.8%</span></strong> of
+        <span data-bind="cliPoints">6,054</span> road points flood in an average year.
+      </p>
+      <pre class="code-block cli" id="cli-output" tabindex="0" role="region" aria-label="Recorded floodline_cli.py output, scrollable">$ uv run python floodline_cli.py --year 2050 --scenario intermediate --elevation 3.0 --exposure
+  P(flood > 6 in, any given year) = 0.6149</pre>
+      <p class="caption-note">Recorded run (<code>README_multidriver.md</code>). A ranking tool under flagged assumptions, not a forecast.</p>
+
+      <p class="eyebrow eyebrow--gap">Money the tool saves today &middot; classical engine</p>
+      <h2>Which road to raise first, in dollars.</h2>
+      <p>
+        <strong>Flagler Ave is first:</strong> 4.7&nbsp;mi, and its low point has
+        a 99% chance of flooding in 2050. Raising it 1&nbsp;ft costs <strong>$7.0M&ndash;$17.5M per
+        flood-year avoided</strong> (2026&ndash;2050).
+      </p>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Road-raising priority table, scrollable on narrow screens">
+        <table>
+          <caption>Top 5 streets by flooded road-miles a year, 2050 Intermediate sea-level rise</caption>
+          <thead><tr><th scope="col">#</th><th scope="col">Street</th><th scope="col">$ per flood-year avoided</th><th scope="col">P(flood) 2050</th><th scope="col">Flood-years avoided per ft</th><th scope="col">Miles</th></tr></thead>
+          <tbody id="road-rows">
+            <tr><td>1</td><th scope="row">Flagler Avenue</th><td>$7.0M&ndash;$17.5M</td><td>0.99</td><td>6.4</td><td>4.7</td></tr>
+            <tr><td>2</td><th scope="row">South Roosevelt Boulevard</th><td>$3.6M&ndash;$9.0M</td><td>0.80</td><td>7.7</td><td>2.9</td></tr>
+            <tr><td>3</td><th scope="row">North Roosevelt Boulevard</th><td>$3.5M&ndash;$8.7M</td><td>0.67</td><td>7.1</td><td>2.6</td></tr>
+            <tr><td>4</td><th scope="row">Front Street</th><td>$4.4M&ndash;$10.9M</td><td>1.00</td><td>3.0</td><td>1.4</td></tr>
+            <tr><td>5</td><th scope="row">College Road</th><td>$2.2M&ndash;$5.5M</td><td>0.76</td><td>7.7</td><td>1.8</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="caption-note">
+        Assumes a 1-ft raise. Cost per mile: $9.6M
+        (<a href="https://floridaspecifier.com/issues/v44n6/monroe-county-caps-roads-plan-with-1-6-billion-in-projects/">Monroe County roads plan</a>)
+        to $23.9M (<a href="https://keysweekly.com/?p=84561">Twin Lakes pilot</a>, drainage included).
+        Neither states a raise height, so read the dollars as an order of
+        magnitude. Conditional MC + Sobol on a laptop, ~8&nbsp;min for 6,054 road points.
+      </p>
+    </div>
+  </section>
+
+<!-- TONIGHT: live street flood view (js/tonight.js, css/tonight.css) -->
+  <section class="section" id="tonight" aria-labelledby="tonight-title">
+    <div class="section__content section__content--wide">
+      <p class="eyebrow">Live &middot; Tonight in Key West</p>
+      <h2 id="tonight-title">Which streets could flood at the next high tide?</h2>
+      <p class="tonight__disclaimer" role="note">
+        <strong>Research prototype. Not an official warning.</strong>
+        Check <a href="https://www.weather.gov/key/">NWS Key West</a> and City of Key West alerts.
+        This model has not been validated against observed flood reports.
+      </p>
+      <p>
+        NOAA's tide forecast for gauge 8724580, the gap between observed and
+        predicted water over the last day, and the NWS rain forecast, run
+        through the five-driver street model for 6,054 road points.
+      </p>
+      <div class="tonight__controls">
+        <fieldset class="tonight__group">
+          <legend>View</legend>
+          <div class="tonight__choices">
+            <label><input type="radio" name="tonight-mode" value="live" checked> Next high tides</label>
+            <label><input type="radio" name="tonight-mode" value="plan"> 2050 planning</label>
+          </div>
+        </fieldset>
+        <fieldset class="tonight__group" id="tonight-tides" hidden>
+          <legend>High tide (Key West time)</legend>
+          <div class="tonight__choices"></div>
+        </fieldset>
+        <div class="tonight__group" id="tonight-scenario-wrap" hidden>
+          <label for="tonight-scenario">NOAA 2022 sea-level scenario</label>
+          <select id="tonight-scenario">
+            <option value="low">Low</option>
+            <option value="intermediate-low">Intermediate-Low</option>
+            <option value="intermediate" selected>Intermediate</option>
+            <option value="intermediate-high">Intermediate-High</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+      </div>
+      <p class="tonight__status" id="tonight-status" role="status">Live data loads when you reach this section.</p>
+      <div class="tonight__map">
+        <canvas id="tonight-map" role="img" aria-label="Key West road map, loading."></canvas>
+      </div>
+      <ul class="tonight__legend" id="tonight-legend"></ul>
+      <p class="tonight__summary" id="tonight-summary" aria-live="polite"></p>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Streets most at risk, scrollable on narrow screens">
+        <table>
+          <caption>Named streets with at least one road point at risk (top 10)</caption>
+          <thead><tr><th scope="col">Street</th><th scope="col">Lowest point (NAVD88)</th><th scope="col" id="tonight-col">Flood likelihood</th><th scope="col">Points</th></tr></thead>
+          <tbody id="tonight-rows"><tr><td colspan="4">Loading&hellip;</td></tr></tbody>
+        </table>
+      </div>
+      <details class="more">
+        <summary>Inputs, method and limits</summary>
+        <dl class="tonight__inputs" id="tonight-inputs"></dl>
+        <ul>
+          <li>Each road point is the street's centreline elevation (USGS 3DEP lidar) every ~30&nbsp;m. Gutters sit lower, so real ponding starts earlier.</li>
+          <li>The rule is multidriver.py's: water from the sea, groundwater 0.5&ndash;1.5&nbsp;ft above high tide (City of Key West 2024 Stormwater Master Plan) and rain the drains can't take; a street floods past 6&nbsp;inches of water.</li>
+          <li>Absolute probabilities depend on the drainage calibration, an assumption: the five-driver and two-driver calibrations disagree at Patterson Ave (about 0.97 vs 0.64 a year).</li>
+          <li>Simplified: no waves, wind setup, tidal lag in groundwater, or blocked drains. Rain spread &times;0.5&ndash;&times;2 is our assumption, not an NWS figure.</li>
+          <li>Data: NOAA CO-OPS and NWS api.weather.gov, fetched by your browser, no account and no data about you sent. Roads &copy; OpenStreetMap contributors (ODbL).</li>
+        </ul>
+      </details>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <p>Floodline — FGCU Quantum Hackathon 2026. Simulator, plus one 3-qubit run on IBM ibm_fez.</p>
+  <p class="site-footer__credit">
+    Imagery: NASA GIBS (ESDIS). Track: NOAA NHC. Terrain: NOAA NCEI, USDA
+    NAIP. Coastline: Natural Earth. Roads: &copy; OpenStreetMap contributors.
+    <a href="CREDITS.md">Credits</a>.
+  </p>
+</footer>
+
+<script src="js/data.js"></script>
+<script type="module" src="js/tonight.js"></script>
+</body>
+</html>

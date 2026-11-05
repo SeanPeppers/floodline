@@ -14,9 +14,9 @@
   --border: rgba(169, 180, 194, 0.18);
   --hairline: #232c3a;
 
-  --font-head: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
+  --font-head: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-body: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Consolas, monospace;
 
   --max-w: 46rem;
   --max-w-wide: 62rem;
@@ -162,6 +162,41 @@ code { font-family: var(--font-mono); font-size: 0.92em; }
 .scroll-cue::after {
   content: ""; position: absolute; left: 50%; top: 0.3rem; width: 3px; height: 0.4rem; margin-left: -1.5px;
   background: var(--amber); border-radius: 2px; animation: cue 1.8s ease-in-out infinite;
+}
+/* Tour button (story.js): plays the journey once, then recaps and goes to results. */
+.tour-btn {
+  position: fixed; left: 50%; bottom: 1.25rem; transform: translateX(-50%); z-index: 15;
+  font-family: var(--font-head); font-weight: 600; font-size: 0.95rem;
+  color: #0a1628; background: var(--amber);
+  border: 1px solid transparent; border-radius: 999px; padding: 0.7rem 1.25rem; cursor: pointer;
+  box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.8);
+}
+.tour-btn[aria-pressed="true"] { background: rgba(5, 9, 16, 0.88); color: var(--text); border-color: var(--border); }
+.tour-btn[hidden] { display: none; }
+.tour-summary {
+  position: fixed; left: 50%; top: 50%; z-index: 16; width: min(36rem, calc(100vw - 2rem));
+  max-height: calc(100vh - var(--header-h) - 2rem); overflow-y: auto;
+  transform: translate(-50%, -46%); opacity: 0; transition: opacity 0.5s ease, transform 0.5s ease;
+  background: rgba(5, 9, 16, 0.92); color: var(--text); border: 1px solid var(--border);
+  border-radius: 14px; padding: 1.5rem 1.6rem; box-shadow: 0 20px 60px -20px rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(6px);
+}
+.tour-summary.is-on { opacity: 1; transform: translate(-50%, -50%); }
+.tour-summary[hidden] { display: none; }
+.tour-summary h2 { margin: 0.2rem 0 0.9rem; }
+.tour-summary ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.55rem; line-height: 1.45; }
+.tour-summary__foot { display: flex; align-items: center; gap: 1rem; margin-top: 1.2rem; }
+.tour-summary__bar { flex: 1; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.tour-summary__bar span { display: block; height: 100%; width: 0; background: var(--amber); }
+.tour-summary__go {
+  font-family: var(--font-head); font-weight: 600; font-size: 0.9rem; color: #0a1628; background: var(--amber);
+  border: 0; border-radius: 999px; padding: 0.55rem 1.05rem; cursor: pointer; white-space: nowrap;
+}
+.tour-summary__go:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .tour-summary { transition: none; } }
+.tour-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+@media (max-width: 760px) {
+  .tour-btn { left: 0.6rem; bottom: auto; top: calc(var(--header-h) + 0.6rem); transform: none; padding: 0.45rem 0.85rem; font-size: 0.85rem; }
 }
 @keyframes cue { 0% { transform: translateY(0); opacity: 1; } 80% { transform: translateY(0.55rem); opacity: 0; } 100% { opacity: 0; } }
 
@@ -318,3 +353,113 @@ table.table--fit { min-width: 0; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
 }
+
+/* Plain-English explainers in the results section. */
+.plain {
+  margin: 1rem 0; padding: 0.75rem 1rem; max-width: 46rem;
+  border-left: 3px solid var(--amber); border-radius: 0 8px 8px 0;
+  background: rgba(255, 255, 255, 0.04); line-height: 1.5;
+}
+.plain__tag {
+  display: block; margin-bottom: 0.2rem; font-family: var(--font-head); font-weight: 600;
+  font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--amber);
+}
+.plain--tldr { font-size: 1.08rem; padding: 1rem 1.2rem; margin-bottom: 1.6rem; }
+
+/* Live Monte Carlo vs QAE race (race.js). */
+.race { margin: 1.5rem 0 2.5rem; }
+.race__panels { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; }
+.race__panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 0.9rem 1rem 0.7rem; min-width: 0; }
+.race__head { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
+.race__head h4 { margin: 0 0 0.5rem; font-family: var(--font-head); font-size: 1rem; }
+.race__panel--mc h4 { color: var(--accent); }
+.race__panel--q h4 { color: var(--amber); }
+.race__state { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.race__mc, .race__qae { display: block; width: 100%; height: 230px; }
+.race__chart { display: block; width: 100%; height: 260px; background: var(--chart-surface); border-radius: 10px; }
+.race__stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin: 0.6rem 0 0; }
+.race__stats div { min-width: 0; }
+.race__stats dt { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.race__stats dd { margin: 0; font-family: var(--font-mono); font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+.race__figure { margin-top: 1.2rem; }
+.race__play { margin: 0 0.6rem 0 0; }
+.race__key::before { content: ""; display: inline-block; width: 0.9em; height: 3px; margin: 0 0.3em 0.2em 0.2em; vertical-align: middle; border-radius: 2px; }
+.race__key--mc::before { background: var(--accent); }
+.race__key--q::before { background: var(--amber); }
+@media (max-width: 760px) {
+  .race__panels { grid-template-columns: 1fr; }
+  .race__mc, .race__qae { height: 210px; }
+}
+.race__lock { margin: 0.45rem 0 0; font-size: 0.85rem; color: var(--text-muted); }
+.race__lock-yes { color: #7fd99a; font-weight: 600; }
+.race__verdict {
+  margin-top: 1.2rem; padding: 1.1rem 1.25rem; border: 1px solid var(--border); border-left: 3px solid var(--amber);
+  border-radius: 0 12px 12px 0; background: var(--surface);
+}
+.race__verdict[hidden] { display: none; }
+.race__headline { font-size: 1.15rem; line-height: 1.45; margin: 0.2rem 0 1rem; }
+.race__times { display: grid; gap: 0.6rem; margin-bottom: 1rem; }
+.race__per-try-label { font-size: 0.9rem; color: var(--text-muted); }
+.race__per-try { margin-left: 0.4rem; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 0.2rem 0.4rem; font: inherit; }
+.race__times dl { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin: 0; }
+.race__times dt { font-size: 0.8rem; color: var(--text-muted); }
+.race__times dd { margin: 0.15rem 0 0; font-size: 0.95rem; }
+.race__means-title { font-family: var(--font-head); font-weight: 600; margin: 0 0 0.4rem; }
+.race__means { margin: 0 0 0.8rem; padding-left: 1.1rem; display: grid; gap: 0.45rem; line-height: 1.5; }
+@media (max-width: 760px) { .race__times dl { grid-template-columns: 1fr; } }
+
+/* ---------- Opening fly-in (story.js) ---------- */
+.journey__stage::after {
+  content: "Loading Hurricane Irma\2026"; position: absolute; inset: 0; z-index: 3;
+  display: grid; place-items: center; background: #04070d;
+  color: var(--text-muted); font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase;
+  opacity: 0; pointer-events: none; transition: opacity 1.2s ease;
+}
+body.is-opening-wait .journey__stage::after { opacity: 1; transition: none; }
+body.is-opening .journey__chapters,
+body.is-opening .tour-btn { opacity: 0; pointer-events: none; }
+.journey__chapters { transition: opacity 0.5s ease; }
+
+/* Tour cards (intro / recap) never sit on top of chapter text. */
+body.tour-card-open .journey__chapters { opacity: 0; pointer-events: none; }
+.tour-summary__skip {
+  font-family: var(--font-head); font-weight: 600; font-size: 0.9rem; color: var(--text);
+  background: transparent; border: 1px solid var(--border); border-radius: 999px;
+  padding: 0.55rem 1.05rem; cursor: pointer; white-space: nowrap;
+}
+.tour-summary__skip:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* ---------- Multi-page chrome ---------- */
+a.brand { color: inherit; text-decoration: none; }
+.site-header nav a[aria-current="page"] { color: var(--amber); }
+body.page-sub main { padding-top: var(--header-h); }
+body.page-sub main > .section:first-child { border-top: 0; }
+@media (max-width: 760px) {
+  .tour-summary__foot { flex-wrap: wrap; }
+  .tour-summary__bar { flex-basis: 100%; }
+}
+
+/* Opening title over deep space (story.js). */
+html:has(body.is-opening) { overflow: hidden; }
+body.is-opening-title .journey__stage::after { content: ""; }
+.opening-title {
+  position: fixed; inset: 0; z-index: 17; display: grid; place-content: center; justify-items: center;
+  gap: 0.6rem; padding: 1.5rem; text-align: center; pointer-events: none;
+  opacity: 0; transition: opacity 0.6s ease;
+}
+.opening-title.is-on { opacity: 1; }
+.opening-title[hidden] { display: none; }
+.opening-title > * { margin: 0; }
+.opening-title__name {
+  font-family: var(--font-head); font-weight: 700; letter-spacing: -0.01em; line-height: 1;
+  font-size: clamp(3.2rem, 11vw, 7rem); text-shadow: 0 4px 40px rgba(0, 0, 0, 0.8);
+}
+.opening-title__tag { max-width: 32rem; color: var(--text-muted); font-size: 1.05rem; line-height: 1.5; }
+.opening-title__go {
+  pointer-events: auto; margin-top: 1.2rem;
+  font-family: var(--font-head); font-weight: 600; font-size: 1.05rem; color: #0a1628; background: var(--amber);
+  border: 0; border-radius: 999px; padding: 0.8rem 1.6rem; cursor: pointer;
+  box-shadow: 0 10px 30px -12px rgba(245, 177, 61, 0.6);
+}
+.opening-title__go:hover { filter: brightness(1.08); }
+.opening-title__go:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }

@@ -29,6 +29,9 @@
     return out;
   }
 
+  // Pages carry only some charts: write a fallback message only if the chart is here.
+  const say = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+
   function lineChart(root, cfg) {
     const legend = document.createElement("ul");
     legend.className = "chart__legend";
@@ -312,6 +315,7 @@
   }
 
   FloodlineData.results.then((d) => {
+    if (!document.getElementById("convergence-chart")) return; // chart lives on another page
     const b = d.budgets;
     const series = [
       { key: "mc", name: "Plain Monte Carlo", short: "MC" },
@@ -346,11 +350,12 @@
       ], true);
     }
   }).catch(() => {
-    document.getElementById("convergence-chart").textContent = "Convergence data unavailable. The tables below hold the same numbers.";
+    say("convergence-chart", "Convergence data unavailable. The tables below hold the same numbers.");
   });
 
   // Five-driver study: every classical arm as a multiple of QAE's queries.
   FloodlineData.multi.then((m) => {
+    if (!document.getElementById("multi-chart")) return; // chart lives on another page
     const zs = Object.keys(m.studies);
     const study = m.studies[zs[0]];
     const ds = Object.keys(study.configs).map(Number).sort((a, b) => a - b);
@@ -422,11 +427,12 @@
       }
     }
   }).catch(() => {
-    for (const id of ["multi-chart", "qmc-chart", "bb-chart"]) document.getElementById(id).textContent = "Five-driver data unavailable.";
+    for (const id of ["multi-chart", "qmc-chart", "bb-chart"]) say(id, "Five-driver data unavailable.");
   });
 
   // Win 2: plain Monte Carlo ÷ QAE, two-driver street vs the five-driver model (benchmark street, d = 5).
   Promise.all([FloodlineData.results, FloodlineData.multi]).then(([r, m]) => {
+    if (!document.getElementById("mc-chart")) return; // chart lives on another page
     // QAE's ε is extrapolated where it lies below the smallest RMSE QAE actually reached.
     const qaeFloor = Math.min(...r.budgets.map((b) => b.rmse_qae));
     const two = r.matched_eps.map((e) => ({ y: e.mc_over_qae, lo: e.mc_over_qae_ci[0], hi: e.mc_over_qae_ci[1], text: ratio(e.mc_over_qae), hollow: e.eps < qaeFloor }));
@@ -447,11 +453,12 @@
       ariaLabel: `Bar chart with 95% confidence bars: how many times fewer queries QAE needs than plain Monte Carlo. ${series.map((s) => `${s.name}: ${s.values.map((v, i) => `${v.text}${v.hollow ? " (extrapolated)" : ""} at error ${r.matched_eps[i].eps.toExponential(0)}`).join(", ")}`).join(". ")}.`,
     });
   }).catch(() => {
-    document.getElementById("mc-chart").textContent = "Monte Carlo data unavailable.";
+    say("mc-chart", "Monte Carlo data unavailable.");
   });
 
   // Wins study: the best classical arm (CMC+QMC) against QAE as the model's own uncertain parameters are added.
   FloodlineData.wins.then((w) => {
+    if (!document.getElementById("wins-chart")) return; // chart lives on another page
     const ds = Object.keys(w.dim).map(Number).sort((a, b) => a - b);
     const series = [["0.0001", "ε = 1e-4", EPS_RAMP[1], -5], ["0.0003", "ε = 3e-4", EPS_RAMP[0], 5]].map(([eps, name, color, dx]) => ({
       name, short: name, color, dx,
@@ -474,11 +481,12 @@
       ariaLabel: `Line chart with 95% confidence bars: how many times fewer queries ideal QAE needs than the best classical method, by number of uncertain factors. At error 1e-4: ${series[0].points.map((p) => `${p.y.toFixed(2)} at d = ${p.x}`).join(", ")}; the top value is ${top.y.toFixed(1)} [${top.lo.toFixed(1)}, ${top.hi.toFixed(1)}]. At error 3e-4: ${series[1].points.map((p) => `${p.y.toFixed(2)} at d = ${p.x}`).join(", ")}.`,
     });
   }).catch(() => {
-    document.getElementById("wins-chart").textContent = "Wins data unavailable.";
+    say("wins-chart", "Wins data unavailable.");
   });
 
   // Real ibm_fez run: P(flood qubit = 1) after Q^m A. Ideal law sin²((2m+1)θ), a = sin²θ.
   FloodlineData.hw.then((h) => {
+    if (!document.getElementById("hw-chart")) return; // chart lives on another page
     const theta = Math.asin(Math.sqrt(h.model.a));
     const law = (m) => Math.sin((2 * m + 1) * theta) ** 2;
     const mMax = h.ms[h.ms.length - 1];
@@ -503,10 +511,11 @@
       ariaLabel: `Chart of P(flood qubit = 1) against Grover depth m from ${h.ms[0]} to ${mMax}. ${series.map((s) => `${s.name}: ${s.points.map((p) => f2(p.y)).join(", ")}`).join(". ")}.`,
     });
   }).catch(() => {
-    document.getElementById("hw-chart").textContent = "Hardware data unavailable.";
+    say("hw-chart", "Hardware data unavailable.");
   });
 
   FloodlineData.crossover.then((x) => {
+    if (!document.getElementById("crossover-chart")) return; // chart lives on another page
     const epsKeys = Object.keys(x.crossover.qae_fit).sort((a, b) => b - a);
     const ds = x.setup.ds;
     const series = epsKeys.map((eps, i) => ({
@@ -548,6 +557,6 @@
       return `${c.d_star_median.toFixed(1)} [${c.d_star_ci95[0].toFixed(1)}, ${c.d_star_ci95[1].toFixed(1)}]`;
     })], true);
   }).catch(() => {
-    document.getElementById("crossover-chart").textContent = "Crossover data unavailable.";
+    say("crossover-chart", "Crossover data unavailable.");
   });
 })();

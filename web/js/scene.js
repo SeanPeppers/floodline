@@ -455,6 +455,27 @@ export function start(canvas, state, onReady, onUnavailable) {
     side: THREE.BackSide, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
   })));
 
+  // Starfield for the deep-space opening: points on a unit sphere, rescaled each
+  // frame to sit between the Earth and the far plane, drawn first so the globe
+  // always covers them.
+  const stars = (() => {
+    const n = 1800, pos = new Float32Array(n * 3), col = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) {
+      const z = Math.random() * 2 - 1, a = Math.random() * Math.PI * 2, r = Math.sqrt(1 - z * z);
+      pos.set([r * Math.cos(a), z, r * Math.sin(a)], i * 3);
+      const b = 0.35 + 0.65 * Math.random() ** 3;
+      col.set([b, b, b * (0.9 + 0.1 * Math.random())], i * 3);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    g.setAttribute("color", new THREE.BufferAttribute(col, 3));
+    const p = new THREE.Points(g, new THREE.PointsMaterial({ size: 1.6, sizeAttenuation: false, vertexColors: true, depthTest: false, depthWrite: false }));
+    p.renderOrder = -1;
+    p.frustumCulled = false;
+    return p;
+  })();
+  globe.add(stars);
+
   // NHC best track: a line just above the cloud tops and place names only; the
   // times live in the chapter text, where they don't clutter the storm.
   const trackGroup = new THREE.Group();
@@ -465,10 +486,10 @@ export function start(canvas, state, onReady, onUnavailable) {
     const c = document.createElement("canvas");
     const fontPx = 30;
     const ctx = c.getContext("2d");
-    ctx.font = `600 ${fontPx}px Inter, system-ui, sans-serif`;
+    ctx.font = `600 ${fontPx}px 'IBM Plex Sans', system-ui, sans-serif`;
     c.width = Math.ceil(ctx.measureText(text).width) + 24;
     c.height = fontPx + 16;
-    ctx.font = `600 ${fontPx}px Inter, system-ui, sans-serif`;
+    ctx.font = `600 ${fontPx}px 'IBM Plex Sans', system-ui, sans-serif`;
     ctx.textBaseline = "middle";
     ctx.lineWidth = 6;
     ctx.strokeStyle = "rgba(4,7,13,0.85)";
@@ -569,15 +590,20 @@ export function start(canvas, state, onReady, onUnavailable) {
     tmpE.set(tmpN.z, 0, -tmpN.x).normalize(); // east at this point
     tmpNorth.crossVectors(tmpN, tmpE).normalize();
     const az = k.az * D2R, tilt = k.tilt * D2R;
+    // state.zoomOut (story.js) pulls the camera far back for the opening fly-in.
+    const alt = k.alt * Math.max(1, state.zoomOut ?? 1);
     tmpP.copy(tmpN).multiplyScalar(Math.cos(tilt))
       .addScaledVector(tmpNorth, -Math.cos(az) * Math.sin(tilt))
       .addScaledVector(tmpE, Math.sin(az) * Math.sin(tilt))
-      .multiplyScalar(k.alt).add(tmpN);
+      .multiplyScalar(alt).add(tmpN);
     camG.position.copy(tmpP);
     camG.up.copy(tmpN);
     camG.lookAt(tmpN);
-    camG.near = Math.max(0.0004, (k.alt - 0.02) * 0.4);
+    camG.near = Math.max(0.0004, (alt - 0.02) * 0.4);
+    camG.far = Math.max(20, alt * 2 + 5);
     camG.updateProjectionMatrix();
+    stars.position.copy(camG.position);
+    stars.scale.setScalar(Math.max(15, alt * 1.5));
   }
 
   // ---------- Key West ----------
