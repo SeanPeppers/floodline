@@ -216,6 +216,19 @@ draws, and that the runoff table is monotone, which the bisection needs. The gat
 for large grids (`count_a`) reproduces the built circuit's CCX/CX/UCRY counts exactly at the
 benchmark resolution.
 
+`validate_gpu.py` repeats the circuit check at larger grids, up to 30 qubits, with the same
+`qae.exact_hit_probs` path and Aer's double-precision statevector on a Colab NVIDIA L4 (24 GB,
+cuStateVec). Every configuration has all five drivers (z = 2.0 ft, 2050 Intermediate). 31 and 32
+qubits need 32 and 64 GB of statevector, more than the L4 holds; no larger GPU was available.
+
+| total qubits | data qubits (W, P24, P3, S, O) | n_k | a | m checked | A: CX (decomposed) | A: Toffoli | max \|sim - sin²((2m+1)θ)\| | wall time |
+|---|---|---|---|---|---|---|---|---|
+| 20 | 7 (2, 2, 1, 1, 1) | 3 | 0.5925 | 0, 1, 2, 4 | 432 | 58 | 3.1e-14 | 3 s |
+| 23 | 9 (3, 2, 2, 1, 1) | 3 | 0.3902 | 0, 1, 2, 4 | 699 | 96 | 9.5e-15 | 8 s |
+| 26 | 11 (3, 3, 2, 2, 1) | 3 | 0.4440 | 0, 1, 2, 4 | 1,932 | 274 | 2.9e-14 | 78 s |
+| 29 | 12 (3, 3, 2, 2, 2) | 4 | 0.6978 | 0, 1, 2, 4 | 2,580 | 350 | 8.4e-14 | 881 s |
+| 30 | 12 (4, 3, 2, 2, 1) | 4 | 0.5743 | 0, 1, 2 | 2,881 | 390 | 1.0e-13 | 1,010 s |
+
 **Full-resolution QAE statistics are not simulated.** A 52-qubit statevector does not fit in
 memory. The MLAE arm draws binomial shots from the closed form sin²((2m+1)θ) with the exact a.
 That **assumes a correct, fault-free circuit**. The reduced-scale test is the evidence that the
