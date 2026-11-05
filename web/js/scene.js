@@ -1,7 +1,8 @@
 // The 3-D stage, lazy-loaded by story.js after first paint. Two scenes share
 // one renderer:
-//   globe   - NASA Blue Marble with the real Suomi NPP VIIRS cloud field of
-//             10 Sep 2017 (Hurricane Irma) on stacked shells; the camera
+//   globe   - NASA Blue Marble with Hurricane Irma's real cloud field (MODIS
+//             Terra, 15:50 UTC 10 Sep 2017, ~3 h after the Cudjoe Key
+//             landfall) on stacked shells, plus the NHC best track; the camera
 //             spirals around the eye and dives toward Key West.
 //   keywest - NOAA CUDEM topobathy with USGS/USDA NAIP imagery draped on it,
 //             flooded "bathtub" style to the level story.js derives from the
@@ -10,13 +11,17 @@
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.187.0/+esm";
 
 const D2R = Math.PI / 180;
-// Eye of Irma in the VIIRS frame (read off the image, ~0.05 deg).
-const EYE = { lat: 25.83, lon: -81.72 };
+// Eye of Irma in the MODIS Terra frame (darkest point of the eye, ~0.03 deg).
+// NHC best track interpolated to the 15:50 UTC overpass: 25.21 N, 81.61 W.
+const EYE = { lat: 25.16, lon: -81.69 };
 // NOAA CO-OPS 8724580 metadata.
 const GAUGE = { lat: 24.5557, lon: -81.8079 };
 // The bbox both Key West rasters were exported with (scripts in CREDITS.md).
 const KW_BBOX = { w: -81.82, s: 24.535, e: -81.72, n: 24.59 };
 const IRMA_BBOX = { w: -96, s: 12, e: -64, n: 38 };
+const KEYS_BBOX = { w: -85, s: 22, e: -78, n: 28 }; // the sharper Terra tile
+// Terra's descending pass crossed the Florida Straits at about 15:50 UTC.
+const IMAGE_TIME = "2017-09-10T15:50Z";
 // MHHW - NAVD88 at the gauge, from data/keywest_datums.json (1.941 - 1.928 m).
 const MHHW_NAVD88 = 0.013;
 // Must match the encoder in CREDITS.md: piecewise-linear 8-bit height code.
@@ -61,7 +66,9 @@ const OUTPUT = /* glsl */ `
 const CLOUD_GLSL = /* glsl */ `
   uniform sampler2D uCloudG;
   uniform sampler2D uCloudR;
+  uniform sampler2D uCloudF;
   uniform vec4 uRegion;   // w, s, e, n in degrees
+  uniform vec4 uRegionF;  // the sharper tile around the Keys
   uniform vec2 uEye;      // lon, lat in degrees
   uniform float uSpin;
   const float PI = 3.141592653589793;
@@ -69,6 +76,15 @@ const CLOUD_GLSL = /* glsl */ `
   float cloudiness(vec3 c) {
     float lo = min(min(c.r, c.g), c.b), hi = max(max(c.r, c.g), c.b);
     return smoothstep(0.17, 0.52, lo) * (1.0 - smoothstep(0.10, 0.30, hi - lo));
+  }
+  float inBox(vec2 u, float e) { return smoothstep(0.0, e, u.x) * smoothstep(0.0, e, 1.0 - u.x) * smoothstep(0.0, e, u.y) * smoothstep(0.0, e, 1.0 - u.y); }
+  // Regional Terra frame, with the sharper Keys tile laid into it.
+  vec3 regional(vec2 ll, out float inR) {
+    vec2 ur = (ll - uRegion.xy) / (uRegion.zw - uRegion.xy);
+    vec2 uf = (ll - uRegionF.xy) / (uRegionF.zw - uRegionF.xy);
+    inR = inBox(ur, 0.08);
+    vec3 c = texture2D(uCloudR, clamp(ur, 0.0, 1.0)).rgb;
+    return mix(c, texture2D(uCloudF, clamp(uf, 0.0, 1.0)).rgb, inBox(uf, 0.12));
   }
   // Raw sRGB cloud colour (not linearised) and cloudiness, with the storm
   // turned cyclonically about its eye by uSpin radians (fading out by ~8 deg).
@@ -81,9 +97,8 @@ const CLOUD_GLSL = /* glsl */ `
     d.x /= cl;
     ll = uEye + d;
     vec3 g = texture2D(uCloudG, vec2((ll.x + 180.0) / 360.0, (ll.y + 90.0) / 180.0)).rgb;
-    vec2 ur = (ll - uRegion.xy) / (uRegion.zw - uRegion.xy);
-    float inR = smoothstep(0.0, 0.08, ur.x) * smoothstep(0.0, 0.08, 1.0 - ur.x) * smoothstep(0.0, 0.08, ur.y) * smoothstep(0.0, 0.08, 1.0 - ur.y);
-    vec3 c = mix(g, texture2D(uCloudR, clamp(ur, 0.0, 1.0)).rgb, inR);
+    float inR;
+    vec3 c = mix(g, regional(ll, inR), inR);
     return vec4(c, cloudiness(c));
   }
 `;
@@ -109,19 +124,18 @@ const EARTH_FRAG = /* glsl */ `
     vec3 n = normalize(vN);
     vec2 ll = lonLatDeg(n);
     vec3 day = texture2D(uDay, vec2((ll.x + 180.0) / 360.0, (ll.y + 90.0) / 180.0)).rgb;
-    // Inside the Irma frame, clear-sky VIIRS pixels are a sharper photo of the
-    // same ground than the global Blue Marble; use them where there's no cloud.
-    vec2 ur = (ll - uRegion.xy) / (uRegion.zw - uRegion.xy);
-    float inR = smoothstep(0.0, 0.05, ur.x) * smoothstep(0.0, 0.05, 1.0 - ur.x) * smoothstep(0.0, 0.05, ur.y) * smoothstep(0.0, 0.05, 1.0 - ur.y);
-    vec3 vi = texture2D(uCloudR, clamp(ur, 0.0, 1.0)).rgb;
+    // Inside the Irma frame, clear-sky satellite pixels are a sharper photo of
+    // the same ground than the global Blue Marble; use them where there's no cloud.
+    float inR;
+    vec3 vi = regional(ll, inR);
     day = mix(day, pow(vi, vec3(2.2)) * 1.15, inR * (1.0 - smoothstep(0.03, 0.2, cloudiness(vi))) * 0.85);
     float ndl = dot(n, uSun);
     vec3 V = normalize(cameraPosition - vWorld);
     float ocean = smoothstep(0.004, 0.03, day.b - max(day.r, day.g));
     vec3 H = normalize(uSun + V);
     float spec = pow(max(dot(n, H), 0.0), 70.0) * ocean * 0.55;
-    // cloud shadow: sample the cloud field a little toward the sun
-    float shade = 1.0 - 0.5 * cloudAt(ll + vec2(-0.12, -0.04)).a;
+    // cloud shadow: sample the cloud field a little toward the (morning, eastern) sun
+    float shade = 1.0 - 0.5 * cloudAt(ll + vec2(0.12, -0.04)).a;
     vec3 col = day * (max(ndl, 0.0) * 1.1 + 0.015) * shade + spec * vec3(1.0, 0.92, 0.8) * shade;
     float fres = pow(max(1.0 - max(dot(n, V), 0.0), 0.0), 3.0);
     col = mix(col, vec3(0.32, 0.55, 1.0) * clamp(ndl + 0.25, 0.0, 1.0), fres * 0.65);
@@ -328,14 +342,15 @@ export function start(canvas, state, onReady, onUnavailable) {
   renderer.setClearColor(0x04070d);
   const loader = new THREE.TextureLoader();
   const t0 = performance.now();
-  const sunGlobe = latLon(4.9, -103.5).normalize(); // subsolar point near 19 UTC, 10 Sep 2017
+  const sunGlobe = latLon(4.9, -58.2).normalize(); // subsolar point at 15:50 UTC, 10 Sep 2017
 
   // ---------- globe ----------
   const globe = new THREE.Scene();
   const camG = new THREE.PerspectiveCamera(38, 1, 0.0005, 20);
   const cloudUniforms = {
-    uCloudG: { value: null }, uCloudR: { value: null },
+    uCloudG: { value: null }, uCloudR: { value: null }, uCloudF: { value: null },
     uRegion: { value: new THREE.Vector4(IRMA_BBOX.w, IRMA_BBOX.s, IRMA_BBOX.e, IRMA_BBOX.n) },
+    uRegionF: { value: new THREE.Vector4(KEYS_BBOX.w, KEYS_BBOX.s, KEYS_BBOX.e, KEYS_BBOX.n) },
     uEye: { value: new THREE.Vector2(EYE.lon, EYE.lat) },
     uSpin: { value: 0 },
     uSun: { value: sunGlobe },
@@ -358,18 +373,108 @@ export function start(canvas, state, onReady, onUnavailable) {
     side: THREE.BackSide, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
   })));
 
+  // NHC best track: a line just above the cloud tops, a dot every synoptic
+  // fix, and labels at the landfalls, at the image time and at Key West.
+  const trackGroup = new THREE.Group();
+  globe.add(trackGroup);
+  const TRACK_R = 1.0115;
+  const trackMats = [];
+  function label(text, lat, lon, { color = "#ffd27a", align = "left" } = {}) {
+    const c = document.createElement("canvas");
+    const fontPx = 30;
+    const ctx = c.getContext("2d");
+    ctx.font = `600 ${fontPx}px Inter, system-ui, sans-serif`;
+    c.width = Math.ceil(ctx.measureText(text).width) + 24;
+    c.height = fontPx + 16;
+    ctx.font = `600 ${fontPx}px Inter, system-ui, sans-serif`;
+    ctx.textBaseline = "middle";
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = "rgba(4,7,13,0.85)";
+    ctx.strokeText(text, 12, c.height / 2);
+    ctx.fillStyle = color;
+    ctx.fillText(text, 12, c.height / 2);
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    const mat = new THREE.SpriteMaterial({ map: tex, sizeAttenuation: false, depthWrite: false, transparent: true });
+    trackMats.push(mat);
+    const s = new THREE.Sprite(mat);
+    s.center.set(align === "left" ? -0.04 : 1.04, 0.5);
+    s.userData.aspect = c.width / c.height;
+    s.position.copy(latLon(lat, lon, TRACK_R + 0.001));
+    trackGroup.add(s);
+    return s;
+  }
+  const labels = [];
+  function buildTrack(track) {
+    const pts = track.points;
+    const pos = pts.map((p) => latLon(p.lat, p.lon, TRACK_R));
+    const lineMat = new THREE.LineBasicMaterial({ color: 0xffb020, transparent: true, opacity: 0.9, depthWrite: false });
+    lineMat.userData.base = 0.9;
+    trackMats.push(lineMat);
+    trackGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(new THREE.CatmullRomCurve3(pos).getPoints(pts.length * 8)), lineMat));
+    const dotMat = new THREE.PointsMaterial({ color: 0xffd27a, size: 5, sizeAttenuation: false, transparent: true, depthWrite: false });
+    trackMats.push(dotMat);
+    trackGroup.add(new THREE.Points(new THREE.BufferGeometry().setFromPoints(pos), dotMat));
+    const hhmm = (t) => t.slice(11, 16);
+    const day = (t) => `${Number(t.slice(8, 10))} Sep`;
+    const names = { "2017-09-09T03:00Z": "Cuba", "2017-09-10T13:00Z": "Cudjoe Key", "2017-09-10T19:30Z": "Marco Island" };
+    for (const p of pts.filter((q) => q.id === "L" && names[q.t])) {
+      labels.push(label(`${names[p.t]} landfall, ${p.t.startsWith(IMAGE_TIME.slice(0, 10)) ? `${hhmm(p.t)} UTC` : day(p.t)}`, p.lat, p.lon));
+    }
+    // Interpolate the track to the image time: that is where the photographed eye should be.
+    const ti = Date.parse(IMAGE_TIME);
+    const k = pts.findIndex((p) => Date.parse(p.t) > ti);
+    const a = pts[k - 1], b = pts[k];
+    const f = (ti - Date.parse(a.t)) / (Date.parse(b.t) - Date.parse(a.t));
+    labels.push(label(`Track at photo time, ${hhmm(IMAGE_TIME)}`, lerp(a.lat, b.lat, f), lerp(a.lon, b.lon, f), { color: "#ffffff", align: "right" }));
+    // Key West sits too close to the photo-time label to show from far out.
+    const kwLabel = label("Key West", GAUGE.lat, GAUGE.lon, { color: "#ffffff", align: "right" });
+    kwLabel.userData.maxAlt = 0.22;
+    labels.push(kwLabel);
+    const kwMat = new THREE.PointsMaterial({ color: 0xffffff, size: 7, sizeAttenuation: false, transparent: true, depthWrite: false });
+    trackMats.push(kwMat);
+    trackGroup.add(new THREE.Points(new THREE.BufferGeometry().setFromPoints([latLon(GAUGE.lat, GAUGE.lon, TRACK_R)]), kwMat));
+  }
+  // Faint Natural Earth coastline drawn over the clouds, so Florida, Cuba and
+  // the Keys read even where Irma hides them.
+  function buildCoast(coast) {
+    const pos = [];
+    for (const l of coast.lines) {
+      for (let i = 2; i < l.length; i += 2) {
+        pos.push(latLon(l[i - 1], l[i - 2], TRACK_R - 0.0005), latLon(l[i + 1], l[i], TRACK_R - 0.0005));
+      }
+    }
+    // Mid-blue reads on both white cloud and dark sea.
+    const mat = new THREE.LineBasicMaterial({ color: 0x3f7fc0, transparent: true, opacity: 0.75, depthWrite: false });
+    mat.userData.base = 0.75;
+    trackMats.push(mat);
+    trackGroup.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pos), mat));
+  }
+  // Labels hold a fixed on-screen height; the track fades as the camera dives.
+  function placeTrack(alt) {
+    const o = smooth(0.012, 0.05, alt);
+    const ol = o * smooth(0.75, 0.5, alt); // labels only once the region fills the view
+    trackGroup.visible = o > 0.01;
+    for (const m of trackMats) m.opacity = m.isSpriteMaterial ? ol : o * (m.userData.base ?? 1);
+    for (const s of labels) s.visible = ol > 0.01 && alt < (s.userData.maxAlt ?? Infinity);
+    const h = (2 * (W < 600 ? 22 : 26) / H) * Math.tan((camG.fov * D2R) / 2);
+    for (const s of labels) s.scale.set(h * s.userData.aspect, h, 1);
+  }
+
   const eyeN = latLon(EYE.lat, EYE.lon).normalize();
   const kwN = latLon(GAUGE.lat, GAUGE.lon).normalize();
   const G = state.firstKeyWest;
   // u: chapter coordinate, as fractions of the globe chapters so adding one
-  // re-spaces the flight. az in degrees (the spiral), tilt from vertical.
+  // re-spaces the flight. az in degrees, tilt from vertical. The camera swings
+  // around the eye but stays within ~35 deg of north-up, so Florida, Cuba and
+  // the Keys always read the right way round.
   const globeKeys = [
-    { u: 0, alt: 2.5, tilt: 10, az: -30 },
+    { u: 0, alt: 2.5, tilt: 10, az: -20 },
     { u: 0.18 * G, alt: 2.15, tilt: 14, az: -10 },
-    { u: 0.5 * G, alt: 0.4, tilt: 50, az: 130 },
-    { u: 0.833 * G, alt: 0.3, tilt: 38, az: 260 },
-    { u: 0.933 * G, alt: 0.06, tilt: 24, az: 330 },
-    { u: G, alt: 0.0075, tilt: 10, az: 360 },
+    { u: 0.5 * G, alt: 0.42, tilt: 42, az: 30 },
+    { u: 0.833 * G, alt: 0.17, tilt: 20, az: -25 },
+    { u: 0.933 * G, alt: 0.06, tilt: 20, az: -10 },
+    { u: G, alt: 0.0075, tilt: 8, az: 0 },
   ];
   const tmpN = new THREE.Vector3(), tmpE = new THREE.Vector3(), tmpNorth = new THREE.Vector3(), tmpP = new THREE.Vector3();
   function placeGlobeCamera(u) {
@@ -540,9 +645,10 @@ export function start(canvas, state, onReady, onUnavailable) {
       placeGlobeCamera(Math.min(u, G0));
       // The storm turns with scroll and, slowly, with time (bounded so the
       // differential twist never smears the image).
-      cloudUniforms.uSpin.value = 0.3 * smooth(0, G0, u) + 0.12 * (1 - Math.exp(-t / 50));
+      cloudUniforms.uSpin.value = 0.1 * smooth(0, G0, u) + 0.05 * (1 - Math.exp(-t / 50));
       const near = smooth(0.25, 0.02, camG.position.length() - 1);
       shells[2].material.uniforms.uOpacity.value = 0.3 * (1 - near * 0.6);
+      placeTrack(camG.position.length() - 1);
       renderer.render(globe, camG);
     }
     frames++;
@@ -558,15 +664,17 @@ export function start(canvas, state, onReady, onUnavailable) {
   return Promise.all([
     loadTexture(loader, "assets/globe/earth-bmng-2048.webp"),
     loadTexture(loader, "assets/globe/clouds-20170910-2048.webp", { srgb: false }),
-    loadTexture(loader, "assets/globe/irma-20170910-2048.webp", { srgb: false }),
-  ]).then(([day, cg, cr]) => {
+    loadTexture(loader, "assets/globe/irma-terra-20170910-2048.webp", { srgb: false }),
+    loadTexture(loader, "assets/globe/keys-terra-20170910-2048.webp", { srgb: false }),
+    ...["irma-track", "coast-ne10m"].map((f) => fetch(`assets/data/${f}.json`).then((r) => (r.ok ? r.json() : null)).catch(() => null)),
+  ]).then(([day, cg, cr, cf, track, coast]) => {
+    // The shells share these uniform objects with the earth material.
     earthMat.uniforms.uDay.value = day;
     cloudUniforms.uCloudG.value = cg;
     cloudUniforms.uCloudR.value = cr;
-    for (const s of shells) {
-      s.material.uniforms.uCloudG.value = cg;
-      s.material.uniforms.uCloudR.value = cr;
-    }
+    cloudUniforms.uCloudF.value = cf;
+    if (coast) buildCoast(coast);
+    if (track) buildTrack(track);
     if (running) frame();
     return Promise.all([
       loadTexture(loader, "assets/keywest/ortho-naip-2048.webp"),

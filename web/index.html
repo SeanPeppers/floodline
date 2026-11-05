@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Floodline — Quantum Amplitude Estimation for Key West Compound Flood Risk</title>
-<meta name="description" content="Floodline measures whether quantum amplitude estimation's proven quadratic query speedup survives contact with a real, 2-D Key West tide+rainfall compound flood-risk problem, against a fair classical Sobol QMC control.">
+<title>Floodline — Where quantum amplitude estimation helps Key West flood risk</title>
+<meta name="description" content="A compound-flood risk tool for Key West, and a measured answer to where quantum amplitude estimation beats classical sampling: from about 4 flood drivers against Sobol QMC, never against the best classical method.">
 <meta name="theme-color" content="#05080f">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,10 +26,10 @@
   <div class="site-header__inner">
     <span class="brand"><span class="brand__dot" aria-hidden="true"></span>Floodline</span>
     <nav aria-label="Section navigation">
-      <a href="#problem">Problem</a>
-      <a href="#method">Method</a>
+      <a href="#results">Results</a>
+      <a href="#tool">Tool</a>
       <a href="#verdict">Verdict</a>
-      <a href="#outlook">Outlook</a>
+      <a href="#methods">Methods</a>
     </nav>
   </div>
 </header>
@@ -59,394 +59,340 @@
     <div class="journey__chapters">
       <article class="chapter chapter--hero" data-scene="globe" data-still="0">
         <div class="chapter__card chapter__card--hero">
-          <p class="eyebrow">FGCU Quantum Hackathon 2026 &middot; Key West compound flood tail</p>
+          <p class="eyebrow">FGCU Quantum Hackathon 2026 &middot; Key West</p>
           <h1>Floodline</h1>
           <p class="hero__lede">
-            Does quantum amplitude estimation's proven query advantage over
-            Monte Carlo survive a real flood-risk problem? We built a
-            tide&nbsp;+&nbsp;rainfall model from
-            <span data-bind="nYears">110</span> years of Key West data and
-            raced it against a <em>fair</em> classical control, 2-D Sobol
-            quasi-Monte&nbsp;Carlo, instead of assuming the answer.
+            We built a compound-flood risk tool for Key West and found where
+            quantum helps. It beats standard sampling at 4+ flood drivers and
+            loses to the best classical method unless the simulator is a black
+            box. That case needs hardware
+            <span data-bind="cleaner">100,000&times;</span> cleaner than today's.
           </p>
           <ul class="hero__stats" aria-label="Headline results">
             <li class="stat">
-              <span class="stat__value"><span data-bind="mcOverQaeLo">13</span>&ndash;<span data-bind="mcOverQaeHi">131</span>&times;</span>
-              <span class="stat__label">fewer queries than plain Monte&nbsp;Carlo, depending on target precision</span>
-            </li>
-            <li class="stat">
-              <span class="stat__value">1 in <span data-bind="aInv">9</span> years</span>
-              <span class="stat__label">compound event: minor-flood tide <em>and</em> a 10-year rain in the same year (a&nbsp;=&nbsp;<span data-bind="a">0.109</span>)</span>
+              <span class="stat__value">d &asymp; <span data-bind="dStar">3.7&ndash;4.9</span></span>
+              <span class="stat__label">drivers where QAE starts beating Sobol QMC</span>
             </li>
             <li class="stat stat--warn">
-              <span class="stat__value"><span data-bind="qaeOverQmcLo">3.7</span>&ndash;<span data-bind="qaeOverQmcHi">4.6</span>&times;</span>
-              <span class="stat__label">more queries than the best classical control. QAE still loses this race, and we report it.</span>
+              <span class="stat__value"><span data-bind="cmcAt5">0.12&ndash;0.34</span>&times;</span>
+              <span class="stat__label">best classical method's queries relative to QAE, 5 drivers</span>
+            </li>
+            <li class="stat stat--warn">
+              <span class="stat__value"><span data-bind="pNeed">9.1e-9</span></span>
+              <span class="stat__label">gate error QAE's one win needs; today <span data-bind="czErr">0.0039</span></span>
             </li>
           </ul>
           <p class="hero__cta">
             <span class="scroll-cue" aria-hidden="true"></span>
-            Scroll to fly from Hurricane Irma down to Key West, or
-            <a href="#problem">skip to the numbers</a>.
+            Scroll through Irma to Key West, or <a href="#results">skip to results</a>
           </p>
         </div>
       </article>
 
       <article class="chapter" data-scene="globe" data-still="1">
         <div class="chapter__card">
-          <p class="eyebrow">10 September 2017 &middot; Hurricane Irma</p>
-          <h2>Irma came ashore in the Lower Keys as a Category&nbsp;4.</h2>
-          <p>
-            The National Hurricane Center puts landfall near Cudjoe Key at
-            about 1300&nbsp;UTC, with maximum sustained winds of 115&nbsp;kt
-            (130&nbsp;mph) and a minimum pressure of 931&nbsp;mb.
-          </p>
+          <p class="eyebrow">10 Sep 2017 &middot; Hurricane Irma</p>
+          <h2>Irma hit Cudjoe Key at 13:00 UTC as a Category&nbsp;4.</h2>
+          <p>Key West sits about 20 miles west. Landfall two: Marco Island, 19:30 UTC.</p>
           <p class="chapter__source">
-            The clouds are the real ones: NASA Suomi&nbsp;NPP VIIRS true colour
-            from later that day, after the eye had moved north toward Florida's
-            southwest coast, over NASA's Blue Marble. Source:
-            <a href="https://www.nhc.noaa.gov/data/tcr/AL112017_Irma.pdf">NHC Tropical Cyclone Report AL112017</a>.
+            Clouds: NASA MODIS Terra, 15:50 UTC (landfall +3&nbsp;h). Line: NHC best track.
           </p>
         </div>
       </article>
 
       <article class="chapter" data-scene="globe" data-still="2">
         <div class="chapter__card">
-          <p class="eyebrow">NOAA tide gauge 8724580 &middot; Key West</p>
-          <h2>The Key West gauge peaked 2.7&nbsp;ft above the average high tide.</h2>
-          <p>
-            NHC records a peak of 2.7&nbsp;ft (0.82&nbsp;m) above mean
-            higher-high water (MHHW) at the Key West gauge, the same gauge
-            whose <span data-bind="nYears">110</span>-year record Floodline
-            models. That is above the National Weather Service's major flood
-            stage of <span data-bind="major">0.64</span>&nbsp;m.
-          </p>
-          <p class="chapter__source">Keep scrolling to drop through the eyewall's southern bands to the island.</p>
+          <p class="eyebrow">Tide gauge 8724580 &middot; Key West</p>
+          <h2>The gauge peaked 2.7&nbsp;ft above high tide.</h2>
+          <p>That is past NWS major flood stage (<span data-bind="major">0.64</span>&nbsp;m).</p>
+          <p class="chapter__source">Source: NHC Tropical Cyclone Report AL112017.</p>
         </div>
       </article>
 
       <article class="chapter" data-scene="keywest" data-level="mhhw" data-still="3">
         <div class="chapter__card">
-          <p class="eyebrow">Key West, Florida &middot; 24.56&deg;&nbsp;N, 81.78&deg;&nbsp;W</p>
-          <h2>This is the island, measured.</h2>
-          <p>
-            Ground and seabed heights are NOAA's CUDEM 1/9&nbsp;arc-second
-            topobathy; the photo draped over it is USGS/USDA aerial imagery.
-            The water sits at mean higher-high water, an ordinary high tide.
-          </p>
+          <p class="eyebrow">Key West &middot; 24.56&deg;&nbsp;N, 81.78&deg;&nbsp;W</p>
+          <h2>The island, measured.</h2>
+          <p>NOAA topobathy, USDA aerial photo, water at normal high tide.</p>
           <p class="chapter__source">
-            How to read the water: a flat &ldquo;bathtub&rdquo; level over bare
-            earth, with no waves, surge dynamics, drainage or buildings, and
-            low spots flood even where they don't connect to the sea. Heights
-            are exaggerated <span data-bind="exaggeration">25</span>&times;
-            (compressed above 3&nbsp;m) so that small differences show. MHHW is 0.013&nbsp;m
-            above NAVD88 at this gauge (NOAA datum sheet, 1983&ndash;2001 epoch).
+            Flat &ldquo;bathtub&rdquo; fill, no waves or drainage. Heights
+            &times;<span data-bind="exaggeration">25</span>.
           </p>
         </div>
       </article>
 
       <article class="chapter" data-scene="keywest" data-level="nws_minor" data-rain="1" data-still="4">
-        <div class="chapter__card chapter__card--key">
-          <p class="eyebrow">The event Floodline prices</p>
-          <h2>Minor flood stage and a 10-year rain, in the same year.</h2>
-          <p>
-            The water is now at NWS minor flood stage,
-            <strong><span data-bind="minor">0.335</span>&nbsp;m</strong> above
-            MHHW. Add at least <strong><span data-bind="rainIn">7.46</span>&nbsp;in</strong>
-            of rain in 24&nbsp;hours, the <span data-bind="rainYears">10</span>-year
-            NOAA Atlas&nbsp;14 depth. With the two linked by a Gaussian copula
-            (&tau;&nbsp;=&nbsp;<span data-bind="tau">0.3</span>, an assumption),
-            the chance of both in a given year is
-            <strong>a&nbsp;=&nbsp;<span data-bind="a">0.109</span></strong>,
-            about 1 in <span data-bind="aInv">9</span>.
-          </p>
-          <p class="chapter__source">The water level is the real threshold. The rain is illustration.</p>
+        <div class="chapter__card">
+          <p class="eyebrow">NWS minor flood stage</p>
+          <h2><span data-bind="minor">0.335</span>&nbsp;m above high tide.</h2>
+          <p>Key West's yearly peak water level reaches it in <span data-bind="tideMinorPct">96</span>% of years.</p>
+          <p class="chapter__source">Rain is illustration.</p>
         </div>
       </article>
 
       <article class="chapter" data-scene="keywest" data-level="nws_moderate" data-rain="1" data-still="5">
         <div class="chapter__card">
           <p class="eyebrow">NWS moderate flood stage</p>
-          <h2><span data-bind="moderate">0.488</span>&nbsp;m above MHHW.</h2>
-          <p>
-            Water does not rise evenly across an island this flat. Low ground
-            floods first, often well away from the shoreline.
-          </p>
+          <h2><span data-bind="moderate">0.488</span>&nbsp;m.</h2>
+          <p>Low ground floods first, often far from the shore.</p>
         </div>
       </article>
 
       <article class="chapter" data-scene="keywest" data-level="nws_major" data-rain="1" data-still="6">
         <div class="chapter__card">
           <p class="eyebrow">NWS major flood stage</p>
-          <h2><span data-bind="major">0.64</span>&nbsp;m above MHHW.</h2>
-          <p>
-            From <span data-bind="nYears">110</span> annual maxima, shifted to
-            2025 sea level and fitted with a GEV distribution, the tide alone
-            reaches this level in about 1 year in <span data-bind="tideMajorInv">22</span>
-            (<span data-bind="tideMajorA">0.0458</span>).
-          </p>
+          <h2><span data-bind="major">0.64</span>&nbsp;m.</h2>
+          <p>Tide alone reaches major stage about 1 year in <span data-bind="tideMajorInv">22</span> (p&nbsp;=&nbsp;<span data-bind="tideMajorA">0.0458</span>).</p>
         </div>
       </article>
 
       <article class="chapter" data-scene="keywest" data-level-m="0.823" data-rain="1" data-still="7">
         <div class="chapter__card">
-          <p class="eyebrow">Irma, as the gauge saw it</p>
+          <p class="eyebrow">Irma at the gauge</p>
           <h2>2.7&nbsp;ft: where Irma put the water.</h2>
-          <p>
-            This is the peak NHC reports for the Key West gauge during Irma,
-            0.82&nbsp;m above MHHW. Real storm flooding is more than a still
-            water level, since waves and wind push water higher on exposed
-            shores. Read this as the gauge's view, not a flood map.
-          </p>
-          <p>
-            The rest of this page is about the number: how many queries it
-            takes to estimate <em>a</em> to a given precision, and whether
-            quantum amplitude estimation earns its keep.
-            <a href="#problem">Go to the numbers</a>.
-          </p>
+          <p class="chapter__source">Still-water level at the gauge, not a flood map. <a href="#results">Results</a>.</p>
         </div>
       </article>
     </div>
   </section>
 
-  <!-- PROBLEM -->
-  <section class="section" id="problem" aria-label="The problem">
-    <div class="section__content">
-      <p class="eyebrow">The question</p>
-      <h2>In a given year, at today's sea level, what are the odds Key West sees a <em>compound</em> flood event?</h2>
+  <!-- RESULTS -->
+  <section class="section" id="results" aria-label="Results">
+    <div class="section__content section__content--wide">
+      <p class="eyebrow">Result 1 &middot; one street, two drivers</p>
+      <h2>Quantum beats plain Monte Carlo. Sobol QMC still beats quantum.</h2>
       <p>
-        <strong>Compound, not single-variable:</strong> the annual peak water
-        level reaches NWS <strong>minor flood</strong> stage
-        (<span data-bind="minor">0.335</span>&nbsp;m above MHHW)
-        <em>and</em> that year's heaviest 24-hour rainfall is at least a
-        <span data-bind="rainYears">10</span>-year event
-        (<span data-bind="rainIn">7.46</span>&nbsp;in). Tide comes from NOAA
-        CO-OPS station 8724580 (Key West, FL),
-        <span data-bind="yearFrom">1913</span>&ndash;<span data-bind="yearTo">2025</span>,
-        shifted to 2025 sea level (<span data-bind="slrMm">2.65</span>&nbsp;mm/yr
-        trend) and GEV-fit. Rain comes from NOAA Atlas&nbsp;14's published
-        24-hour return-period depths for the same point, re-fit to a Gumbel
-        distribution. A discretized Gaussian copula links them, using the
-        sign and significance of tide&ndash;precipitation dependence that
-        Wahl&nbsp;et&nbsp;al. 2015 (<em>Nature Climate Change</em>) measured
-        directly at this Key West gauge. The exact correlation magnitude they
-        report is in a figure, not a table, so this build uses a
-        representative moderate positive &tau;&nbsp;=&nbsp;<span data-bind="tau">0.3</span>
-        as an explicit, flagged assumption, not their measured number.
+        Street: Patterson Ave, drains from the city's 2024 Stormwater Master
+        Plan. Plain Monte Carlo needs
+        <strong><span data-bind="mcOverQae">28 / 105 / 351</span>&times;</strong>
+        the queries of quantum amplitude estimation (QAE) at
+        &epsilon;&nbsp;=&nbsp;1e-3 / 3e-4 / 1e-4. Sobol QMC needs
+        <strong><span data-bind="qmcWins">2.3&ndash;4.0</span>&times; fewer</strong>.
       </p>
-      <p>
-        <strong>Target probability a = <span data-bind="a4">0.1090</span></strong>,
-        about a 1-in-<span data-bind="aInv">9</span>-year event. Every
-        estimator below races to pin down this exact same number.
-      </p>
-      <div class="callout">
-        <p>
-          Why this needs a fast estimator at all: a flood-risk number that
-          takes few queries to estimate to high precision is cheap to wire
-          into every downstream decision (insurance pricing, levee design,
-          evacuation planning) without the query cost itself becoming the
-          bottleneck. That's the proven claim being tested here.
+
+      <figure class="chart-figure">
+        <figcaption class="chart-figure__title" id="conv-title">Error vs. queries, two-driver street model (log&ndash;log)</figcaption>
+        <div class="chart" id="convergence-chart" aria-describedby="conv-note"></div>
+        <p class="chart-figure__note" id="conv-note">
+          <span data-bind="trials">500</span> trials per point. Steeper is faster.
+          <button id="simulate-btn" class="button button--ghost button--small" type="button">Replay</button>
         </p>
-      </div>
+      </figure>
+      <p class="caption-note">
+        The curved drainage boundary left QMC's exponent unchanged:
+        &Delta;&alpha;&nbsp;=&nbsp;<span data-bind="dAlphaQmc">&minus;0.04 [&minus;0.09, +0.02]</span>.
+      </p>
+
+      <details class="more">
+        <summary>Exponents and matched-&epsilon; table</summary>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Fitted scaling exponent table, scrollable on narrow screens">
+          <table>
+            <caption>Fitted exponent &alpha; (queries &prop; &epsilon;<sup>-&alpha;</sup>), 95% bootstrap CI</caption>
+            <thead>
+              <tr><th scope="col">Arm</th><th scope="col">&alpha;</th><th scope="col">95% CI</th><th scope="col">Textbook</th></tr>
+            </thead>
+            <tbody id="alpha-rows"><tr><td colspan="4">Loading&hellip;</td></tr></tbody>
+          </table>
+        </div>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Queries at matched error table, scrollable on narrow screens">
+          <table>
+            <caption>Queries to reach error &epsilon; (median of bootstrap fits)</caption>
+            <thead>
+              <tr><th scope="col">&epsilon;</th><th scope="col">QAE</th><th scope="col">Plain MC</th><th scope="col">MC &divide; QAE</th><th scope="col">Sobol QMC</th></tr>
+            </thead>
+            <tbody id="eps-rows"><tr><td colspan="5">Loading&hellip;</td></tr></tbody>
+          </table>
+        </div>
+        <p class="caption-note">QAE's 3e-4 and 1e-4 rows extrapolate past its smallest measured error.</p>
+      </details>
+
+      <p class="eyebrow eyebrow--gap">Result 2 &middot; five drivers</p>
+      <h2>With five drivers, QAE passes Sobol QMC but never the best classical method.</h2>
+      <p>Drivers: tide, 24-hour rain, 3-hour burst, sea-level rise, groundwater.</p>
+            <ul class="findings">
+        <li><strong>Sobol QMC falls behind from d&nbsp;&asymp;&nbsp;4.</strong> At 5 drivers, &epsilon;&nbsp;=&nbsp;1e-4, it needs <span data-bind="qmcOverQae5">2.7</span>&times; QAE's queries.</li>
+        <li><strong>Conditional MC + Sobol beats QAE in <span data-bind="cmcAlways">every</span> one of <span data-bind="nCells">24</span> cells</strong>, at <span data-bind="cmcAt5">0.12&ndash;0.34</span>&times; QAE's queries with 5 drivers.</li>
+        <li><strong>Exact enumeration wins on total work:</strong> <span data-bind="enumEvals">2.6e5</span> evaluations, no sampling error. QAE needs <span data-bind="qaeQueries4">9.2e4</span> queries of <span data-bind="aCx">1.5e5</span> CX gates each.</li>
+        <li><strong>QAE leads only if the simulator is a black box</strong>, needing <span data-bind="bbWin">1.4&ndash;2.0</span>&times; fewer runs. That takes a two-qubit error near <span data-bind="pNeed">9.1e-9</span>; today's is <span data-bind="czErr">0.0039</span>.</li>
+      </ul>
+
+      <figure class="chart-figure">
+        <figcaption class="chart-figure__title" id="multi-title">Classical queries &divide; QAE queries at &epsilon;&nbsp;=&nbsp;1e-4, by number of drivers</figcaption>
+        <div class="chart" id="multi-chart" aria-describedby="multi-note"></div>
+        <p class="chart-figure__note" id="multi-note">Above 1, QAE is cheaper. 3.0&nbsp;ft street, 2050.</p>
+      </figure>
+      <details class="more">
+        <summary>All ratios, both streets</summary>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Five-driver ratio table, scrollable on narrow screens">
+          <table>
+            <caption>Classical &divide; QAE queries at matched &epsilon; (below 1: classical cheaper)</caption>
+            <thead><tr><th scope="col">Street, d</th><th scope="col">&epsilon;</th><th scope="col">Sobol QMC</th><th scope="col">Cond. MC + Sobol</th><th scope="col">Same, black box</th><th scope="col">Plain MC</th></tr></thead>
+            <tbody id="multi-rows"><tr><td colspan="6">Loading&hellip;</td></tr></tbody>
+          </table>
+        </div>
+      </details>
     </div>
   </section>
 
-  <!-- METHOD / QUANTUM -->
-  <section class="section" id="method" aria-label="Method and results">
+  <!-- TOOL -->
+  <section class="section" id="tool" aria-label="The flood tool">
     <div class="section__content section__content--wide">
-      <p class="eyebrow">The claim with a proof behind it</p>
-      <h2>Amplitude estimation needs O(1/&epsilon;) queries. Plain Monte Carlo needs O(1/&epsilon;&sup2;).</h2>
+      <p class="eyebrow">Result 3 &middot; the tool</p>
+      <h2>P(flood) for any Key West street, by year, scenario and elevation.</h2>
       <p>
-        A <span data-bind="qubits">17</span>-logical-qubit circuit loads the
-        tide marginal, controlled-loads one of <span data-bind="regimes">4</span>
-        regime-conditional rain distributions, and flips an objective qubit
-        only when both thresholds hit: a discretized Rosenblatt/copula
-        construction, with no closed-form 2-D CDF handed to either
-        estimator. Maximum-likelihood amplitude estimation (MLAE) runs at
-        geometrically increasing Grover depths. Three estimators, exactly
-        matched query budgets, <span data-bind="trials">500</span> seeded
-        trials each: quantum MLAE, plain Monte Carlo, and
-        <strong>2-D scrambled Sobol quasi-Monte&nbsp;Carlo</strong>, the
-        honest classical control for a joint 2-D distribution.
+        A 3.0&nbsp;ft street in 2050: <strong><span data-bind="cliP">0.3249</span></strong>
+        a year, about 1 in <span data-bind="cliYears">3.1</span>. City-wide,
+        <strong><span data-bind="cliExposure">36.9%</span></strong> of
+        <span data-bind="cliPoints">6,054</span> road points flood in an average year.
       </p>
+      <pre class="code-block cli" id="cli-output" tabindex="0" role="region" aria-label="Recorded floodline_cli.py output, scrollable">$ uv run python floodline_cli.py --year 2050 --scenario intermediate --elevation 3.0 --exposure
+  P(flood > 6 in, any given year) = 0.3249</pre>
+      <p class="caption-note">Recorded run (<code>README_multidriver.md</code>). A ranking tool under flagged assumptions, not a forecast.</p>
+    </div>
+  </section>
 
-      <div class="ops-panel" role="group" aria-label="Estimator readout">
-        <div class="ops-panel__header">
-          <span class="ops-panel__title">Compound tail estimator &middot; readout</span>
-          <span class="ops-panel__status"><span class="ops-panel__status-dot" aria-hidden="true"></span>Simulator only</span>
-        </div>
-        <div class="ops-panel__body">
-          <div class="metric-row">
-            <div class="metric-chip">
-              <span class="metric-chip__label">Target a (true value)</span>
-              <span class="metric-chip__value" data-bind="a4">0.1090</span>
-            </div>
-            <div class="metric-chip">
-              <span class="metric-chip__label">Oracle queries, largest budget</span>
-              <span class="metric-chip__value" id="badge-queries-value" data-bind="maxQueries">13,300</span>
-            </div>
-            <div class="metric-chip">
-              <span class="metric-chip__label">MLAE scaling exponent &alpha;</span>
-              <span class="metric-chip__value" data-bind="alphaQae">1.06</span>
-            </div>
-          </div>
-          <div class="ops-panel__feed-wrap">
-            <button id="simulate-btn" class="button button--ghost" type="button">Replay the benchmark</button>
-            <div id="incident-feed-list" class="incident-feed" role="log" aria-live="off" tabindex="0" aria-label="Benchmark replay log (replays this project's own results.json, not a live feed)">
-              <div class="feed-line">awaiting replay of results.json&hellip;</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
+  <!-- TOY -->
+  <section class="section section--compact" id="toy" aria-label="Superseded toy crossover model">
+    <div class="section__content section__content--wide">
+      <p class="eyebrow eyebrow--warn">Superseded by Result 2</p>
+      <h2>The toy crossover that led to Result 2.</h2>
+      <p>
+        With <em>d</em> Gaussian drivers, QAE passed Sobol QMC near
+        <em>d</em>&nbsp;=&nbsp;<span data-bind="xo.dStar.0.001">3.4</span> /
+        <span data-bind="xo.dStar.0.0003">2.7</span> /
+        <span data-bind="xo.dStar.0.0001">2.4</span> at
+        &epsilon;&nbsp;=&nbsp;1e-3 / 3e-4 / 1e-4. The real model puts it near 4.
+      </p>
       <figure class="chart-figure">
-        <figcaption class="chart-figure__title" id="conv-title">Error vs. queries, all three estimators (log&ndash;log)</figcaption>
-        <div class="chart" id="convergence-chart" aria-describedby="conv-note"></div>
-        <p class="chart-figure__note" id="conv-note">
-          RMSE against the true <em>a</em> at each matched query budget,
-          <span data-bind="trials">500</span> trials per point, measured data
-          from <code>results.json</code>. Steeper downward slope means faster
-          convergence per query. Hover or focus the chart for values; the
-          tables below hold the same numbers.
-        </p>
+        <figcaption class="chart-figure__title" id="xo-title">Toy model: Sobol QMC queries &divide; QAE queries, by drivers <em>d</em></figcaption>
+        <div class="chart" id="crossover-chart" aria-describedby="xo-note"></div>
+        <p class="chart-figure__note" id="xo-note">Toy model, superseded. Hollow points are extrapolated.</p>
       </figure>
-
-      <div class="table-wrap" tabindex="0" role="region" aria-label="Fitted scaling exponent table, scrollable on narrow screens">
-        <table>
-          <caption>Fitted scaling exponent &alpha; (queries &prop; &epsilon;<sup>-&alpha;</sup>), 95% bootstrap CI</caption>
-          <thead>
-            <tr><th scope="col">Arm</th><th scope="col">&alpha;</th><th scope="col">95% CI</th><th scope="col">Textbook</th></tr>
-          </thead>
-          <tbody id="alpha-rows">
-            <tr><th scope="row">MLAE (quantum)</th><td>1.06</td><td>[1.01, 1.12]</td><td>1</td></tr>
-            <tr><th scope="row">Plain Monte Carlo</th><td>2.06</td><td>[1.94, 2.20]</td><td>2</td></tr>
-            <tr><th scope="row">Sobol QMC (classical, 2-D)</th><td>1.16</td><td>[1.12, 1.20]</td><td>1 in 1-D; degrades with dimension</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="table-wrap" tabindex="0" role="region" aria-label="Queries needed to reach matched error table, scrollable on narrow screens">
-        <table>
-          <caption>Queries needed to reach matched error &epsilon; (median of bootstrap fits)</caption>
-          <thead>
-            <tr><th scope="col">&epsilon;</th><th scope="col">MLAE</th><th scope="col">Plain MC</th><th scope="col">MC / MLAE</th><th scope="col">Sobol QMC</th></tr>
-          </thead>
-          <tbody id="eps-rows">
-            <tr><th scope="row">1e-3 (0.92%)</th><td>8.2k</td><td>107k</td><td>13.1&times; [10.6, 16.5]</td><td>1.8k</td></tr>
-            <tr><th scope="row">3e-4 (0.28%)</th><td>29.2k</td><td>1.28M</td><td>43.6&times; [30.5, 65.2]</td><td>7.2k</td></tr>
-            <tr><th scope="row">1e-4 (0.09%)</th><td>93.4k</td><td>12.3M</td><td>131&times; [80, 231]</td><td>25.6k</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <p class="caption-note">
-        Sobol QMC needs roughly <span data-bind="qaeOverQmcLo">3.7</span>&ndash;<span data-bind="qaeOverQmcHi">4.6</span>&times;
-        <em>fewer</em> queries than quantum MLAE across this range: a smarter
-        classical method still wins here. But that margin is narrower than the
-        single-variable build's 8&times; gap over 1-D stratified sampling.
-        QMC's own exponent (<span data-bind="alphaQmc">1.16</span>) is visibly
-        above 1, the expected signature of quasi-Monte Carlo's discrepancy
-        bound degrading with dimension. <strong>QAE's disadvantage shrinks as
-        the problem gains a dimension.</strong> That narrowing is the finding
-        here, not a quantum win.
-      </p>
+      <details class="more">
+        <summary>Toy table and caveats</summary>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Toy crossover ratio table, scrollable on narrow screens">
+          <table>
+            <caption>Toy: QMC &divide; QAE queries (&ldquo;extrap.&rdquo; = extrapolated)</caption>
+            <thead id="xo-head"><tr><th scope="col">Drivers d</th><th scope="col">&epsilon; = 1e-3</th><th scope="col">&epsilon; = 3e-4</th><th scope="col">&epsilon; = 1e-4</th></tr></thead>
+            <tbody id="xo-rows"><tr><td colspan="4">Loading&hellip;</td></tr></tbody>
+          </table>
+        </div>
+        <ul>
+          <li>A weighted-sum event, which a classical method can reduce to one dimension.</li>
+          <li>At &epsilon;&nbsp;=&nbsp;1e-4, QMC costs for <em>d</em>&nbsp;&ge;&nbsp;7 are extrapolated.</li>
+          <li>Query counts ignore circuit size and noise.</li>
+        </ul>
+      </details>
     </div>
   </section>
 
   <!-- VERDICT -->
-  <section class="section" id="verdict" aria-label="Honest verdict">
+  <section class="section" id="verdict" aria-label="Verdict">
     <div class="section__content">
-      <p class="eyebrow">The honest verdict</p>
-      <h2>A real, measured speedup over plain Monte Carlo, and still a loss against the best classical method.</h2>
-
+      <p class="eyebrow">Verdict</p>
+      <h2>QAE is quadratically faster than Monte Carlo and slower than the best classical method.</h2>
       <div class="verdict-grid">
         <div class="verdict-card verdict-card--good">
-          <h3>What this demonstrates</h3>
+          <h3>Shown</h3>
           <ul>
-            <li>The QAE vs. plain-MC quadratic query separation is real and measured on a real 2-D compound tide+rain problem, not asserted: &alpha;=<span data-bind="alphaQae">1.06</span> vs. &alpha;=<span data-bind="alphaMc">2.06</span>.</li>
-            <li><span data-bind="mcOverQaeLo">13</span>&times; fewer queries than plain MC at the loosest matched error; about <span data-bind="mcOverQaeHi">131</span>&times; fewer at the tightest.</li>
-            <li>Against a fair 2-D classical control (Sobol QMC, not a method that cheats with exact CDF knowledge), QAE's gap narrows from the single-variable build's 8&times; to <span data-bind="qaeOverQmcLo">3.7</span>&ndash;<span data-bind="qaeOverQmcHi">4.6</span>&times;, the direction the "QAE matters in higher dimensions" argument predicts.</li>
-            <li>Simulator-only, ideal-circuit result, stated plainly.</li>
+            <li>Quadratic edge over plain MC: &alpha;&nbsp;=&nbsp;<span data-bind="alphaQae">0.91</span> vs <span data-bind="alphaMc">2.01</span>.</li>
+            <li>QAE passes Sobol QMC near 4 drivers.</li>
+            <li>A working street and city flood tool.</li>
           </ul>
         </div>
         <div class="verdict-card verdict-card--warn">
-          <h3>What it doesn't demonstrate</h3>
+          <h3>Not shown</h3>
           <ul>
-            <li><strong>No advantage over the best classical method here.</strong> Sobol QMC still needs <span data-bind="qaeOverQmcLo">3.7</span>&ndash;<span data-bind="qaeOverQmcHi">4.6</span>&times; fewer queries than MLAE at every &epsilon; tested.</li>
-            <li><strong>No hardware speedup today.</strong> On IBM Heron's noise model (FakeFez), the readout is swamped by noise before any Grover step even runs: ideal P=<span data-bind="pIdeal0">0.109</span> at m=0 reads back as <span data-bind="pNoisy0">0.425</span>.</li>
-            <li><strong>Query count &ne; wall-clock time.</strong> One quantum query costs far more than one classical draw.</li>
-            <li><strong>The flood model itself has uncertainty</strong> larger than the precision being chased. A sharper estimator of <em>a</em> doesn't make the real-world flood probability better known, and the &tau;=<span data-bind="tau">0.3</span> tide&ndash;rain correlation is an assumption, not Key West's measured value.</li>
+            <li>A win over conditional MC + Sobol or enumeration.</li>
+            <li>Hardware speedup. Simulator only; IBM Heron noise turns the readout into a coin flip (<span data-bind="pNoisy0">0.50</span> vs ideal <span data-bind="pIdeal0">0.64</span>).</li>
+            <li>Wall-clock gains: a quantum query costs far more than a sample.</li>
+            <li>A calibrated forecast.</li>
           </ul>
         </div>
       </div>
-
-      <blockquote class="bottom-line">
-        Pitch it as <em>"we measured the provable part, against a fair
-        classical control, on a real 2-D problem, and found the gap
-        narrows with dimension,"</em> not as <em>"quantum beats
-        classical."</em>
-      </blockquote>
     </div>
   </section>
 
-  <!-- OUTLOOK: classical crossover toy model -->
-  <section class="section" id="outlook" aria-label="Where quantum could overtake classical: a toy model">
-    <div class="section__content section__content--wide">
-      <p class="eyebrow">Outlook &middot; toy model, not the Key West result</p>
-      <h2>Where quantum overtakes classical: add flood drivers.</h2>
-      <p>
-        QAE's query cost doesn't grow with the number of random drivers;
-        Sobol QMC's does. A separate toy study keeps the measured MLAE cost
-        from the real model and asks how many Sobol QMC queries an event
-        built from <em>d</em> correlated drivers needs to reach the same
-        error. Above the line, QMC needs more queries than QAE. QAE pulls
-        ahead at about <em>d</em>&nbsp;=&nbsp;<span data-bind="xo.dStar.0.001">3.4</span>,
-        <span data-bind="xo.dStar.0.0003">2.7</span> and
-        <span data-bind="xo.dStar.0.0001">2.4</span> drivers for
-        &epsilon;&nbsp;=&nbsp;1e-3, 3e-4 and 1e-4.
-      </p>
+  <!-- METHODS -->
+  <section class="section" id="methods" aria-label="Methods and caveats">
+    <div class="section__content">
+      <p class="eyebrow">Methods &amp; caveats</p>
+      <h2>How we built it, and what we assumed.</h2>
 
-      <figure class="chart-figure">
-        <figcaption class="chart-figure__title" id="xo-title">Sobol QMC queries &divide; MLAE queries at matched &epsilon;, by number of drivers <em>d</em></figcaption>
-        <div class="chart" id="crossover-chart" aria-describedby="xo-note"></div>
-        <p class="chart-figure__note" id="xo-note">
-          Ratio above 1: QAE needs fewer queries. Hollow points are
-          extrapolated beyond the QMC budgets actually run. Data:
-          <code>assets/data/crossover.json</code>.
+      <details class="more">
+        <summary>Two-driver street model</summary>
+        <p>
+          Tide: <span data-bind="nYears">110</span> annual maxima from NOAA
+          gauge 8724580, shifted to 2025 sea level, GEV fit. Rain: NOAA
+          Atlas&nbsp;14 24-hour depths, GEV fit. The Patterson Ave rule uses
+          the Master Plan's curve number and tide runs. Annual flood chance:
+          <span data-bind="a2">0.640</span>.
         </p>
-      </figure>
+        <p>
+          Tide and rain share a Gaussian copula with
+          &tau;&nbsp;=&nbsp;<span data-bind="tau">0.3</span>, our assumption.
+          Wahl et&nbsp;al. (2015) report significant surge&ndash;rain dependence
+          at virtually all Gulf and east-coast sites; Key West appears only in
+          their Fig.&nbsp;1b, and they used daily surge and rain, not annual maxima.
+        </p>
+        <p>Also assumed: linear storage, square-root drainage, and annual tide and rain peaks counted as one event.</p>
+      </details>
 
-      <div class="table-wrap" tabindex="0" role="region" aria-label="Crossover ratio table, scrollable on narrow screens">
-        <table>
-          <caption>QMC &divide; MLAE queries at matched &epsilon; (&ldquo;extrap.&rdquo; = extrapolated, not run)</caption>
-          <thead id="xo-head"><tr><th scope="col">Drivers d</th><th scope="col">&epsilon; = 1e-3</th><th scope="col">&epsilon; = 3e-4</th><th scope="col">&epsilon; = 1e-4</th></tr></thead>
-          <tbody id="xo-rows"><tr><td colspan="4">Loading crossover data&hellip;</td></tr></tbody>
-        </table>
-      </div>
+      <details class="more">
+        <summary>Five-driver model</summary>
+        <p>
+          Adds a 3-hour burst, NOAA 2022 sea-level rise and groundwater
+          (Master Plan range). Assumed: drainage calibration, catchment ratio,
+          tide&ndash;rain &tau;&nbsp;=&nbsp;0.2, burst &rho;&nbsp;=&nbsp;0.8.
+          The circuit matches the closed form at 20 qubits; full-scale QAE uses
+          the ideal law. See <code>README_multidriver.md</code>.
+        </p>
+      </details>
 
-      <div class="callout callout--warn">
-        <p><strong>Read this as a toy model, with three caveats.</strong></p>
-        <ul>
-          <li>The <em>d</em>-driver events are linear (a threshold on a sum), which is classically reducible: a smarter classical method could collapse them to one dimension.</li>
-          <li>At &epsilon;&nbsp;=&nbsp;1e-4, the QMC costs for <em>d</em>&nbsp;&ge;&nbsp;7 are extrapolated from fitted scaling, not run.</li>
-          <li>Query counts ignore circuit size and noise. A QAE query on a <em>d</em>-driver circuit is bigger, and today's hardware can't run even the 2-driver one.</li>
-        </ul>
-        <p>The verdict above stands for the real two-driver Key West model.</p>
-      </div>
+      <details class="more">
+        <summary>Estimators and hardware</summary>
+        <p>
+          QAE is maximum-likelihood amplitude estimation. One query is one
+          circuit call or one classical sample. Exponents and ratios carry 95%
+          bootstrap intervals; an interval containing 1 is a tie.
+        </p>
+        <p>
+          The deepest 5-driver circuit, Q<sup><span data-bind="mDeep">256</span></sup>A,
+          has <span data-bind="deepCx">7.6e7</span> CX gates on
+          <span data-bind="qubits5">52</span> logical qubits. Half-time success
+          needs gate error near <span data-bind="pNeed">9.1e-9</span>; IBM
+          Heron's snapshot median is <span data-bind="czErr">0.0039</span>.
+        </p>
+      </details>
+
+      <details class="more">
+        <summary>Imagery and terrain</summary>
+        <p>
+          Clouds: NASA MODIS Terra, 10 Sep 2017, ~15:50 UTC, brightest tones
+          stretched so the eye shows; VIIRS of the same day fills Terra's
+          swath gaps. The cloud turn on scroll is ours. Track: NHC HURDAT2.
+          Coastline: Natural Earth.
+        </p>
+        <p>
+          Terrain: NOAA CUDEM topobathy (MHHW = NAVD88 + 0.013&nbsp;m) under
+          USDA NAIP imagery; bathtub fill, heights &times;25.
+          <a href="CREDITS.md">Licenses</a>.
+        </p>
+      </details>
     </div>
   </section>
 
   <!-- RUN -->
   <section class="section section--compact" id="run" aria-label="Run it yourself">
     <div class="section__content">
-      <p class="eyebrow">Run it yourself</p>
-      <h2>Simulator-only. No quantum hardware account needed.</h2>
+      <p class="eyebrow">Run it</p>
+      <h2>Simulator only, no quantum account.</h2>
       <pre class="code-block" tabindex="0" role="region" aria-label="Run commands, scrollable on narrow screens"><code>uv sync
-uv run python smoke_test.py   # circuit vs closed form vs sampler
-uv run python experiment.py   # writes results.json and results.png
-uv run python demo.py         # live animated convergence demo (needs a display)</code></pre>
+uv run python experiment.py        # two-driver benchmark
+uv run python experiment_multi.py  # five-driver benchmark
+uv run python floodline_cli.py --year 2050 --elevation 3.0 --exposure</code></pre>
       <p>
         Source: <a href="https://github.com/SeanPeppers/floodline">github.com/SeanPeppers/floodline</a>.
-        Imagery, terrain and code credits with licenses: <a href="CREDITS.md">CREDITS.md</a>.
       </p>
     </div>
   </section>
@@ -454,19 +400,16 @@ uv run python demo.py         # live animated convergence demo (needs a display)
 </main>
 
 <footer class="site-footer">
-  <p>Floodline — FGCU Quantum Hackathon 2026. Simulator-only (<code>RUN_ON_HARDWARE = False</code>).</p>
+  <p>Floodline — FGCU Quantum Hackathon 2026. Simulator only.</p>
   <p class="site-footer__credit">
-    We acknowledge the use of imagery provided by services from NASA's Global
-    Imagery Browse Services (GIBS), part of NASA's Earth Science Data and
-    Information System (ESDIS): Blue Marble and Suomi NPP VIIRS. Aerial photo:
-    USDA NAIP via USGS The National Map. Terrain: NOAA NCEI CUDEM. Water
-    normals: three.js (MIT). Details in <a href="CREDITS.md">CREDITS.md</a>.
+    Imagery: NASA GIBS (ESDIS). Track: NOAA NHC. Terrain: NOAA NCEI, USDA
+    NAIP. Coastline: Natural Earth. Roads: &copy; OpenStreetMap contributors.
+    <a href="CREDITS.md">Credits</a>.
   </p>
 </footer>
 
 <script src="js/data.js"></script>
 <script src="js/charts.js" defer></script>
-<script src="js/incident-feed.js" defer></script>
 <script src="js/main.js" defer></script>
 <script src="js/story.js" defer></script>
 </body>

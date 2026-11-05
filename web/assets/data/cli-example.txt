@@ -1,0 +1,14 @@
+$ uv run python floodline_cli.py --year 2050 --scenario intermediate --elevation 3.0 --exposure
+Key West street at 3.00 ft NAVD88, 2050, NOAA 2022 intermediate SLR (+0.66 ft vs 2025)
+  P(flood > 6 in, any given year) = 0.3249 +- 5.8e-05 (95%, estimator)  ~ 1 in 3.1 yr
+  model uncertainty: GEV fit 90% [0.3188, 0.3760];  tide-rain tau 0.1..0.3 -> [0.3263, 0.3237]
+  drivers: probability if this one driver is held at its median (the 3-h burst is instead
+  locked to the 24-h depth's return period):
+    peak water level (tide + surge)     0.3462  (+0.0213)
+    24-h rainfall                       0.0396  (-0.2853)
+    3-h rain burst                      0.3960  (+0.0711)
+    sea-level rise to target year       0.3183  (-0.0066)
+    groundwater offset                  0.3275  (+0.0026)
+    no rain (tide + groundwater only)   0.0134
+  city exposure (6054 road points, median 3.05 ft): expected 36.9% of road points flood per year; 23.4% flood at least every 2 yr
+  QAE (ideal, fault-free) to match +-5.8e-05: ~309,271 oracle queries, deepest circuit Q^1024 A = 52 logical qubits, 305,378,637 CX (36,935,274 Toffoli). Classical used 262,144 conditional samples (a ~6-step bisection of the flood rule each), seconds on a laptop.

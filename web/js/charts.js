@@ -80,8 +80,9 @@
 
       if (cfg.ref) {
         el("line", { x1: pad.l, x2: W - pad.r, y1: Y(cfg.ref.y), y2: Y(cfg.ref.y), class: "chart__ref" }, svg);
-        el("text", { x: W - pad.r - 4, y: Y(cfg.ref.y) - 6, "text-anchor": "end", class: "chart__reflabel" }, svg).textContent = cfg.ref.above;
-        el("text", { x: W - pad.r - 4, y: Y(cfg.ref.y) + 15, "text-anchor": "end", class: "chart__reflabel" }, svg).textContent = cfg.ref.below;
+        const rx = cfg.ref.left ? pad.l + 6 : W - pad.r - 4, anchor = cfg.ref.left ? "start" : "end";
+        el("text", { x: rx, y: Y(cfg.ref.y) - 6, "text-anchor": anchor, class: "chart__reflabel" }, svg).textContent = cfg.ref.above;
+        el("text", { x: rx, y: Y(cfg.ref.y) + 15, "text-anchor": anchor, class: "chart__reflabel" }, svg).textContent = cfg.ref.below;
       }
 
       paths = [];
@@ -202,8 +203,8 @@
     const b = d.budgets;
     const series = [
       { key: "mc", name: "Plain Monte Carlo", short: "MC" },
-      { key: "qmc", name: "Sobol QMC (classical, 2-D)", short: "QMC" },
-      { key: "qae", name: "Quantum MLAE", short: "MLAE" },
+      { key: "qmc", name: "Sobol QMC", short: "QMC" },
+      { key: "qae", name: "QAE (MLAE)", short: "QAE" },
     ].map((s) => ({ ...s, color: C[s.key], points: b.map((r) => ({ x: r.queries, y: r[`rmse_${s.key}`] })) }));
     const chart = lineChart(document.getElementById("convergence-chart"), {
       series,
@@ -212,13 +213,13 @@
       yLabel: "RMSE vs. true a (log)",
       xName: (x) => `${x.toLocaleString("en-US")} queries`,
       yFmt: sci,
-      ariaLabel: "Line chart of estimation error against queries for plain Monte Carlo, Sobol QMC and quantum MLAE, both axes log scale. Monte Carlo falls slowest, MLAE faster, Sobol QMC lowest throughout.",
+      ariaLabel: "Line chart of estimation error against queries for plain Monte Carlo, Sobol QMC and QAE on the two-driver street model, both axes log scale. Monte Carlo falls slowest; Sobol QMC stays lowest throughout.",
     });
     window.FloodlineChart = chart;
 
     const alphaRows = document.getElementById("alpha-rows");
     alphaRows.replaceChildren();
-    [["MLAE (quantum)", "qae", "1"], ["Plain Monte Carlo", "mc", "2"], ["Sobol QMC (classical, 2-D)", "qmc", "1 in 1-D; degrades with dimension"]].forEach(([label, k, book]) => {
+    [["QAE (MLAE)", "qae", "1"], ["Plain Monte Carlo", "mc", "2"], ["Sobol QMC", "qmc", "~1, worse with dimension"]].forEach(([label, k, book]) => {
       const s = d.scaling[k];
       cells(alphaRows.insertRow(), [label, s.alpha.toFixed(2), `[${s.alpha_ci[0].toFixed(2)}, ${s.alpha_ci[1].toFixed(2)}]`, book], true);
     });
@@ -226,7 +227,7 @@
     epsRows.replaceChildren();
     for (const e of d.matched_eps) {
       cells(epsRows.insertRow(), [
-        `${e.eps.toExponential(0)} (${(e.rel_eps * 100).toFixed(2)}%)`,
+        e.eps.toExponential(0),
         fmtQ(e.qae_queries), fmtQ(e.mc_queries),
         `${e.mc_over_qae.toPrecision(3)}× [${e.mc_over_qae_ci[0].toPrecision(3)}, ${e.mc_over_qae_ci[1].toPrecision(3)}]`,
         fmtQ(e.qmc_queries),
@@ -234,6 +235,46 @@
     }
   }).catch(() => {
     document.getElementById("convergence-chart").textContent = "Convergence data unavailable. The tables below hold the same numbers.";
+  });
+
+  // Five-driver study: every classical arm as a multiple of QAE's queries.
+  FloodlineData.multi.then((m) => {
+    const zs = Object.keys(m.studies);
+    const study = m.studies[zs[0]];
+    const ds = Object.keys(study.configs).map(Number).sort((a, b) => a - b);
+    const EPS = 0.0001;
+    const arms = [
+      { name: "Plain Monte Carlo", short: "MC", color: C.mc, f: (r) => r.mc_over_qae },
+      { name: "Sobol QMC", short: "QMC", color: C.qmc, f: (r) => r.qmc_over_qae },
+      { name: "Cond. MC + Sobol, black box", short: "CMC black box", color: "#e3b04b", f: (r, c) => r.cmc_qmc_over_qae * c.bisection_evals },
+      { name: "Cond. MC + Sobol", short: "CMC", color: "#b58ce0", f: (r) => r.cmc_qmc_over_qae },
+    ];
+    const at = (c, eps) => c.matched.find((r) => r.eps === eps);
+    lineChart(document.getElementById("multi-chart"), {
+      series: arms.map((a) => ({ ...a, points: ds.map((d) => ({ x: d, y: a.f(at(study.configs[d], EPS), study.configs[d]) })) })),
+      xLog: false,
+      xLabel: "number of flood drivers d",
+      yLabel: "classical ÷ QAE queries (log)",
+      xName: (d) => `d = ${d} drivers`,
+      yFmt: (v) => `${v.toPrecision(2)}×`,
+      yTick: (v) => `${v}×`,
+      ref: { y: 1, above: "QAE cheaper ↑", below: "classical cheaper ↓", left: true },
+      ariaLabel: `Line chart of classical queries divided by QAE queries at error 1e-4 against the number of drivers, for the ${study.z_ft} ft street. Sobol QMC rises above 1 near 4 drivers; conditional MC plus Sobol stays below 1; its black-box version rises above 1 at 5 drivers.`,
+    });
+    const rows = document.getElementById("multi-rows");
+    rows.replaceChildren();
+    for (const z of zs) {
+      const s = m.studies[z];
+      for (const d of ds) {
+        const c = s.configs[d];
+        for (const r of c.matched) {
+          const x = (v) => `${v.toPrecision(2)}×`;
+          cells(rows.insertRow(), [`${s.z_ft} ft, d = ${d}`, r.eps.toExponential(0), x(r.qmc_over_qae), x(r.cmc_qmc_over_qae), x(r.cmc_qmc_over_qae * c.bisection_evals), x(r.mc_over_qae)], true);
+        }
+      }
+    }
+  }).catch(() => {
+    document.getElementById("multi-chart").textContent = "Five-driver data unavailable.";
   });
 
   FloodlineData.crossover.then((x) => {
@@ -248,7 +289,7 @@
       series,
       xLog: false,
       xLabel: "number of correlated flood drivers d",
-      yLabel: "QMC ÷ MLAE queries (log)",
+      yLabel: "toy: QMC ÷ QAE queries (log)",
       xName: (d) => `d = ${d} driver${d > 1 ? "s" : ""}`,
       yFmt: (v) => `${v.toPrecision(2)}×`,
       yTick: (v) => `${v}×`,
@@ -256,7 +297,7 @@
       ariaLabel: (() => {
         const dStars = epsKeys.map((e) => x.crossover.qae_fit[e].d_star_median);
         const ends = series.map((s) => s.points[s.points.length - 1].y);
-        return `Line chart of the ratio of Sobol QMC queries to MLAE queries against the number of drivers d, one line per target error. The lines cross 1 between d = ${Math.min(...dStars).toFixed(1)} and ${Math.max(...dStars).toFixed(1)} and reach ${Math.min(...ends).toPrecision(2)} to ${Math.max(...ends).toPrecision(2)} at d = ${ds[ds.length - 1]}.`;
+        return `Toy model, superseded: line chart of the ratio of Sobol QMC queries to QAE queries against the number of drivers d, one line per target error. The lines cross 1 between d = ${Math.min(...dStars).toFixed(1)} and ${Math.max(...dStars).toFixed(1)} and reach ${Math.min(...ends).toPrecision(2)} to ${Math.max(...ends).toPrecision(2)} at d = ${ds[ds.length - 1]}.`;
       })(),
     });
     const head = document.querySelector("#xo-head tr");
