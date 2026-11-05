@@ -8,11 +8,10 @@
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   let data = null;
-  fetch("assets/data/results.json")
-    .then((r) => r.json())
+  FloodlineData.results
     .then((d) => { data = d; replay(); })
     .catch(() => {
-      list.innerHTML = '<li class="feed-line">feed data unavailable offline.</li>';
+      list.innerHTML = '<div class="feed-line">feed data unavailable offline.</div>';
     });
 
   function fmt(n) {
@@ -37,7 +36,7 @@
     const eps = data.matched_eps[0];
     lines.push({
       delay: lines.length * (reduceMotion ? 0 : 260) + 300,
-      text: `[ALERT] matched ε=${eps.eps}: MLAE needs ${fmt(eps.qae_queries)} q, QMC needs ${fmt(eps.qmc_queries)} q — QAE loses this race, by design of the test`,
+      text: `[ALERT] matched ε=${eps.eps}: MLAE needs ${fmt(eps.qae_queries)} q, QMC needs ${fmt(eps.qmc_queries)} q: QMC wins this one`,
       cls: "feed-line--alert",
     });
 
