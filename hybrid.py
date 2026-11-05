@@ -25,9 +25,11 @@ Engine: estimate(cfg, eps, backend) with backend "classical" (CMC + Sobol, produ
 
 from __future__ import annotations
 
+import itertools
 import math
 import time
 from dataclasses import dataclass, replace
+from typing import Any
 
 import numpy as np
 from scipy.stats import qmc
@@ -44,8 +46,8 @@ MAX_SIM_QUBITS = 22  # statevector limit on this 15 GB machine with other jobs r
 DROPS = {"1k": {"W": 3, "P24": 2, "S": 2, "O": 1}, "8k": {"W": 2, "P24": 1, "S": 1, "O": 1},
          "16k": {"W": 1, "P24": 1, "S": 1, "O": 1}, "64k": {"W": 1, "P24": 0, "S": 1, "O": 0}}  # fmt: skip
 # MLAE constant on this repo's estimator (100 shots per power): RMSE ~= MLAE_K * sqrt(a(1-a)) / queries.
-# Measured by experiment_hybrid.py (results_hybrid.json, "mlae_k"); 3.0 matches it to within 10%.
-MLAE_K = 3.0
+# Measured by experiment_hybrid.py (results_hybrid.json, "mlae_k"): 17.75 at 3.0 ft, 17.37 at 6.0 ft.
+MLAE_K = 17.5
 TOFFOLI_S = 170e-6  # Babbush et al. arXiv:2011.04149: ~170 us per Toffoli (surface code, d = 30, 1 us cycle)
 
 
@@ -181,9 +183,9 @@ def exact_parts(t: Tables) -> dict[str, float]:
 
 def layers(n_layers: int, scale: int) -> list[tuple[int, int, int]]:
     """(sign, lo, hi) integer cuts: dyadic 0, S/2**(L-1), ..., S/2, S for each sign."""
-    cuts = [0] + [int(round(scale / 2**j)) for j in range(n_layers - 1, -1, -1)]
+    cuts = [0] + [round(scale / 2**j) for j in range(n_layers - 1, -1, -1)]
     cuts = sorted(set(cuts))
-    return [(s, lo, hi) for s in (1, -1) for lo, hi in zip(cuts[:-1], cuts[1:])]
+    return [(s, lo, hi) for s in (1, -1) for lo, hi in itertools.pairwise(cuts)]
 
 
 def encode(r: np.ndarray, part: tuple[int, int, int]) -> np.ndarray:
@@ -207,24 +209,25 @@ def layer_sigmas(r: np.ndarray, w: np.ndarray, parts: list[tuple[int, int, int]]
 
 
 def sigma_eff(sig: list[float]) -> float:
-    """Total-query constant after the optimal error split across layers: (sum sigma_k**(2/3))**(3/2)."""
-    return sum(s ** (2 / 3) for s in sig) ** 1.5
+    """Total-query constant with the same shots on every layer (what experiment_hybrid.py runs):
+    each layer gets Q / n queries, error_k = K sigma_k n / Q, so Q = K * n * sqrt(sum sigma_k**2) / eps.
+    An optimal split, (sum sigma_k**(2/3))**(3/2), is up to ~2x smaller, but MLAE with few shots per
+    power is unstable at deep schedules, so we do not claim it."""
+    return len(sig) * math.sqrt(sum(x * x for x in sig))
 
 
 def pilot(t: Tables, seed: int = 0) -> dict:
-    """2**PILOT_LOG2 Sobol points of r choose the layer count and the shot split. Its cost (two
-    table reads per point) is charged to the hybrid. Every layer keeps >= 5% of the top layer's
-    shot weight, because a pilot can miss a rare tail and a layer with no shots would bias."""
+    """2**PILOT_LOG2 Sobol points of r choose the layer count (min sigma_eff). Its cost (two table
+    reads per point) is charged to the hybrid. Every layer is run even if the pilot saw it empty:
+    a pilot can miss a rare tail, and a skipped layer would bias the estimate."""
     u = qmc.Sobol(len(t.m.nonleaf()), scramble=True, seed=seed).random_base2(PILOT_LOG2)
     r = t.residual(t.m.bins_from_u_nonleaf(u))
     w = np.ones(len(r))
     best = min(range(1, MAX_LAYERS + 1), key=lambda n: sigma_eff(layer_sigmas(r, w, layers(n, t.scale), t.scale)))
     parts = layers(best, t.scale)
     sig = layer_sigmas(r, w, parts, t.scale)
-    floor = 0.05 * max(max(sig), 1e-12)
-    wts = [max(s, floor) ** (2 / 3) for s in sig]
     return {"n_layers": best, "parts": parts, "sigma_pilot": sig, "sigma_eff_pilot": sigma_eff(sig),
-            "weights": [x / max(wts) for x in wts], "reads": 2 * len(r)}  # fmt: skip
+            "reads": 2 * len(r)}  # fmt: skip
 
 
 # ----------------------------------------------------------------------------- classical engine
@@ -257,42 +260,45 @@ def classical(cfg: md.Config, eps: float, drain: md.Drainage | None = None, seed
 
 # ----------------------------------------------------------------------------- quantum engines
 
-SIM_GRID = dict(delta_ft=1.0, n_w=2, n_s=1, n_o=1, n_p24=2, n_p3=1, regime_bits=1, n_k=2, g_drop=1)
+SIM_GRID: dict[str, Any] = {
+    "delta_ft": 1.0,
+    "n_w": 2,
+    "n_s": 1,
+    "n_o": 1,
+    "n_p24": 2,
+    "n_p3": 1,
+    "regime_bits": 1,
+    "n_k": 2,
+    "g_drop": 1,
+}
 SIM_DROP = {"W": 1, "P24": 1, "S": 1, "O": 0}
 SIM_BITS = 2
 
 
 def quantum_sim(cfg: md.Config, eps: float, drain: md.Drainage | None = None, seed: int = 0,
-                shots: int = 400, k_max: int = 4) -> dict:  # fmt: skip
-    """The hybrid circuit, sampled with shots on Aer, at the reduced grid SIM_GRID (the benchmark
-    grid needs ~70 qubits). Each layer: Q^m A for m in qae.schedule(k_max), MLAE. `eps` is only
-    reported against: the reduced grid cannot be refined on a laptop."""
-    from qiskit import ClassicalRegister
-    from qiskit_aer import AerSimulator
-
+                shots: int = 400, k_max: int = 5) -> dict:  # fmt: skip
+    """The hybrid circuit at the reduced grid SIM_GRID (the benchmark grid needs ~70 qubits). For
+    each layer, one Aer statevector run gives P(obj = 1) after Q^m A_h at every m in
+    qae.schedule(k_max) (qae.exact_hit_probs); `shots` measurements per m are then drawn from those
+    probabilities, which is the same distribution as sampling the circuit shot by shot, at a
+    fraction of the run time. MLAE per layer. `eps` is only reported against: the reduced grid
+    cannot be refined on a laptop."""
     import hybrid_circuit as hc
 
     t0 = time.perf_counter()
+    rng = np.random.default_rng(seed)
     m = md.Model(replace(cfg, **SIM_GRID), drain)
     t = tables(m, SIM_DROP, SIM_BITS)
     parts = layers(1, t.scale)
     ms = qae.schedule(k_max)
-    sim = AerSimulator(method="statevector", seed_simulator=seed)
     y, qubits, n_q = [], 0, 0
     for part in parts:
         a_circ, q_circ, lay = hc.build(t, part)
         qubits = lay["total_qubits"]
         if qubits > MAX_SIM_QUBITS:
             raise ValueError(f"{qubits} qubits exceeds the {MAX_SIM_QUBITS}-qubit simulation limit")
-        obj, hits = a_circ.metadata["obj"], []
-        for mm in ms:
-            qc = qae.circuit(a_circ, q_circ, mm)
-            cr = ClassicalRegister(1)
-            qc.add_register(cr)
-            qc.measure(obj, cr[0])
-            counts = sim.run(qc.decompose(reps=6), shots=shots).result().get_counts()
-            hits.append(counts.get("1", 0))
-        y.append(qae.mlae(np.array(hits), shots, ms))
+        hits = rng.binomial(shots, np.clip(qae.exact_hit_probs(a_circ, q_circ, ms), 0.0, 1.0))
+        y.append(qae.mlae(hits, shots, ms))
         n_q += qae.queries(shots, ms)
     est = cv_mean(t) + combine(y, parts, t.scale)
     truth = exact_parts(t)
@@ -309,31 +315,37 @@ def mlae_m_for(queries: float, shots: int = 100) -> int:
     return qae.schedule(39)[-1]
 
 
-def quantum_resource(cfg: md.Config, eps: float, drain: md.Drainage | None = None, drop: str = "16k") -> dict:
+def quantum_resource(cfg: md.Config, eps: float, drain: md.Drainage | None = None) -> dict:
     """Queries, qubits, Toffoli/CX and the two-qubit error the deepest circuit needs, without
-    running anything. Queries = MLAE_K * sigma_eff / eps with sigma_eff from the classical pilot.
+    running anything. Each CV grid in DROPS gets a pilot; the one with the fewest total reads
+    (coarse cells + MLAE_K * sigma_eff / eps) is used, and every pilot is charged.
     Assumes a correct, fault-free circuit (validated at reduced scale by test_hybrid.py)."""
     import hybrid_circuit as hc
 
     m = md.Model(cfg, drain)
-    t = tables(m, DROPS[drop])
-    pl = pilot(t)
+    best = None
+    for d in DROPS.values():
+        tt = tables(m, d)
+        pp = pilot(tt)
+        cost = tt.coarse_cells + MLAE_K * pp["sigma_eff_pilot"] / eps
+        if best is None or cost < best[0]:
+            best = (cost, tt, pp)
+    assert best is not None
+    _, t, pl = best
     q_h = MLAE_K * pl["sigma_eff_pilot"] / eps
     sig_ind = math.sqrt(0.25)  # plain QAE's constant is sqrt(a(1-a)) <= 1/2
     cnt = hc.count(t, pl["parts"][0])
-    top = int(np.argmax(pl["weights"]))
-    share = pl["weights"][top] / sum(pl["weights"])
-    m_max = mlae_m_for(q_h * share)
+    m_max = mlae_m_for(q_h / len(pl["parts"]))  # each layer runs its own MLAE schedule
     q_cx = 2 * cnt["cx_equiv"] + 4 * cnt["qubits"]  # A, A^dagger, two reflections (~2n CX each)
     deep_cx = cnt["cx_equiv"] + m_max * q_cx
     return {"backend": "quantum-resource", "eps": eps, "oracle_queries": q_h,
             "plain_qae_queries_upper": MLAE_K * sig_ind / eps, "sigma_eff": pl["sigma_eff_pilot"],
             "layers": pl["n_layers"], "cv_coarse_cells": t.coarse_cells, "qubits": cnt["qubits"],
             "a_toffoli": cnt["toffoli"], "a_cx_equiv": cnt["cx_equiv"], "deepest_m": m_max,
-            "deepest_cx_equiv": deep_cx, "total_toffoli": 2 * cnt["toffoli"] * q_h,
+            "deepest_cx_equiv": deep_cx, "total_toffoli": cnt["toffoli"] * q_h,  # one query = one A_h or A_h^dagger
             "two_qubit_error_for_50pct_success": math.log(2) / deep_cx,
-            "ft_hours_at_170us_per_toffoli": 2 * cnt["toffoli"] * q_h * TOFFOLI_S / 3600,
-            "classical_reads": t.coarse_cells + pl["reads"], "model": m}  # fmt: skip
+            "ft_hours_at_170us_per_toffoli": cnt["toffoli"] * q_h * TOFFOLI_S / 3600,
+            "classical_reads": t.coarse_cells + pl["reads"] * len(DROPS), "model": m}  # fmt: skip
 
 
 BACKENDS = {"classical": classical, "quantum-sim": quantum_sim, "quantum-resource": quantum_resource}
@@ -345,4 +357,4 @@ def estimate(model_config: md.Config, eps: float, backend: str = "classical", **
         raise ValueError(f"backend must be one of {list(BACKENDS)}")
     if not 0 < eps < 0.5:
         raise ValueError("eps must be in (0, 0.5)")
-    return BACKENDS[backend](model_config, eps, **kw)  # type: ignore[operator]
+    return BACKENDS[backend](model_config, eps, **kw)  # type: ignore[operator, arg-type]
