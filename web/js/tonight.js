@@ -350,7 +350,7 @@ function init() {
     io.disconnect();
     load().catch((e) => {
       console.error("Floodline: tonight panel failed", e);
-      setStatus("Could not load the road data or model constants, so no estimate is shown.", "warn");
+      setStatus(`Could not load the road data or model constants, so no estimate is shown (${e.name}: ${e.message}).`, "warn");
     });
   }, { rootMargin: "50% 0px" });
   io.observe(root);
