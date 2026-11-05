@@ -1,21 +1,21 @@
 <!DOCTYPE html>
-<html lang="en" class="paper">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The flood tool — Floodline</title>
 <meta name="description" content="A compound-flood risk tool for Key West, and a measured answer to where quantum amplitude estimation beats classical sampling: with 13 uncertain factors, ideal QAE needs 4.3x fewer queries than the best classical method; with 5, it loses.">
-<meta name="theme-color" content="#05080f">
+<meta name="theme-color" content="#ffffff">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- Non-render-blocking font load (media="print" swap); system fonts show until then. -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
       media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"></noscript>
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"></noscript>
 
 <link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/paper.css">
+<link rel="stylesheet" href="css/tide.css">
 <link rel="stylesheet" href="css/tonight.css">
 <link rel="icon" href="data:,">
 </head>
@@ -38,7 +38,7 @@
 <main id="main">
 
   <!-- TOOL -->
-  <section class="section" id="tool" aria-label="The flood tool">
+  <section class="section" id="tool" data-chapter="Street odds" aria-label="The flood tool">
     <div class="section__content section__content--wide">
       <p class="eyebrow">Result 3 &middot; the tool</p>
       <h2>P(flood) for any Key West street, by year, scenario and elevation.</h2>
@@ -83,7 +83,7 @@
   </section>
 
 <!-- TONIGHT: live street flood view (js/tonight.js, css/tonight.css) -->
-  <section class="section" id="tonight" aria-labelledby="tonight-title">
+  <section class="section" id="tonight" data-chapter="Tonight" aria-labelledby="tonight-title">
     <div class="section__content section__content--wide">
       <p class="eyebrow">Live &middot; Tonight in Key West</p>
       <h2 id="tonight-title">Which streets could flood at the next high tide?</h2>
@@ -160,5 +160,6 @@
 
 <script src="js/data.js"></script>
 <script type="module" src="js/tonight.js"></script>
+<script src="js/chrome.js" defer></script>
 </body>
 </html>

@@ -5,16 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Floodline — Hurricane Irma and Key West's flood risk</title>
 <meta name="description" content="A compound-flood risk tool for Key West, and a measured answer to where quantum amplitude estimation beats classical sampling: with 13 uncertain factors, ideal QAE needs 4.3x fewer queries than the best classical method; with 5, it loses.">
-<meta name="theme-color" content="#05080f">
+<meta name="theme-color" content="#ffffff">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- Non-render-blocking font load (media="print" swap); system fonts show until then. -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
       media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"></noscript>
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"></noscript>
 
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/tide.css">
 <link rel="preload" as="image" href="assets/stills/s0-1024.webp" imagesrcset="assets/stills/s0-640.webp 640w, assets/stills/s0-1024.webp 1024w, assets/stills/s0-1600.webp 1600w" imagesizes="100vw" fetchpriority="high">
 <link rel="icon" href="data:,">
 </head>
@@ -157,8 +158,8 @@
 <!-- Opening title (story.js): shown over deep space until the visitor presses Start. -->
   <div class="opening-title" id="opening-title" hidden>
     <p class="eyebrow">FGCU Quantum Hackathon 2026 &middot; Key West</p>
-    <p class="opening-title__name">Floodline</p>
-    <p class="opening-title__tag">Hurricane Irma, Key West&rsquo;s flood risk, and where quantum computing could help.</p>
+    <p class="opening-title__name">Flood<span>line</span></p>
+    <p class="opening-title__tag">Key West floods. Which streets? How fast can we know?</p>
     <button type="button" class="opening-title__go">&#9654; Start</button>
   </div>
 
@@ -210,5 +211,6 @@
 <script src="js/data.js"></script>
 <script src="js/story.js" defer></script>
 <script type="module" src="js/streets.js"></script>
+<script src="js/chrome.js" defer></script>
 </body>
 </html>

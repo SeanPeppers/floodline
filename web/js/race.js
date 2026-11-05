@@ -142,7 +142,7 @@
     ctx.beginPath(); ctx.moveTo(ox, oy);
     for (let i = 0; i <= 60; i++) { const x = i / 60; ctx.lineTo(ox + x * s, oy + (1 - boundary(x)) * s); }
     ctx.lineTo(ox + s, oy); ctx.closePath();
-    ctx.fillStyle = "rgba(245, 177, 61, 0.10)"; ctx.fill();
+    ctx.fillStyle = "rgba(44, 196, 211, 0.12)"; ctx.fill();
     ctx.beginPath();
     for (let i = 0; i <= 60; i++) { const x = i / 60, X = ox + x * s, Y = oy + (1 - boundary(x)) * s; i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); }
     ctx.strokeStyle = C.amber; ctx.lineWidth = 1.2; ctx.setLineDash([4, 3]); ctx.stroke(); ctx.setLineDash([]);
@@ -197,7 +197,7 @@
       const x = bx + k * (colW + gap);
       if (k <= i) {
         const f = q.hits[k] / SHOTS;
-        ctx.fillStyle = k === i ? C.amber : "rgba(245, 177, 61, 0.55)";
+        ctx.fillStyle = k === i ? C.amber : "rgba(44, 196, 211, 0.45)";
         ctx.fillRect(x, top + bh * (1 - f), colW, bh * f);
         if (thEst != null) {
           const pred = Math.sin((2 * DEPTHS[k] + 1) * thEst) ** 2;

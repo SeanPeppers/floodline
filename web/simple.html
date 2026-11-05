@@ -1,17 +1,17 @@
 <!DOCTYPE html>
-<html lang="en" class="paper">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The short version — Floodline</title>
 <meta name="description" content="Key West flooding and a quantum shortcut, in two minutes.">
-<meta name="theme-color" content="#05080f">
+<meta name="theme-color" content="#ffffff">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"></noscript>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"></noscript>
 <link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/paper.css">
+<link rel="stylesheet" href="css/tide.css">
 <link rel="icon" href="data:,">
 </head>
 <body class="page-sub">
@@ -29,36 +29,67 @@
 </header>
 
 <main id="main">
-  <div class="read">
+  <section class="read" data-chapter="The question">
     <header class="read-hero">
       <p class="eyebrow">The short version &middot; about 2 minutes</p>
-      <h1>Key West floods. The hard part is knowing which streets, and when.</h1>
-      <p class="lede">We built a tool that answers that, then tested whether a quantum computer could answer it faster.</p>
+      <h1>Key West floods. <span class="hl-aqua">Which streets?</span> How fast can we know?</h1>
+      <p class="lede">We built a tool that answers the first question, then tested whether a quantum computer could answer it faster.</p>
       <p class="byline">FGCU Quantum Hackathon 2026 &middot; Key West, Florida</p>
     </header>
+  </section>
 
-    <section class="beat" aria-labelledby="b1">
+  <section class="band band--edge" data-chapter="How often" aria-labelledby="b1">
+    <div class="read">
       <p class="beat__n">01 &middot; How often</p>
-      <p class="big-num"><span id="mortgage-n">3 in 4</span></p>
-      <h2 id="b1">That&rsquo;s the chance high tide alone pushes Key West past major flood stage during a 30-year mortgage.</h2>
-      <div class="icons" id="icons" role="img" aria-label="100 squares, one per household; the shaded ones see a major tidal flood within 30 years"></div>
-      <p class="icons-key">Each square is one household. Shaded: sees it within 30 years. Tide gauge 8724580, 110 years of data.</p>
-    </section>
+      <div class="giant">
+        <p class="giant__pre">The chance high tide alone pushes Key West past major flood stage</p>
+        <p class="giant__num" id="mortgage-n">3 in 4</p>
+        <p class="giant__post" id="b1">at least once during a 30-year mortgage.</p>
+      </div>
+      <div class="icons" id="icons" role="img" aria-label="100 squares, one per household; the filled ones see a major tidal flood within 30 years"></div>
+      <p class="icons-key">Each square is one household. Filled: sees it within 30 years.</p>
+      <p class="margin-note margin-note--r">NOAA tide gauge 8724580, 110 years of yearly peaks. Tide only; rain makes it worse.</p>
+    </div>
+  </section>
 
-    <section class="beat" aria-labelledby="b2">
-      <p class="beat__n">02 &middot; Why it&rsquo;s hard</p>
-      <h2 id="b2">To get one street&rsquo;s odds, you run the flood model thousands of times.</h2>
-      <p>Random tide, random rain. Count how often the street goes under. More runs, <mark class="hl">sharper answer</mark>. That&rsquo;s called Monte Carlo.</p>
-    </section>
+  <section class="band band--sea" data-chapter="Irma" aria-labelledby="b2">
+    <div class="read">
+      <p class="beat__n">02 &middot; 10 September 2017</p>
+      <div class="beat">
+        <p class="stamp">13:00 UTC</p>
+        <p>Hurricane Irma comes ashore at Cudjoe Key as a <strong>Category 4</strong>, about 20 miles from Key West.</p>
+      </div>
+      <div class="beat">
+        <p class="stamp stamp--box">2.7 ft</p>
+        <p>The Key West tide gauge peaks <strong>2.7 feet above normal high tide</strong>, past major flood stage.</p>
+      </div>
+      <div class="beat">
+        <h2 id="b2">Stand at the high-tide line. Irma&rsquo;s water reached <span class="hl-aqua">past your knees.</span></h2>
+        <p><a href="index.html">Watch it in 3-D &rarr;</a></p>
+      </div>
+    </div>
+  </section>
 
-    <section class="beat" aria-labelledby="race-h">
-      <p class="beat__n">03 &middot; The race</p>
-      <h2 id="race-h">Same question, two methods. Watch how many tries each one needs.</h2>
-      <p>It starts on its own when you scroll here.</p>
-    </section>
-  </div>
+  <section class="band" data-chapter="Why it's hard" aria-labelledby="b3">
+    <div class="read">
+      <p class="beat__n">03 &middot; Why it&rsquo;s hard</p>
+      <h2 id="b3">One street&rsquo;s odds take thousands of model runs.</h2>
+      <p>Random tide, random rain. Count how often the street goes under. More runs, <mark class="hl">sharper answer</mark>. That&rsquo;s Monte Carlo.</p>
+      <div class="tally" aria-label="Tries needed for the same answer, one mark per 1,000 tries">
+        <div class="tally__row"><span class="tally__label">Monte Carlo</span><span class="tally__marks" data-tally="230"></span><span class="tally__n">~230,000</span></div>
+        <div class="tally__row tally__row--q"><span class="tally__label">Quantum</span><span class="tally__marks" data-tally="13"></span><span class="tally__n">13,300</span></div>
+      </div>
+      <p class="icons-key">Average tries to pin the flood share within &plusmn;0.001. One mark = 1,000 tries.</p>
+    </div>
+  </section>
 
-  <div class="read read--wide">
+  <section class="band band--lilac" data-chapter="The race" aria-labelledby="race-h">
+    <div class="read">
+      <p class="beat__n">04 &middot; The race</p>
+      <h2 id="race-h">Same question. Two methods. <span class="hl-lilac">Watch the tries.</span></h2>
+      <p>It starts on its own. Every run is a little different.</p>
+    </div>
+    <div class="read read--wide">
       <div class="race" id="race" aria-labelledby="race-h">
         <div class="race__panels">
           <div class="race__panel race__panel--mc">
@@ -115,36 +146,52 @@
           <p class="caption-note">Honest fine print: this counts tries on an ideal, error-free quantum computer that doesn&rsquo;t exist yet. Monte Carlo can also be split across many computers at once, and today&rsquo;s quantum chips are far too noisy to win. See <a href="deep.html#losses">where classical still wins</a>.</p>
         </div>
       </div>
-  </div>
+    </div>
+  </section>
 
-  <div class="read">
-    <section class="beat" aria-labelledby="b4">
-      <p class="beat__n">04 &middot; How big the win is</p>
-      <h2 id="b4">Quantum wins big against brute force, and smaller against the best tricks.</h2>
+  <section class="band" data-chapter="How big the win is" aria-labelledby="b5">
+    <div class="read">
+      <p class="beat__n">05 &middot; How big the win is</p>
+      <h2 id="b5">Huge against brute force. Smaller against the best tricks.</h2>
       <ul class="score">
         <li><b><span data-bind="mcTop">351</span>&times;</b><span>fewer tries than plain Monte Carlo, for a very precise answer</span></li>
-        <li><b><span data-bind="winTop">4.3</span>&times;</b><span>fewer than the best normal method, once all <span data-bind="winTopD">13</span> uncertain factors are in play</span></li>
+        <li><b><span data-bind="winTop">4.3</span>&times;</b><span>fewer than the best normal method, with all <span data-bind="winTopD">13</span> uncertain factors in play</span></li>
         <li class="lose"><b><span data-bind="winLow">0.65</span>&times;</b><span>with only 5 factors: <mark class="hl">quantum loses</mark></span></li>
       </ul>
-      <p class="aside-note">We expected quantum to win everywhere. It didn&rsquo;t, and we kept the losses in.</p>
-    </section>
+      <p class="margin-note margin-note--r">We expected quantum to win everywhere. It didn&rsquo;t, and we kept the losses in.</p>
+    </div>
+  </section>
 
-    <section class="beat" aria-labelledby="b5">
-      <p class="beat__n">05 &middot; The catch</p>
-      <h2 id="b5">No quantum computer can do this yet.</h2>
-      <p>We ran a tiny version on a real IBM machine. Noise blurred the answer: <span data-bind="hwA">0.074</span> instead of <span data-bind="hwExact">0.096</span>. It needs chips about <mark class="hl">a million times cleaner</mark>.</p>
-    </section>
+  <section class="band band--aqua" data-chapter="The catch" aria-labelledby="b6">
+    <div class="read">
+      <p class="beat__n">06 &middot; The catch</p>
+      <div class="giant">
+        <p class="giant__pre">How much cleaner quantum chips need to get</p>
+        <p class="giant__num giant__num--lilac">1,000,000&times;</p>
+        <p class="giant__post" id="b6">We ran a tiny version on a real IBM machine. Noise blurred the answer: <strong><span data-bind="hwA">0.074</span></strong> instead of <strong><span data-bind="hwExact">0.096</span></strong>.</p>
+      </div>
+    </div>
+  </section>
 
-    <section class="beat" aria-labelledby="b6">
-      <p class="beat__n">06 &middot; Where next</p>
-      <h2 id="b6">Pick one.</h2>
+  <section class="band band--sea" data-chapter="The verdict" aria-labelledby="b7">
+    <div class="read">
+      <p class="beat__n">07 &middot; The bottom line</p>
+      <p class="verdict-big" id="b7">Can quantum map Key West floods faster today? <em>No.</em></p>
+      <p>On the error-free machines that are coming, with every uncertainty counted, it needs <strong><span data-bind="winTop">4.3</span>&times; fewer runs</strong> than the best method we have. That could mean flood maps that keep up with every forecast.</p>
+    </div>
+  </section>
+
+  <section class="band" data-chapter="Where next" aria-labelledby="b8">
+    <div class="read">
+      <p class="beat__n">08 &middot; Where next</p>
+      <h2 id="b8">Pick one.</h2>
       <ul class="next">
         <li><a href="tool.html">Check your street</a><small>Flood odds for a Key West street, today and in 2050.</small></li>
         <li><a href="deep.html">Read the deep dive</a><small>Every chart, method and loss, with the numbers.</small></li>
-        <li><a href="index.html">Watch Irma again</a><small>The 3-D story from space down to the island.</small></li>
+        <li><a href="index.html">Watch Irma again</a><small>The 3-D story, from space down to the island.</small></li>
       </ul>
-    </section>
-  </div>
+    </div>
+  </section>
 </main>
 
 <footer class="site-footer">
@@ -159,5 +206,6 @@
 <script src="js/data.js"></script>
 <script src="js/race.js" defer></script>
 <script src="js/simple.js" defer></script>
+<script src="js/chrome.js" defer></script>
 </body>
 </html>

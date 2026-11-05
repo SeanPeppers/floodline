@@ -7,8 +7,8 @@
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   // dataviz reference palette, dark steps, validated against the panel surface
   // #0f1522 (categorical: CVD dE 9.4, all >= 3:1; ordinal blue: monotone L).
-  const C = { qae: "#3987e5", mc: "#d95926", qmc: "#199e70" };
-  const EPS_RAMP = ["#b7d3f6", "#5598e7", "#1c5cab"];
+  const C = { qae: "#00909f", mc: "#6450d4", qmc: "#7d8d99" };
+  const EPS_RAMP = ["#8fdde5", "#2cb4c3", "#00707d"];
 
   const el = (tag, attrs = {}, parent) => {
     const n = document.createElementNS(SVG, tag);
@@ -363,8 +363,8 @@
     const arms = [
       { name: "Plain Monte Carlo", short: "MC", color: C.mc, f: (r) => r.mc_over_qae },
       { name: "Sobol QMC", short: "QMC", color: C.qmc, f: (r) => r.qmc_over_qae },
-      { name: "Cond. MC + Sobol, black box", short: "CMC black box", color: "#e3b04b", f: (r, c) => r.cmc_qmc_over_qae * c.bisection_evals },
-      { name: "Cond. MC + Sobol", short: "CMC", color: "#b58ce0", f: (r) => r.cmc_qmc_over_qae },
+      { name: "Cond. MC + Sobol, black box", short: "CMC black box", color: "#0c1b26", f: (r, c) => r.cmc_qmc_over_qae * c.bisection_evals },
+      { name: "Cond. MC + Sobol", short: "CMC", color: "#a294f0", f: (r) => r.cmc_qmc_over_qae },
     ];
     const at = (c, eps) => c.matched.find((r) => r.eps === eps);
     lineChart(document.getElementById("multi-chart"), {
@@ -493,7 +493,7 @@
     const curve = Array.from({ length: mMax * 20 + 1 }, (_, i) => ({ x: i / 20, y: law(i / 20) }));
     const pts = (ys) => h.ms.map((m, i) => ({ x: m, y: ys[i] }));
     const series = [
-      { name: "Ideal law", short: "ideal", color: "#8a95a5", curve, dots: false, points: pts(h.ideal_p_obj) },
+      { name: "Ideal law", short: "ideal", color: "#7d8d99", curve, dots: false, points: pts(h.ideal_p_obj) },
       { name: "Noisy simulation of ibm_fez", short: "noisy sim", color: C.mc, line: false, dx: -4, points: pts(h.noisy_sim.p_obj) },
       { name: `Real ${h.backend} hardware`, short: h.backend, color: C.qae, line: false, dx: 4, points: pts(h.hardware.p_obj) },
     ];
