@@ -166,3 +166,33 @@ claim. It is listed because it changed every downstream number.
 `README_multidriver.md` ("What changed: Gumbel to GEV rain").
 
 **Caveat.** The fit is to nine published return-period depths, not to raw rain data.
+
+## 9. Ran on real IBM hardware
+
+**What we did.** Ran a 3-qubit QAE circuit for the Key West compound flood on IBM's `ibm_fez`
+on 2026-11-05 (job `dbmbikl8mdtc73d7m170`). One qubit per driver: the rectangle rule (annual-max
+tide at or above the NWS minor stage and 24-h rain at or above the 10-year depth) only depends
+on which side of each threshold a driver falls, so the one-bit coarsening is exact and keeps the
+real-data a = 0.0959. The job ran Grover depths m = 0 to 6 at 4,000 shots each, 12 to 192
+two-qubit gates per circuit, in 10 s of QPU time. Measured P(obj = 1):
+
+| m | 0 | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|---|---|
+| ideal | 0.096 | 0.656 | 1.000 | 0.650 | 0.092 | 0.100 | 0.662 |
+| noisy sim | 0.111 | 0.623 | 0.896 | 0.625 | 0.207 | 0.233 | 0.568 |
+| `ibm_fez` | 0.128 | 0.616 | 0.842 | 0.580 | 0.247 | 0.314 | 0.574 |
+
+MLAE on the hardware counts (m = 0, 1, 2, 4) gives a = 0.0738 against the exact 0.0959.
+
+**Prior art.** The literature search did not cover QAE runs on hardware, so we cannot say
+whether a flood QAE has run on a device before.
+
+**Why it matters.** We make no priority claim. The run shows that the Grover oscillation QAE
+depends on survives on a real device for this circuit, damped by noise as depth grows.
+
+**Evidence.** `hw_demo.py` (`dry` for the ideal and noisy simulation, `run` for the QPU),
+`results_hw.json`.
+
+**Caveat.** Noise biases the estimate low by 0.022, about 10 times the standard error of plain
+Monte Carlo with the same 16,000 samples (0.0023), so today's hardware does not beat
+classical. Three qubits is a toy; the five-driver benchmark circuit needs two-qubit error near 1e-8 (`README_multidriver.md`, "Hardware").
