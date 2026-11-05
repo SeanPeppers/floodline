@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Floodline — Where quantum amplitude estimation helps Key West flood risk</title>
-<meta name="description" content="A compound-flood risk tool for Key West, and a measured answer to where quantum amplitude estimation beats classical sampling: from about 4 flood drivers against Sobol QMC, never against the best classical method.">
+<meta name="description" content="A compound-flood risk tool for Key West, and a measured answer to where quantum amplitude estimation beats classical sampling: with 13 uncertain factors, ideal QAE needs 4.3x fewer queries than the best classical method; with 5, it loses.">
 <meta name="theme-color" content="#05080f">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -64,24 +64,22 @@
           <p class="eyebrow">FGCU Quantum Hackathon 2026 &middot; Key West</p>
           <h1>Floodline</h1>
           <p class="hero__lede">
-            We built a compound-flood risk tool for Key West and found where
-            quantum helps. It beats standard sampling at 4+ flood drivers and
-            loses to the best classical method unless the simulator is a black
-            box. That case needs hardware about a million times cleaner than
-            today's (two-qubit error 1e-8&ndash;1e-9 vs 4e-3).
+            A Key West flood-risk tool, and a measured quantum win over the
+            best classical method once the model's uncertain parameters are
+            sampled too. Query count on ideal hardware that doesn't exist yet.
           </p>
           <ul class="hero__stats" aria-label="Headline results">
+            <li class="stat stat--win">
+              <span class="stat__value"><span data-bind="winTop">4.3</span>&times; <span class="stat__ci">[<span data-bind="winTopCi">3.5, 5.4</span>]</span></span>
+              <span class="stat__label">fewer queries than the best classical method, <span data-bind="winTopD">13</span> uncertain factors, <span class="nowrap">&epsilon;&nbsp;=&nbsp;1e-4</span></span>
+            </li>
             <li class="stat">
-              <span class="stat__value">d &asymp; <span data-bind="dStar">3.5&ndash;4.9</span></span>
-              <span class="stat__label">drivers where QAE starts beating Sobol QMC</span>
+              <span class="stat__value">d &asymp; 7&ndash;8</span>
+              <span class="stat__label">factors where QAE overtakes it</span>
             </li>
             <li class="stat stat--warn">
-              <span class="stat__value"><span data-bind="cmcAt5">0.18&ndash;0.55</span>&times;</span>
-              <span class="stat__label">best classical method's queries relative to QAE, 5 drivers</span>
-            </li>
-            <li class="stat stat--warn">
-              <span class="stat__value"><span data-bind="pNeed">9.1e-9</span></span>
-              <span class="stat__label">gate error QAE's one win needs; today <span data-bind="czErr">0.0039</span></span>
+              <span class="stat__value"><span data-bind="winLow">0.65</span>&times;</span>
+              <span class="stat__label">same ratio at 5 factors: classical wins</span>
             </li>
           </ul>
           <p class="hero__cta">
@@ -161,7 +159,46 @@
   <!-- RESULTS -->
   <section class="section" id="results" aria-label="Results">
     <div class="section__content section__content--wide">
-      <p class="eyebrow">Result 1 &middot; one street, two drivers</p>
+      <p class="eyebrow">Headline &middot; model uncertainty included</p>
+      <h2>With <span data-bind="winTopD">13</span> uncertain factors, QAE needs <span data-bind="winTop">4.3</span>&times; fewer queries than the best classical method.</h2>
+      <ul class="findings">
+        <li><strong><span data-bind="winTop">4.3</span>&times; [<span data-bind="winTopCi">3.5, 5.4</span>]</strong> at 13 factors, <strong><span data-bind="winMid">3.0</span>&times;</strong> at 9&ndash;10, a tie at 7 (<span data-bind="winTie">1.1</span>&times;), a loss at 5 (<span data-bind="winLow">0.65</span>&times;). &epsilon;&nbsp;=&nbsp;1e-4.</li>
+        <li>Best classical: conditional MC on Sobol points (CMC+QMC). Its exponent climbs from <span data-bind="winAlphaCmc">1.31 to 1.68</span>; QAE's stays at <span data-bind="winAlphaQae">0.97&ndash;1.01</span>.</li>
+      </ul>
+
+      <figure class="chart-figure">
+        <figcaption class="chart-figure__title" id="wins-title">CMC+QMC queries &divide; QAE queries, by number of uncertain factors (95% CI)</figcaption>
+        <div class="chart" id="wins-chart" aria-describedby="wins-note"></div>
+        <p class="chart-figure__note" id="wins-note">Above 1, QAE is cheaper. 3.0&nbsp;ft street, 2050.</p>
+      </figure>
+      <p class="claim">Query count on ideal fault-tolerant hardware. Appears only at &epsilon;&nbsp;&le;&nbsp;3e-4, far tighter than the model's own uncertainty (&plusmn;0.016). The 8 extra parameters need a quantum circuit nobody has built, and 3 of their ranges are judgment calls.</p>
+
+      <details class="more">
+        <summary>Method: what the 13 factors are</summary>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Uncertain factor table, scrollable on narrow screens">
+          <table>
+            <caption>Factors added to the 5 flood drivers</caption>
+            <thead><tr><th scope="col">d</th><th scope="col">Added</th><th scope="col">Range</th><th scope="col">Source</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">5</th><td>tide, 24-h rain, 3-h burst, sea-level rise, groundwater</td><td>as in Result 2</td><td>NOAA, Master Plan</td></tr>
+              <tr><th scope="row">7</th><td>curve number, soil depth</td><td>88&ndash;95, 3&ndash;5&nbsp;ft</td><td>Master Plan</td></tr>
+              <tr><th scope="row">9</th><td>outfall share, catchment ratio</td><td>0.25&ndash;0.75, 2&ndash;4</td><td>our judgment</td></tr>
+              <tr><th scope="row">10</th><td>gravity-well start</td><td>1.4&ndash;1.8&nbsp;ft</td><td>our judgment</td></tr>
+              <tr><th scope="row">13</th><td>tide GEV shape, location, scale</td><td>200-refit bootstrap</td><td>NOAA 8724580, 110 yr</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <ul>
+          <li>One query is one flood-rule run at one input vector, or one application of A or A&dagger;. Classical counted white-box (1 query per sample); a black box would cost it about 6.</li>
+          <li>QAE is ideal, fault-free MLAE. 64 replicates per arm, OLS fit of log error on log queries, 2,000 bootstrap resamples. A CI containing 1 is a tie.</li>
+          <li>Truth per d: 32 &times; 2<sup>21</sup> CMC+QMC samples. No CMC+QMC cell is extrapolated.</li>
+          <li>A control variate doesn't help CMC+QMC at 13 factors (RMSE 1.21e-4 vs 1.18e-4). Exact enumeration no longer applies: the new inputs are continuous.</li>
+          <li>At &epsilon;&nbsp;=&nbsp;1e-3 it is a tie or a loss at every d. At 3e-4, 13 factors: <span data-bind="winTop3e4">2.1</span>&times;.</li>
+          <li>Details: <code>README_wins.md</code>, <code>results_wins.json</code>.</li>
+        </ul>
+      </details>
+
+      <p class="eyebrow eyebrow--gap">Result 1 &middot; one street, two drivers</p>
       <h2>Quantum beats plain Monte Carlo. Sobol QMC still beats quantum.</h2>
       <p>
         Street: Patterson Ave, drains from the city's 2024 Stormwater Master
@@ -209,14 +246,14 @@
       </details>
 
       <p class="eyebrow eyebrow--gap">Result 2 &middot; five drivers</p>
-      <h2>With five drivers, QAE passes Sobol QMC but never the best classical method.</h2>
+      <h2>With five drivers, QAE passes Sobol QMC but not the best classical method.</h2>
       <p>Drivers: tide, 24-hour rain, 3-hour burst, sea-level rise, groundwater.</p>
       <p class="claim">We found no published head-to-head of quantum amplitude estimation vs quasi-Monte Carlo on a real risk model; we measured the crossover at ~4 drivers.</p>
       <ul class="findings">
         <li><strong>Sobol QMC falls behind from d&nbsp;&asymp;&nbsp;4.</strong> At 5 drivers, &epsilon;&nbsp;=&nbsp;1e-4, it needs <span data-bind="qmcOverQae5">3.5</span>&times; QAE's queries.</li>
-        <li><strong>Conditional MC + Sobol beats QAE in <span data-bind="cmcAlways">every</span> one of <span data-bind="nCells">24</span> cells</strong>, at <span data-bind="cmcAt5">0.18&ndash;0.55</span>&times; QAE's queries with 5 drivers.</li>
+        <li><strong>Conditional MC + Sobol beats QAE in <span data-bind="cmcAlways">every</span> one of <span data-bind="nCells">24</span> cells up to five drivers</strong>, at <span data-bind="cmcAt5">0.18&ndash;0.55</span>&times; QAE's queries with 5 drivers.</li>
         <li><strong>Exact enumeration wins on total work:</strong> <span data-bind="enumEvals">2.6e5</span> evaluations, no sampling error. QAE needs <span data-bind="qaeQueries4">9.6e4</span> queries of <span data-bind="aCx">1.5e5</span> CX gates each.</li>
-        <li><strong>QAE leads only if the simulator is a black box</strong>, needing <span data-bind="bbWin">1.6 / 2.3 / 3.3</span>&times; fewer runs at &epsilon;&nbsp;=&nbsp;1e-3 / 3e-4 / 1e-4. That takes a two-qubit error near <span data-bind="pNeed">9.1e-9</span>; today's is <span data-bind="czErr">0.0039</span>.</li>
+        <li><strong>At five drivers, QAE leads only if the simulator is a black box</strong>, needing <span data-bind="bbWin">1.6 / 2.3 / 3.3</span>&times; fewer runs at &epsilon;&nbsp;=&nbsp;1e-3 / 3e-4 / 1e-4. That takes a two-qubit error near <span data-bind="pNeed">9.1e-9</span>; today's is <span data-bind="czErr">0.0039</span>.</li>
       </ul>
 
       <figure class="chart-figure">
@@ -282,7 +319,7 @@
           <span class="stat__label">fewer simulator runs for quantum than the best classical method, &epsilon;&nbsp;=&nbsp;1e-3 / 3e-4 / 1e-4</span>
         </li>
       </ul>
-      <p>Inside a black box, our best classical method has to bisect for each sample: <span data-bind="bisect">6</span> simulator runs. That is where QAE wins.</p>
+      <p>Inside a black box, our best classical method has to bisect for each sample: <span data-bind="bisect">6</span> simulator runs. That is where QAE wins at five drivers.</p>
 
       <h3 class="eyebrow--gap">What it could save</h3>
       <div class="table-wrap" tabindex="0" role="region" aria-label="Compute savings table, scrollable on narrow screens">
@@ -475,11 +512,12 @@
   <section class="section" id="verdict" aria-label="Verdict">
     <div class="section__content">
       <p class="eyebrow">Verdict</p>
-      <h2>QAE is quadratically faster than Monte Carlo and slower than the best classical method.</h2>
+      <h2>QAE loses to the best classical method at 5 factors and wins from 9, in query count.</h2>
       <div class="verdict-grid">
         <div class="verdict-card verdict-card--good">
           <h3>Shown</h3>
           <ul>
+            <li><span data-bind="winTop">4.3</span>&times; fewer queries than CMC+QMC at 13 factors, <span data-bind="winMid">3.0</span>&times; at 9&ndash;10 (&epsilon;&nbsp;=&nbsp;1e-4, ideal hardware).</li>
             <li>Quadratic edge over plain MC: &alpha;&nbsp;=&nbsp;<span data-bind="alphaQae">0.91</span> vs <span data-bind="alphaMc">2.01</span>.</li>
             <li>QAE passes Sobol QMC near 4 drivers.</li>
             <li>A working street and city flood tool.</li>
@@ -488,7 +526,8 @@
         <div class="verdict-card verdict-card--warn">
           <h3>Not shown</h3>
           <ul>
-            <li>A win over conditional MC + Sobol or enumeration.</li>
+            <li>A win at 5 factors (<span data-bind="winLow">0.65</span>&times;), or at &epsilon;&nbsp;=&nbsp;1e-3 at any d.</li>
+            <li>A circuit for the 8 extra parameters.</li>
             <li>Hardware speedup. Simulator only; IBM Heron noise turns the readout into a coin flip (<span data-bind="pNoisy0">0.50</span> vs ideal <span data-bind="pIdeal0">0.64</span>).</li>
             <li>Wall-clock gains: a quantum query costs far more than a sample.</li>
             <li>A calibrated forecast.</li>
@@ -577,6 +616,7 @@
       <pre class="code-block" tabindex="0" role="region" aria-label="Run commands, scrollable on narrow screens"><code>uv sync
 uv run python experiment.py        # two-driver benchmark
 uv run python experiment_multi.py  # five-driver benchmark
+uv run python experiment_wins.py dim  # 5-13 uncertain factors
 uv run python floodline_cli.py --year 2050 --elevation 3.0 --exposure</code></pre>
       <p>
         Source: <a href="https://github.com/SeanPeppers/floodline">github.com/SeanPeppers/floodline</a>.
