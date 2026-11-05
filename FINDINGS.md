@@ -80,6 +80,8 @@ What limits it: the counts are queries, not work. The d = 5 circuit A is already
 
 ## Negative and blocked experiments
 
+The full log of failed, rejected and abandoned attempts is in [FAILED.md](FAILED.md).
+
 - **Irma forecast-track surge model (not shipped).** A parametric surge model (Holland wind profile plus steady wind setup, fitted on the 11 other hurricanes passing within 250 km of Key West since 1996) predicted 0.63 ft on Irma's best track against the 2.69 ft above MHHW observed at NOAA 8724580 (17:42 UTC, 10 Sep 2017; the observed peak was re-checked against the CO-OPS API). That is 2.06 ft too low, and the street flood rule starts mattering near 1 ft, so the per-street forecast-track counts were not shipped. The cause: none of the calibration storms had Irma's north-wind setup. The code and the real NHC a-deck archive are on the unmerged branch `worktree-agent-a5a20bc9099952862` (WIP commit 9d7fdab).
 - **Realistic boundary did not hurt QMC (two drivers).** The hypothesis that a curved drainage boundary would raise QMC's exponent failed: Δα = −0.04 [−0.09, +0.02]. The five-driver resolution study later showed the penalty appears only on finer grids.
 - **Nested expectation.** The model favours quantum by 3e3-1e5×, but every classical number is extrapolated 30-10⁴× past the largest budget and the classical designs were not tuned. Not a pitch number.
