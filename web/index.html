@@ -5,18 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Floodline — Where quantum amplitude estimation helps Key West flood risk</title>
 <meta name="description" content="A compound-flood risk tool for Key West, and a measured answer to where quantum amplitude estimation beats classical sampling: with 13 uncertain factors, ideal QAE needs 4.3x fewer queries than the best classical method; with 5, it loses.">
-<meta name="theme-color" content="#f2ead8">
+<meta name="theme-color" content="#ffffff">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- Non-render-blocking font load (media="print" swap); system fonts show until then. -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
       media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap"></noscript>
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap"></noscript>
 
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/tonight.css">
 <link rel="stylesheet" href="css/nautical.css">
+<link rel="stylesheet" href="css/tide.css">
 <link rel="preload" as="image" href="assets/stills/s0-1024.webp" imagesrcset="assets/stills/s0-640.webp 640w, assets/stills/s0-1024.webp 1024w, assets/stills/s0-1600.webp 1600w" imagesizes="100vw" fetchpriority="high">
 <link rel="icon" href="data:,">
 </head>
@@ -139,6 +140,11 @@
     <div class="section__content section__content--wide">
       <p class="eyebrow">Results &middot; query count, ideal hardware</p>
       <h2 id="results-title">Where quantum wins</h2>
+      <div class="giant">
+        <p class="giant__pre">Once 13 uncertain factors are in play, quantum needs</p>
+        <p class="giant__num"><span data-bind="winTop">4.3</span>&times;</p>
+        <p class="giant__post">fewer queries than the best classical method we know (95% CI 3.5&ndash;5.4, ideal hardware).</p>
+      </div>
 
       <h3 id="race-title" class="race__title">Watch the race: same flood question, two methods</h3>
       <p>Both sides run live in your browser. Monte Carlo throws random storms at a street; quantum amplitude estimation homes in on the same flood odds with far fewer tries.</p>
@@ -277,7 +283,12 @@
   <section class="section" id="savings" aria-labelledby="savings-title">
     <div class="section__content section__content--wide">
       <p class="eyebrow">What's at stake</p>
-      <h2 id="stakes-title">Four Florida hurricanes, flood claims alone: $13.5B.</h2>
+      <h2 id="stakes-title">Four Florida hurricanes.</h2>
+      <div class="giant">
+        <p class="giant__pre">Federal flood insurance paid on Florida claims for Irma, Ian, Helene and Milton:</p>
+        <p class="giant__num">$13.5B</p>
+        <p class="giant__post">Flood claims alone, before any other damage.</p>
+      </div>
       <div class="table-wrap" tabindex="0" role="region" aria-label="Hurricane cost table, scrollable on narrow screens">
         <table class="table--fit">
           <caption>Federal flood insurance (NFIP) paid on Florida claims, and surge deaths in Florida</caption>
@@ -304,6 +315,11 @@
 
       <p class="eyebrow eyebrow--gap">Where the quantum result applies</p>
       <h2 id="savings-title">Real flood models are black boxes.</h2>
+      <div class="giant">
+        <p class="giant__pre">With a black-box surge simulator, quantum needs up to</p>
+        <p class="giant__num">3.3&times;</p>
+        <p class="giant__post">fewer simulator runs (5 drivers, &epsilon;&nbsp;=&nbsp;1e-4, ideal hardware).</p>
+      </div>
       <ul class="hero__stats" aria-label="Black-box flood models">
         <li class="stat">
           <span class="stat__value">~630</span>
@@ -367,6 +383,11 @@
     <div class="section__content section__content--wide">
       <p class="eyebrow">Money the tool saves today &middot; classical engine</p>
       <h2>Which road to raise first, in dollars.</h2>
+      <div class="giant">
+        <p class="giant__pre">Chance that high tide alone pushes Key West past major flood stage at least once in a 30-year mortgage</p>
+        <p class="giant__num giant__num--lilac">3 in 4</p>
+        <p class="giant__post">From 110 years of the Key West tide gauge: about 1 year in 22, assuming years are independent.</p>
+      </div>
       <p>
         <strong>Flagler Ave is first:</strong> 4.7&nbsp;mi, and its low point has
         a 99% chance of flooding in 2050. Raising it 1&nbsp;ft costs <strong>$7.0M&ndash;$17.5M per

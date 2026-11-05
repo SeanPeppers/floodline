@@ -5,10 +5,10 @@
 (function () {
   const SVG = "http://www.w3.org/2000/svg";
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  // Light-surface steps for the nautical paper panel
-  // #faf6ec: every color >= 3:1 against it; ordinal blue stays monotone in lightness.
-  const C = { qae: "#2a6fc4", mc: "#c2491b", qmc: "#13805a" };
-  const EPS_RAMP = ["#5f8bc0", "#2a6fc4", "#143f70"];
+  // Tide palette (aqua quantum, purple Monte Carlo) on the white panel
+  // #fbfdfe: every color >= 3:1 against it; the aqua ramp stays monotone in lightness.
+  const C = { qae: "#00909f", mc: "#6450d4", qmc: "#6b7b87" };
+  const EPS_RAMP = ["#2a9fad", "#00707d", "#004a54"];
 
   const el = (tag, attrs = {}, parent) => {
     const n = document.createElementNS(SVG, tag);
@@ -363,8 +363,8 @@
     const arms = [
       { name: "Plain Monte Carlo", short: "MC", color: C.mc, f: (r) => r.mc_over_qae },
       { name: "Sobol QMC", short: "QMC", color: C.qmc, f: (r) => r.qmc_over_qae },
-      { name: "Cond. MC + Sobol, black box", short: "CMC black box", color: "#a2730c", f: (r, c) => r.cmc_qmc_over_qae * c.bisection_evals },
-      { name: "Cond. MC + Sobol", short: "CMC", color: "#7d55b0", f: (r) => r.cmc_qmc_over_qae },
+      { name: "Cond. MC + Sobol, black box", short: "CMC black box", color: "#0c1b26", f: (r, c) => r.cmc_qmc_over_qae * c.bisection_evals },
+      { name: "Cond. MC + Sobol", short: "CMC", color: "#8f7fe6", f: (r) => r.cmc_qmc_over_qae },
     ];
     const at = (c, eps) => c.matched.find((r) => r.eps === eps);
     lineChart(document.getElementById("multi-chart"), {

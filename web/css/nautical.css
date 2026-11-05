@@ -14,7 +14,7 @@
   --border: rgba(23, 38, 58, 0.28);
   --hairline: rgba(23, 38, 58, 0.12);
 
-  --font-head: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-head: "Big Shoulders Display", "Oswald", Impact, sans-serif;
   --font-body: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Consolas, monospace;
 }
@@ -32,12 +32,12 @@ body {
 /* Text never sits on the water: every section's text column is a paper sheet,
    so ink-on-paper contrast holds whatever the water level behind it. */
 .section__content {
-  background: rgba(246, 240, 226, 0.96);
+  background: rgba(255, 255, 255, 0.97);
   border: 1px solid var(--border);
   padding: 2.2rem 2.4rem;
 }
 @media (max-width: 760px) { .section__content { padding: 1.4rem 1.1rem; } }
-.site-footer { position: relative; z-index: 1; background: rgba(246, 240, 226, 0.96); }
+.site-footer { position: relative; z-index: 1; background: rgba(255, 255, 255, 0.97); }
 
 /* Rising water (water.js): a fixed layer behind the sheets whose top climbs as
    the page scrolls past the story. Only its transform changes, so the
@@ -66,13 +66,11 @@ body {
 @keyframes lap { to { transform: translateX(-240px); } }
 
 h1, h2 { font-weight: 500; letter-spacing: -0.015em; }
-h1 { font-style: italic; }
 h3 { font-family: var(--font-body); font-weight: 600; }
 a:hover, a:focus-visible { color: var(--amber); }
 
 /* Chart-label caps instead of a tech eyebrow. */
 .eyebrow { font-family: var(--font-body); font-weight: 600; letter-spacing: 0.16em; color: var(--amber); }
-.eyebrow::before { content: "◆ "; font-size: 0.8em; }
 
 /* Square corners and no drop shadows anywhere: printed charts have neither. */
 .chapter__card, .stat, .button, .more, .chart, .chart__tip, .verdict-card, .code-block,
@@ -80,12 +78,11 @@ a:hover, a:focus-visible { color: var(--amber); }
 .chart-figure__num { border-radius: 0; box-shadow: none; }
 
 .site-header { background: rgba(242, 234, 216, 0.94); border-bottom: 1px solid var(--text); }
-.brand { font-style: italic; font-weight: 700; }
 .brand__dot { border-radius: 0; transform: rotate(45deg); background: var(--amber); }
 
 /* Hero cards sit over the imagery like the title block on a chart. */
 .chapter__card, .chapter__card--hero { background: var(--card); border: 1px solid var(--text); outline: 1px solid var(--border); outline-offset: 3px; }
-.chapter__card--hero { background: rgba(246, 240, 226, 0.96); }
+.chapter__card--hero { background: rgba(255, 255, 255, 0.97); }
 .journey__hud { background: rgba(246, 240, 226, 0.94); border: 1px solid var(--text); }
 .journey__hud-roads { color: #b3261e; }
 .chapter__roads { border-left-color: #b3261e; }
