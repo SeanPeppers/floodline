@@ -5,8 +5,8 @@ sampled classically and loaded into a quantum circuit (multidriver_circuit.py).
 Drivers (all stages in ft NAVD88, rain in inches):
   W    annual-max still water level (tide + surge), GEV fitted to 110 usable years of NOAA
        gauge 8724580, detrended to 2025 mean sea level (flood.py, unchanged).
-  P24  24-h rain depth, Gumbel fitted to NOAA Atlas 14 annual-maximum-series depths (rainfall.py).
-  P3   peak 3-h burst inside that storm, Gumbel fitted to Atlas 14 3-h AMS depths (same PFDS query).
+  P24  24-h rain depth, GEV fitted to NOAA Atlas 14 annual-maximum-series depths (rainfall.fit_gev).
+  P3   peak 3-h burst inside that storm, GEV fitted to Atlas 14 3-h AMS depths (same PFDS query).
   S    sea-level-rise offset from 2025 to the target year, NOAA 2022 (Sweet et al.) scenario
        projections for station 8724580 from the CO-OPS API, split-normal through (low, central, high).
   O    groundwater offset above the normal high tide, Uniform(0.5, 1.5) ft (City of Key West 2024
@@ -379,24 +379,24 @@ class Model:
         else:
             self.o_lo, self.pmf_o = o_mid, np.ones(1)
 
-        # Rain marginals (Gumbel on Atlas 14 AMS), bin centres, tails folded.
+        # Rain marginals (GEV on Atlas 14 AMS, rainfall.fit_gev), bin centres, tails folded.
         pf = pfds_ams()
-        self.g24 = rainfall.fit_gumbel(np.array(pf["24h"]))
-        self.g3 = rainfall.fit_gumbel(np.array(pf["3h"]))
+        self.g24 = rainfall.fit_gev(np.array(pf["24h"]))
+        self.g3 = rainfall.fit_gev(np.array(pf["3h"]))
         n24, w24 = 2**cfg.n_p24, cfg.p24_max_in / 2**cfg.n_p24
         self.p24_nodes = w24 * (np.arange(n24) + 0.5)
-        e24 = stats.gumbel_r.cdf(w24 * np.arange(1, n24), *self.g24)
+        e24 = stats.genextreme.cdf(w24 * np.arange(1, n24), *self.g24)
         rho_wp = float(np.sin(np.pi * cfg.tau_wp / 2))  # Kendall tau -> Gaussian-copula rho
         self.cond_p24 = _copula_conditional(self.pmf_w, cfg.regime_bits, e24, rho_wp)
         if self.nbits["P3"]:
             n3, w3 = 2**cfg.n_p3, cfg.p3_max_in / 2**cfg.n_p3
             self.p3_nodes = w3 * (np.arange(n3) + 0.5)
-            e3 = stats.gumbel_r.cdf(w3 * np.arange(1, n3), *self.g3)
+            e3 = stats.genextreme.cdf(w3 * np.arange(1, n3), *self.g3)
             p24_marg = self.pmf_w_regimes() @ self.cond_p24
             self.cond_p3 = _copula_conditional(p24_marg, cfg.regime_bits, e3, cfg.rho_p)
         else:  # comonotone: the 3-h depth at the same Atlas-14 quantile as the 24-h depth
-            u = stats.gumbel_r.cdf(self.p24_nodes, *self.g24)
-            self.p3_nodes = stats.gumbel_r.ppf(np.clip(u, 1e-12, 1 - 1e-12), *self.g3)
+            u = stats.genextreme.cdf(self.p24_nodes, *self.g24)
+            self.p3_nodes = stats.genextreme.ppf(np.clip(u, 1e-12, 1 - 1e-12), *self.g3)
             self.cond_p3 = np.ones((1, 1))
         self._build_tables()
 
@@ -519,7 +519,7 @@ class Model:
                 "delta_r_in": self.delta_r, "z_ft": self.cfg.z_ft, "year": self.cfg.year,
                 "scenario": self.cfg.scenario, "slr_ft_median_sig_lo_sig_hi": list(self.slr),
                 "tau_wp": self.cfg.tau_wp, "rho_p": self.cfg.rho_p, "gev_m": list(self.gev),
-                "gumbel_24h_in": list(self.g24), "gumbel_3h_in": list(self.g3), "mhhw_navd_ft": self.mhhw,
+                "gev_24h_in": list(self.g24), "gev_3h_in": list(self.g3), "mhhw_navd_ft": self.mhhw,
                 "drainage": {"k_out": self.drain.k_out, "k_well": self.drain.k_well, **self.drain.anchor}}  # fmt: skip
 
 
