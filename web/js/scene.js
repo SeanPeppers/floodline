@@ -706,6 +706,7 @@ export function start(canvas, state, onReady, onUnavailable) {
     }
     geo.setAttribute("aH", new THREE.BufferAttribute(aH, 1));
     geo.computeVertexNormals();
+    geo.computeBoundingSphere(); // else the first culling pass does it, mid-scroll
     dem.minFilter = THREE.LinearFilter;
     dem.generateMipmaps = false;
     Object.assign(terrainUniforms, { uOrtho: { value: ortho }, uDem: { value: dem }, uNormals: { value: normals } });
@@ -724,8 +725,25 @@ export function start(canvas, state, onReady, onUnavailable) {
     seaMesh.position.y = -0.0005;
     kw.add(seaMesh);
     // Road flood layer (streets.js): real OSM roads at their 3DEP elevations.
-    import("./streets.js").then((m) => m.attach({ THREE, scene: kw, uniforms: terrainUniforms, toLocal: kwLocal })).catch(() => {});
+    import("./streets.js").then((m) => m.attach({ THREE, scene: kw, uniforms: terrainUniforms, toLocal: kwLocal })).catch(() => {})
+      .then(() => prewarm([[kw, camK]], [ortho, dem, normals]));
     kwReady = true;
+  }
+
+  // A material's first draw links its shader program, and a texture's first
+  // use decodes and uploads its image: 30-270 ms of main thread each. Left to
+  // the render loop, that lands mid-scroll (labels appearing, rain starting,
+  // the Key West hand-off). compileAsync links without blocking; uploads go
+  // one per idle slot.
+  const idle = (fn) => ("requestIdleCallback" in window ? requestIdleCallback(fn, { timeout: 1000 }) : setTimeout(fn, 100));
+  function prewarm(scenes, textures) {
+    if (!running) return;
+    for (const [s, cam] of scenes) renderer.compileAsync(s, cam).catch(() => {});
+    const next = () => {
+      const t = textures.shift();
+      if (t && running) { renderer.initTexture(t); idle(next); }
+    };
+    idle(next);
   }
 
   // ---------- sizing, framing ----------
@@ -839,6 +857,7 @@ export function start(canvas, state, onReady, onUnavailable) {
     if (coast) buildCoast(coast);
     if (track) buildTrack(track);
     if (running) frame();
+    prewarm([[globe, camG], [overlay, camO]], trackMats.filter((m) => m.map).map((m) => m.map));
     return Promise.all([
       loadTexture(loader, "assets/keywest/ortho-naip-2048.webp"),
       loadTexture(loader, "assets/keywest/dem-cudem-navd88.png", { srgb: false }),
