@@ -589,6 +589,8 @@ export function start(canvas, state, onReady, onUnavailable) {
     }));
     seaMesh.position.y = -0.0005;
     kw.add(seaMesh);
+    // Road flood layer (streets.js): real OSM roads at their 3DEP elevations.
+    import("./streets.js").then((m) => m.attach({ THREE, scene: kw, uniforms: terrainUniforms, toLocal: kwLocal })).catch(() => {});
     kwReady = true;
   }
 

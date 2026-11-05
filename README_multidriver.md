@@ -419,6 +419,11 @@ wherever the drainage calibration is too pessimistic for that street.
   cost → `results_multi_resolution.json`, `results_multi_resolution.png`.
 - `test_multidriver.py`: regression test (circuit vs closed form, estimators unbiased, monotone tables).
 - `floodline_cli.py`: the tool.
+- `web_data.py`: writes the site's road layer (`web/assets/data/streets.json`, the same 6,054
+  road points as `--exposure`) and `floodrule.json` (the rule's constants, calibrated drainage,
+  and with `--planning` the CLI's 2050 P(flood) vs elevation curve for every scenario).
+- `check_floodrule_port.py`: compares the browser port of the flood rule (`web/js/floodrule.js`,
+  used by the site's live "Tonight in Key West" panel) with this module on 205 cases.
 
 ```
 uv run python test_multidriver.py        # ~3 min
