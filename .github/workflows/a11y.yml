@@ -1,0 +1,32 @@
+name: Accessibility
+
+on:
+  push:
+    paths: ["web/**", "qa/**", ".github/workflows/a11y.yml"]
+  pull_request:
+    paths: ["web/**", "qa/**", ".github/workflows/a11y.yml"]
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: qa/package-lock.json
+      - run: npm ci
+        working-directory: qa
+      - name: Serve the static site
+        run: |
+          python3 -m http.server 8765 --directory web > /dev/null 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://localhost:8765/ > /dev/null && exit 0; sleep 1; done; exit 1
+      - name: axe-core (WCAG 2.1 A/AA) and Lighthouse
+        working-directory: qa
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+          STOPS: "8"
+          LOADER: "#no-loader"
+        run: node qa.mjs http://localhost:8765/

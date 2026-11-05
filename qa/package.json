@@ -1,0 +1,13 @@
+{
+  "name": "floodline-qa",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "qa": "node qa.mjs"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "lighthouse": "^12.8.2",
+    "playwright": "^1.65.0"
+  }
+}

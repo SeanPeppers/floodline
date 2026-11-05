@@ -18,3 +18,4 @@ smoke_results.json
 .ruff_cache/
 .mypy_cache/
 .claude/
+qa/node_modules/

@@ -4,7 +4,7 @@ Context for anyone making the pitch video or slides. Every number here is in the
 
 ## One line
 
-Floodline tells Key West which streets flood tonight and which roads to raise first, and it measures exactly where a quantum computer starts beating the best classical math on the same flood model.
+Floodline shows which Key West streets flood and which roads to raise first, and it measures exactly where a quantum computer starts beating the best classical math on the same flood model.
 
 ## The problem (why anyone should care)
 
@@ -18,13 +18,12 @@ Do not add these numbers together, and do not say Floodline or quantum computing
 
 ## What Floodline does today (the product)
 
-- **Tonight:** pulls live NOAA tide and National Weather Service rain data and shows which Key West streets are likely to flood at the next high tide.
 - **2050 planning view:** the same street map under NOAA's 2022 sea-level-rise scenarios.
 - **Which road to raise first:** ranks 365 streets by expected flooded road-miles per year in 2050. Flagler Avenue is first: its low point has a 99% chance of flooding in a 2050 year. Raising it 1 ft costs about $7.0M-$17.5M per flood-year avoided (Monroe County's $9.6M/mile plan cost to the Twin Lakes pilot's $23.9M/mile).
 - Built on the City of Key West's own 2024 Stormwater Master Plan rules, 110 years of the Key West tide gauge, and USGS street elevations.
 - The classical engine answers in about 1 second on a laptop.
 
-Who would use it: City of Key West and Monroe County public works and emergency management, road-raising and stormwater planners, residents deciding whether to move a car tonight. Who would pay: municipalities and counties planning resilience spending, insurers and reinsurers pricing compound-flood risk.
+Who would use it: City of Key West and Monroe County public works and emergency management, road-raising and stormwater planners. Who would pay: municipalities and counties planning resilience spending, insurers and reinsurers pricing compound-flood risk.
 
 ## The quantum result (the research)
 
@@ -49,7 +48,7 @@ We found no prior published head-to-head of quantum amplitude estimation against
 Suggested beats:
 1. **Hook (0-10 s):** storm surge and flooded streets; text: "$13.5B in Florida flood claims, four storms."
 2. **The place (10-20 s):** Key West from above; "Floodline: compound-flood risk, street by street."
-3. **The product (20-45 s):** screen recording of the real site: the hurricane-to-island scroll, Tonight's street map, the road-raising table with Flagler Ave at #1.
+3. **The product (20-45 s):** screen recording of the real site: the hurricane-to-island scroll, the road-raising table with Flagler Ave at #1.
 4. **The quantum result (45-70 s):** the site's "quantum advantage vs factors" chart; "4.3× fewer queries at 13 factors, on ideal hardware."
    Then a few seconds of screen recording of the site's hardware chart: "We ran it on a real IBM quantum computer. The signal is there; noise blurs it."
 5. **Honest close (70-90 s):** "Classical runs the tool today. We measured exactly where quantum takes over." Team names, FGCU Quantum Hackathon 2026.

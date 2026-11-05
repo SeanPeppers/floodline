@@ -1,0 +1,94 @@
+/* Nautical-chart theme (mockup). Loaded after style.css and tonight.css and only overrides them.
+   Palette after NOAA paper charts: buff paper, ink navy, chart blue, and the magenta charts use for
+   lights and hazards. Contrast on --bg #f2ead8: --text 13:1, --text-muted 6.4:1, --accent 8:1,
+   --amber (magenta) 6.6:1. */
+:root {
+  --bg: #f2ead8;
+  --surface: #ebe1c9;
+  --card: rgba(246, 240, 226, 0.95);
+  --chart-surface: #faf6ec;
+  --text: #17263a;
+  --text-muted: #46566a;
+  --accent: #1f4e79;
+  --amber: #a3195b;
+  --border: rgba(23, 38, 58, 0.28);
+  --hairline: rgba(23, 38, 58, 0.12);
+
+  --font-head: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-body: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Consolas, monospace;
+}
+
+/* Paper with a faint lat/long graticule, like the grid on a printed chart. */
+body {
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(var(--hairline) 1px, transparent 1px),
+    linear-gradient(90deg, var(--hairline) 1px, transparent 1px);
+  background-size: 96px 96px;
+}
+.section { background: transparent; border-top: 3px double var(--border); }
+
+h1, h2 { font-weight: 500; letter-spacing: -0.015em; }
+h1 { font-style: italic; }
+h3 { font-family: var(--font-body); font-weight: 600; }
+a:hover, a:focus-visible { color: var(--amber); }
+
+/* Chart-label caps instead of a tech eyebrow. */
+.eyebrow { font-family: var(--font-body); font-weight: 600; letter-spacing: 0.16em; color: var(--amber); }
+.eyebrow::before { content: "◆ "; font-size: 0.8em; }
+
+/* Square corners and no drop shadows anywhere: printed charts have neither. */
+.chapter__card, .stat, .button, .more, .chart, .chart__tip, .verdict-card, .code-block,
+.journey__hud, .tonight__disclaimer, .tonight__choices label, #tonight-scenario, .tonight__map,
+.chart-figure__num { border-radius: 0; box-shadow: none; }
+
+.site-header { background: rgba(242, 234, 216, 0.94); border-bottom: 1px solid var(--text); }
+.brand { font-style: italic; font-weight: 700; }
+.brand__dot { border-radius: 0; transform: rotate(45deg); background: var(--amber); }
+
+/* Hero cards sit over the imagery like the title block on a chart. */
+.chapter__card, .chapter__card--hero { background: var(--card); border: 1px solid var(--text); outline: 1px solid var(--border); outline-offset: 3px; }
+.chapter__card--hero { background: rgba(246, 240, 226, 0.96); }
+.journey__hud { background: rgba(246, 240, 226, 0.94); border: 1px solid var(--text); }
+.journey__hud-roads { color: #b3261e; }
+.chapter__roads { border-left-color: #b3261e; }
+.scroll-cue { display: none; }
+
+.stat { background: transparent; border: 0; border-top: 1px solid var(--text); padding: 0.7rem 0 0; }
+.stat--warn, .stat--win { border-color: var(--text); }
+.stat--win .stat__value { color: var(--accent); }
+.stat__value { font-weight: 500; }
+
+.button { color: #f6f0e2; }
+.button:hover, .button:focus-visible { background: #17263a; color: #f6f0e2; }
+.button--ghost { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+.button--ghost:hover, .button--ghost:focus-visible { background: rgba(31, 78, 121, 0.08); color: var(--accent); }
+.skip-link { color: #f6f0e2; }
+
+.more { background: transparent; border-color: var(--border); }
+
+/* Charts on paper: ink axes and labels. */
+.chart { background: var(--chart-surface); border-color: var(--border); }
+.chart__axis { stroke: var(--text); }
+.chart__tick, .chart__label { fill: var(--text-muted); }
+.chart__ref, .chart__cross { stroke: #6b7686; }
+.chart__key--ref { border-top-color: #6b7686; }
+.chart__reflabel { fill: var(--text-muted); }
+.chart__band { fill: rgba(31, 78, 121, 0.08); }
+.chart__tip { background: #faf6ec; border-color: var(--text); }
+.chart-figure__num { color: #f6f0e2; }
+
+thead th { color: var(--text); border-bottom: 1.5px solid var(--text); }
+.verdict-card { background: transparent; }
+.code-block { background: #ebe1c9; color: var(--text); }
+
+.tonight__disclaimer { background: rgba(163, 25, 91, 0.06); border-color: rgba(163, 25, 91, 0.55); }
+.tonight__choices label:has(input:checked) { background: rgba(31, 78, 121, 0.1); }
+
+.site-footer { border-top: 3px double var(--border); }
+
+@media (max-width: 760px) {
+  .chapter__card--hero { background: rgba(246, 240, 226, 0.97); }
+  .stat { padding: 0.5rem 0 0; }
+}

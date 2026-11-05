@@ -5,17 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Floodline — Where quantum amplitude estimation helps Key West flood risk</title>
 <meta name="description" content="A compound-flood risk tool for Key West, and a measured answer to where quantum amplitude estimation beats classical sampling: with 13 uncertain factors, ideal QAE needs 4.3x fewer queries than the best classical method; with 5, it loses.">
-<meta name="theme-color" content="#05080f">
+<meta name="theme-color" content="#f2ead8">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- Non-render-blocking font load (media="print" swap); system fonts show until then. -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap"
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
       media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap"></noscript>
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap"></noscript>
 
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/tonight.css">
+<link rel="stylesheet" href="css/nautical.css">
 <link rel="preload" as="image" href="assets/stills/s0-1024.webp" imagesrcset="assets/stills/s0-640.webp 640w, assets/stills/s0-1024.webp 1024w, assets/stills/s0-1600.webp 1600w" imagesizes="100vw" fetchpriority="high">
 <link rel="icon" href="data:,">
 </head>
@@ -30,7 +31,6 @@
       <a href="#results">Results</a>
       <a href="#savings">Savings</a>
       <a href="#tool">Tool</a>
-      <a href="#tonight">Tonight</a>
       <a href="#verdict">Verdict</a>
       <a href="#methods">Methods</a>
     </nav>
@@ -194,23 +194,7 @@
       </details>
 
       <figure class="chart-figure">
-        <figcaption class="chart-figure__title" id="mc-title"><span class="chart-figure__num">2</span> vs plain Monte Carlo</figcaption>
-        <div class="chart" id="mc-chart" aria-describedby="mc-note"></div>
-        <p class="chart-figure__note" id="mc-note">
-          Two drivers: <strong><span data-bind="mcOverQae">27.7 / 105 / 351</span>&times;</strong> fewer at &epsilon;&nbsp;=&nbsp;1e-3 / 3e-4 / 1e-4. Five-driver model, every d: <span data-bind="mcMulti">76&ndash;246</span>&times; at &epsilon;&nbsp;&le;&nbsp;3e-4. Query count, ideal hardware.
-        </p>
-      </figure>
-
-      <figure class="chart-figure">
-        <figcaption class="chart-figure__title" id="qmc-title"><span class="chart-figure__num">3</span> vs Sobol quasi-Monte Carlo, by number of drivers</figcaption>
-        <div class="chart" id="qmc-chart" aria-describedby="qmc-note"></div>
-        <p class="chart-figure__note" id="qmc-note">
-          QAE overtakes Sobol at d&nbsp;&asymp;&nbsp;<span data-bind="qmcDStar">3.5&ndash;4.9</span> (shaded, both streets); <strong><span data-bind="qmcOverQae5">3.5</span>&times;</strong> at d&nbsp;=&nbsp;5, &epsilon;&nbsp;=&nbsp;1e-4. Query count, ideal hardware, 3.0&nbsp;ft street.
-        </p>
-      </figure>
-
-      <figure class="chart-figure">
-        <figcaption class="chart-figure__title" id="bb-title"><span class="chart-figure__num">4</span> vs a black-box simulator, the way NOAA and FEMA surge models run</figcaption>
+        <figcaption class="chart-figure__title" id="bb-title"><span class="chart-figure__num">2</span> vs a black-box simulator, the way NOAA and FEMA surge models run</figcaption>
         <div class="chart chart--short" id="bb-chart" aria-describedby="bb-note"></div>
         <p class="chart-figure__note" id="bb-note">
           <strong><span data-bind="bbWin">1.6 / 2.3 / 3.3</span>&times;</strong> fewer simulator runs at &epsilon;&nbsp;=&nbsp;1e-3 / 3e-4 / 1e-4. Classical bisects each sample (<span data-bind="bisect">6</span> runs). Simulator runs, ideal hardware, 5 drivers.
@@ -253,56 +237,6 @@
           Full ledger: <a href="https://github.com/SeanPeppers/floodline">FINDINGS.md and FAILED.md in the repo</a>.
         </p>
 
-        <details class="more">
-          <summary>Error vs. queries, two drivers</summary>
-          <figure class="chart-figure">
-            <figcaption class="chart-figure__title" id="conv-title">Error vs. queries, two-driver street model (log&ndash;log)</figcaption>
-            <div class="chart" id="convergence-chart" aria-describedby="conv-note"></div>
-            <p class="chart-figure__note" id="conv-note">
-              <span data-bind="trials">500</span> trials per point. Steeper is faster. Patterson Ave, 2024 Stormwater Master Plan drains.
-              <button id="simulate-btn" class="button button--ghost button--small" type="button">Replay</button>
-            </p>
-          </figure>
-          <p class="caption-note">
-            The curved drainage boundary left QMC's exponent unchanged:
-            &Delta;&alpha;&nbsp;=&nbsp;<span data-bind="dAlphaQmc">&minus;0.04 [&minus;0.09, +0.02]</span>.
-          </p>
-          <div class="table-wrap" tabindex="0" role="region" aria-label="Fitted scaling exponent table, scrollable on narrow screens">
-            <table>
-              <caption>Fitted exponent &alpha; (queries &prop; &epsilon;<sup>-&alpha;</sup>), 95% bootstrap CI</caption>
-              <thead>
-                <tr><th scope="col">Arm</th><th scope="col">&alpha;</th><th scope="col">95% CI</th><th scope="col">Textbook</th></tr>
-              </thead>
-              <tbody id="alpha-rows"><tr><td colspan="4">Loading&hellip;</td></tr></tbody>
-            </table>
-          </div>
-          <div class="table-wrap" tabindex="0" role="region" aria-label="Queries at matched error table, scrollable on narrow screens">
-            <table>
-              <caption>Queries to reach error &epsilon; (median of bootstrap fits)</caption>
-              <thead>
-                <tr><th scope="col">&epsilon;</th><th scope="col">QAE</th><th scope="col">Plain MC</th><th scope="col">MC &divide; QAE</th><th scope="col">Sobol QMC</th></tr>
-              </thead>
-              <tbody id="eps-rows"><tr><td colspan="5">Loading&hellip;</td></tr></tbody>
-            </table>
-          </div>
-          <p class="caption-note">QAE's 3e-4 and 1e-4 rows extrapolate past its smallest measured error.</p>
-        </details>
-
-        <details class="more">
-          <summary>Every classical method vs QAE, five-driver model</summary>
-          <figure class="chart-figure">
-            <figcaption class="chart-figure__title" id="multi-title">Classical queries &divide; QAE queries at &epsilon;&nbsp;=&nbsp;1e-4, by number of drivers</figcaption>
-            <div class="chart" id="multi-chart" aria-describedby="multi-note"></div>
-            <p class="chart-figure__note" id="multi-note">Above 1, QAE is cheaper. 3.0&nbsp;ft street, 2050. Drivers: tide, 24-hour rain, 3-hour burst, sea-level rise, groundwater.</p>
-          </figure>
-          <div class="table-wrap" tabindex="0" role="region" aria-label="Five-driver ratio table, scrollable on narrow screens">
-            <table>
-              <caption>Classical &divide; QAE queries at matched &epsilon; (below 1: classical cheaper)</caption>
-              <thead><tr><th scope="col">Street, d</th><th scope="col">&epsilon;</th><th scope="col">Sobol QMC</th><th scope="col">Cond. MC + Sobol</th><th scope="col">Same, black box</th><th scope="col">Plain MC</th></tr></thead>
-              <tbody id="multi-rows"><tr><td colspan="6">Loading&hellip;</td></tr></tbody>
-            </table>
-          </div>
-        </details>
       </div>
     </div>
   </section>
@@ -399,19 +333,7 @@
   <!-- TOOL -->
   <section class="section" id="tool" aria-label="The flood tool">
     <div class="section__content section__content--wide">
-      <p class="eyebrow">Result 3 &middot; the tool</p>
-      <h2>P(flood) for any Key West street, by year, scenario and elevation.</h2>
-      <p>
-        A 3.0&nbsp;ft street in 2050: <strong><span data-bind="cliP">0.6149</span></strong>
-        a year, about 1 in <span data-bind="cliYears">1.6</span>. City-wide,
-        <strong><span data-bind="cliExposure">55.8%</span></strong> of
-        <span data-bind="cliPoints">6,054</span> road points flood in an average year.
-      </p>
-      <pre class="code-block cli" id="cli-output" tabindex="0" role="region" aria-label="Recorded floodline_cli.py output, scrollable">$ uv run python floodline_cli.py --year 2050 --scenario intermediate --elevation 3.0 --exposure
-  P(flood > 6 in, any given year) = 0.6149</pre>
-      <p class="caption-note">Recorded run (<code>README_multidriver.md</code>). A ranking tool under flagged assumptions, not a forecast.</p>
-
-      <p class="eyebrow eyebrow--gap">Money the tool saves today &middot; classical engine</p>
+      <p class="eyebrow">Money the tool saves today &middot; classical engine</p>
       <h2>Which road to raise first, in dollars.</h2>
       <p>
         <strong>Flagler Ave is first:</strong> 4.7&nbsp;mi, and its low point has
@@ -438,106 +360,6 @@
         Neither states a raise height, so read the dollars as an order of
         magnitude. Conditional MC + Sobol on a laptop, ~8&nbsp;min for 6,054 road points.
       </p>
-    </div>
-  </section>
-
-  <!-- TONIGHT: live street flood view (js/tonight.js, css/tonight.css) -->
-  <section class="section" id="tonight" aria-labelledby="tonight-title">
-    <div class="section__content section__content--wide">
-      <p class="eyebrow">Live &middot; Tonight in Key West</p>
-      <h2 id="tonight-title">Which streets could flood at the next high tide?</h2>
-      <p class="tonight__disclaimer" role="note">
-        <strong>Research prototype. Not an official warning.</strong>
-        Check <a href="https://www.weather.gov/key/">NWS Key West</a> and City of Key West alerts.
-        This model has not been validated against observed flood reports.
-      </p>
-      <p>
-        NOAA's tide forecast for gauge 8724580, the gap between observed and
-        predicted water over the last day, and the NWS rain forecast, run
-        through the five-driver street model for 6,054 road points.
-      </p>
-      <div class="tonight__controls">
-        <fieldset class="tonight__group">
-          <legend>View</legend>
-          <div class="tonight__choices">
-            <label><input type="radio" name="tonight-mode" value="live" checked> Next high tides</label>
-            <label><input type="radio" name="tonight-mode" value="plan"> 2050 planning</label>
-          </div>
-        </fieldset>
-        <fieldset class="tonight__group" id="tonight-tides" hidden>
-          <legend>High tide (Key West time)</legend>
-          <div class="tonight__choices"></div>
-        </fieldset>
-        <div class="tonight__group" id="tonight-scenario-wrap" hidden>
-          <label for="tonight-scenario">NOAA 2022 sea-level scenario</label>
-          <select id="tonight-scenario">
-            <option value="low">Low</option>
-            <option value="intermediate-low">Intermediate-Low</option>
-            <option value="intermediate" selected>Intermediate</option>
-            <option value="intermediate-high">Intermediate-High</option>
-            <option value="high">High</option>
-          </select>
-        </div>
-      </div>
-      <p class="tonight__status" id="tonight-status" role="status">Live data loads when you reach this section.</p>
-      <div class="tonight__map">
-        <canvas id="tonight-map" role="img" aria-label="Key West road map, loading."></canvas>
-      </div>
-      <ul class="tonight__legend" id="tonight-legend"></ul>
-      <p class="tonight__summary" id="tonight-summary" aria-live="polite"></p>
-      <div class="table-wrap" tabindex="0" role="region" aria-label="Streets most at risk, scrollable on narrow screens">
-        <table>
-          <caption>Named streets with at least one road point at risk (top 10)</caption>
-          <thead><tr><th scope="col">Street</th><th scope="col">Lowest point (NAVD88)</th><th scope="col" id="tonight-col">Flood likelihood</th><th scope="col">Points</th></tr></thead>
-          <tbody id="tonight-rows"><tr><td colspan="4">Loading&hellip;</td></tr></tbody>
-        </table>
-      </div>
-      <details class="more">
-        <summary>Inputs, method and limits</summary>
-        <dl class="tonight__inputs" id="tonight-inputs"></dl>
-        <ul>
-          <li>Each road point is the street's centreline elevation (USGS 3DEP lidar) every ~30&nbsp;m. Gutters sit lower, so real ponding starts earlier.</li>
-          <li>The rule is multidriver.py's: water from the sea, groundwater 0.5&ndash;1.5&nbsp;ft above high tide (City of Key West 2024 Stormwater Master Plan) and rain the drains can't take; a street floods past 6&nbsp;inches of water.</li>
-          <li>Absolute probabilities depend on the drainage calibration, an assumption: the five-driver and two-driver calibrations disagree at Patterson Ave (about 0.97 vs 0.64 a year).</li>
-          <li>Simplified: no waves, wind setup, tidal lag in groundwater, or blocked drains. Rain spread &times;0.5&ndash;&times;2 is our assumption, not an NWS figure.</li>
-          <li>Data: NOAA CO-OPS and NWS api.weather.gov, fetched by your browser, no account and no data about you sent. Roads &copy; OpenStreetMap contributors (ODbL).</li>
-        </ul>
-      </details>
-    </div>
-  </section>
-
-  <!-- TOY -->
-  <section class="section section--compact" id="toy" aria-label="Superseded toy crossover model">
-    <div class="section__content section__content--wide">
-      <p class="eyebrow eyebrow--warn">Superseded by win 3</p>
-      <h2>The toy crossover that led to win 3.</h2>
-      <p>
-        With <em>d</em> Gaussian drivers, QAE passed Sobol QMC near
-        <em>d</em>&nbsp;=&nbsp;<span data-bind="xo.dStar.0.001">3.4</span> /
-        <span data-bind="xo.dStar.0.0003">2.7</span> /
-        <span data-bind="xo.dStar.0.0001">2.4</span> at
-        &epsilon;&nbsp;=&nbsp;1e-3 / 3e-4 / 1e-4. The real model puts it near 4.
-      </p>
-      <figure class="chart-figure">
-        <figcaption class="chart-figure__title" id="xo-title">Toy model: Sobol QMC queries &divide; QAE queries, by drivers <em>d</em></figcaption>
-        <div class="chart" id="crossover-chart" aria-describedby="xo-note"></div>
-        <p class="chart-figure__note" id="xo-note">Toy model, superseded. Hollow points are extrapolated.</p>
-      </figure>
-      <details class="more">
-        <summary>Toy table and caveats</summary>
-        <div class="table-wrap" tabindex="0" role="region" aria-label="Toy crossover ratio table, scrollable on narrow screens">
-          <table>
-            <caption>Toy: QMC &divide; QAE queries (&ldquo;extrap.&rdquo; = extrapolated)</caption>
-            <thead id="xo-head"><tr><th scope="col">Drivers d</th><th scope="col">&epsilon; = 1e-3</th><th scope="col">&epsilon; = 3e-4</th><th scope="col">&epsilon; = 1e-4</th></tr></thead>
-            <tbody id="xo-rows"><tr><td colspan="4">Loading&hellip;</td></tr></tbody>
-          </table>
-        </div>
-        <ul>
-          <li>A weighted-sum event, which a classical method can reduce to one dimension.</li>
-          <li>At &epsilon;&nbsp;=&nbsp;1e-4, QMC costs for <em>d</em>&nbsp;&ge;&nbsp;7 are extrapolated.</li>
-          <li>Query counts ignore circuit size and noise.</li>
-        </ul>
-      </details>
     </div>
   </section>
 
@@ -641,23 +463,6 @@
     </div>
   </section>
 
-  <!-- RUN -->
-  <section class="section section--compact" id="run" aria-label="Run it yourself">
-    <div class="section__content">
-      <p class="eyebrow">Run it</p>
-      <h2>Everything runs on a simulator; only the hardware demo needs an IBM account.</h2>
-      <pre class="code-block" tabindex="0" role="region" aria-label="Run commands, scrollable on narrow screens"><code>uv sync
-uv run python experiment.py        # two-driver benchmark
-uv run python experiment_multi.py  # five-driver benchmark
-uv run python experiment_wins.py dim  # 5-13 uncertain factors
-uv run python floodline_cli.py --year 2050 --elevation 3.0 --exposure
-uv run python hw_demo.py dry       # 3-qubit demo, noisy sim; "run" uses a real IBM QPU</code></pre>
-      <p>
-        Source: <a href="https://github.com/SeanPeppers/floodline">github.com/SeanPeppers/floodline</a>.
-      </p>
-    </div>
-  </section>
-
 </main>
 
 <footer class="site-footer">
@@ -674,6 +479,5 @@ uv run python hw_demo.py dry       # 3-qubit demo, noisy sim; "run" uses a real 
 <script src="js/main.js" defer></script>
 <script src="js/story.js" defer></script>
 <script type="module" src="js/streets.js"></script>
-<script type="module" src="js/tonight.js"></script>
 </body>
 </html>
