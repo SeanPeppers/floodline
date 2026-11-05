@@ -240,7 +240,33 @@
   <!-- SAVINGS: inputs and assumptions from the black-box savings study; ratios from results_multi.json -->
   <section class="section" id="savings" aria-labelledby="savings-title">
     <div class="section__content section__content--wide">
-      <p class="eyebrow">Where the quantum result applies</p>
+      <p class="eyebrow">What's at stake</p>
+      <h2 id="stakes-title">Four Florida hurricanes, flood claims alone: $13.5B.</h2>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Hurricane cost table, scrollable on narrow screens">
+        <table class="table--fit">
+          <caption>Federal flood insurance (NFIP) paid on Florida claims, and surge deaths in Florida</caption>
+          <thead><tr><th scope="col">Storm</th><th scope="col">NFIP paid, FL</th><th scope="col">Total US damage</th><th scope="col">Surge deaths, FL</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Irma 2017 (Keys)</th><td>$986M</td><td>$64.0B</td><td>3 drownings, Keys</td></tr>
+            <tr><th scope="row">Ian 2022</th><td>$4.87B</td><td>$119.6B</td><td>41</td></tr>
+            <tr><th scope="row">Helene 2024 (Tampa Bay)</th><td>$6.49B</td><td>$78.7B</td><td>14</td></tr>
+            <tr><th scope="row">Milton 2024 (Tampa Bay)</th><td>$1.21B</td><td>$34.3B</td><td>0</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Irma: NFIP paid $290M in Monroe County alone. Helene: $3.2B in Pinellas, where 12 people drowned in the surge. Milton's surge missed Tampa Bay; NHC says a track shift under 30&nbsp;n&nbsp;mi north would have sent a significant surge into the bay.</p>
+      <details class="more">
+        <summary>Sources and caveats</summary>
+        <ul>
+          <li>NFIP: OpenFEMA <code>NfipClaims</code> v3, Florida claims tagged to each storm, building + contents + ICC paid, data as of 2026-09-08. <a href="https://www.fema.gov/api/open/v3/NfipClaims?$top=1">OpenFEMA API</a></li>
+          <li>Total damage: NOAA NCEI Billion-Dollar Disasters, CPI-adjusted, all states. <a href="https://www.ncei.noaa.gov/access/billions/">NCEI</a></li>
+          <li>Deaths: NHC Tropical Cyclone Reports (Irma: Monroe County Medical Examiner, as quoted by NHC). <a href="https://www.nhc.noaa.gov/data/tcr/">NHC TCRs</a></li>
+          <li>Don't add the columns: NCEI's total already includes insured and NFIP losses. Total damage covers wind as well as flood.</li>
+          <li>Floodline is a planning tool. It did not prevent, and doesn't claim to prevent, any of these losses.</li>
+        </ul>
+      </details>
+
+      <p class="eyebrow eyebrow--gap">Where the quantum result applies</p>
       <h2 id="savings-title">Real flood models are black boxes.</h2>
       <ul class="hero__stats" aria-label="Black-box flood models">
         <li class="stat">

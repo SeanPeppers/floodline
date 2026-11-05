@@ -163,3 +163,9 @@ visitor is sent. The map behind it is the NAIP photo above.
   models all need an account or API key.
 - An earlier version used floating CC0 buoy models; they gave no sense of a
   real place and were removed.
+
+## Hurricane costs ("What's at stake")
+
+- NOAA NCEI Billion-Dollar Weather and Climate Disasters, events CSV 1980-2024: https://www.ncei.noaa.gov/access/billions/
+- NHC Tropical Cyclone Reports (Irma AL112017, Ian AL092022, Helene AL092024, Milton AL142024): https://www.nhc.noaa.gov/data/tcr/
+- OpenFEMA NFIP claims API v3, Florida claims summed by storm (as of 2026-09-08): https://www.fema.gov/api/open/v3/NfipClaims
