@@ -109,6 +109,25 @@ prefers reduced motion.
 CLI's road points come from OpenStreetMap (© OpenStreetMap contributors,
 ODbL) with USGS 3DEP elevations (public domain).
 
+## Road flood layer and "Tonight in Key West"
+
+| File | What it is | Source | License |
+|---|---|---|---|
+| `assets/data/streets.json` | Key West public road centrelines (primary to living_street, Overpass snapshot in `data/keywest_osm_roads.json`), cut into one ~30 m piece per elevation sample, 6,054 samples, coordinates rounded to 1e-5° | OpenStreetMap via Overpass; elevations USGS 3DEP 1 m bare-earth DEM (`getSamples`, NAVD 88) | Roads © OpenStreetMap contributors, [ODbL 1.0](https://www.openstreetmap.org/copyright); elevations public domain. `streets.json` is a derived database under the ODbL |
+| `assets/data/floodrule.json` | Constants of the five-driver street flood rule and the calibrated drainage capacity, plus P(flood in a year) vs elevation for 2050 under each NOAA 2022 scenario | `uv run python web_data.py --planning` (multidriver.py, floodline_cli.py) | Ours |
+
+Both are rebuilt by `uv run python web_data.py` (add `--planning` for the
+2050 curves, a few minutes). `check_floodrule_port.py` checks the browser
+port of the rule (`js/floodrule.js`) against the Python.
+
+The 3-D layer colours each road piece red when the bathtub level is at or
+above its 3DEP elevation and amber within 15 cm of it, in the scene's own
+datum (m NAVD 88 = 0.013 + m above MHHW). The Tonight panel fetches, in the
+browser, NOAA CO-OPS tide predictions and observed water level for 8724580
+and the NWS `api.weather.gov` gridded rain forecast (KEY office). Both APIs
+are keyless and send `Access-Control-Allow-Origin: *`; nothing about the
+visitor is sent. The map behind it is the NAIP photo above.
+
 ## Code
 
 - [three.js](https://threejs.org/) r187, loaded as an ES module from

@@ -1,0 +1,50 @@
+/* Road flood layer (streets.js) and "Tonight in Key West" (tonight.js). */
+.journey__hud-roads { font-size: 0.75rem; color: #ff8a80; }
+.journey__hud-roads:empty { display: none; }
+.chapter__roads { font-size: 0.9rem; color: var(--text); border-left: 3px solid #ff5a4f; padding-left: 0.6rem; }
+
+.tonight__disclaimer {
+  border: 1px solid rgba(245, 177, 61, 0.6); border-left-width: 4px; border-radius: 0.6rem;
+  background: rgba(245, 177, 61, 0.08); padding: 0.85rem 1rem; color: var(--text);
+}
+.tonight__controls { display: flex; flex-wrap: wrap; gap: 1rem 2rem; margin: 1.5rem 0 1rem; }
+.tonight__group { border: 0; margin: 0; padding: 0; min-width: 0; }
+.tonight__group[hidden] { display: none; }
+.tonight__group legend, .tonight__group > label {
+  display: block; font-family: var(--font-mono); font-size: 0.78rem; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--accent); margin-bottom: 0.45rem; padding: 0;
+}
+.tonight__choices { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.tonight__choices label {
+  display: inline-flex; align-items: center; gap: 0.4rem; min-height: 2.75rem;
+  padding: 0.35rem 0.8rem; border: 1px solid var(--border); border-radius: 0.5rem;
+  background: var(--surface); color: var(--text); font-size: 0.92rem; cursor: pointer;
+}
+.tonight__choices label:has(input:checked) { border-color: var(--accent); background: rgba(124, 199, 232, 0.12); }
+.tonight__choices input { accent-color: var(--accent); margin: 0; }
+#tonight-scenario {
+  min-height: 2.75rem; padding: 0.35rem 0.6rem; border-radius: 0.5rem; max-width: 100%;
+  background: var(--surface); color: var(--text); border: 1px solid var(--border); font: inherit;
+}
+.tonight__status { font-size: 0.9rem; }
+.tonight__status[data-kind="warn"] { color: var(--amber); }
+.tonight__map { border: 1px solid var(--border); border-radius: 0.75rem; overflow: hidden; background: #0b1420; }
+.tonight__map canvas { display: block; width: 100%; aspect-ratio: 1.5276; /* the map crop in tonight.js, cos-lat corrected */ height: auto; }
+.tonight__legend {
+  list-style: none; padding: 0; margin: 0.7rem 0 1rem;
+  display: flex; flex-wrap: wrap; gap: 0.35rem 1.2rem; font-size: 0.85rem; color: var(--text);
+}
+.tonight__legend li { display: inline-flex; align-items: center; gap: 0.45rem; }
+.tonight__key { width: 1.1rem; height: 4px; border-radius: 2px; display: inline-block; }
+.tonight__summary { color: var(--text); font-size: 1.02rem; }
+.tonight__inputs { margin: 0.9rem 1rem; display: grid; grid-template-columns: max-content 1fr; gap: 0.4rem 1rem; font-size: 0.9rem; }
+.tonight__inputs dt { color: var(--text); font-weight: 600; }
+.tonight__inputs dd { margin: 0; color: var(--text-muted); }
+
+@media (max-width: 760px) {
+  .tonight__inputs { grid-template-columns: 1fr; }
+  .tonight__inputs dd { margin-bottom: 0.5rem; }
+}
+@media (max-width: 420px) {
+  .site-header nav a[href="#methods"] { display: none; }
+}
