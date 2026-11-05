@@ -3,6 +3,8 @@
 FGCU Quantum Hackathon 2026 candidate build. Self-contained, simulator-only
 (`RUN_ON_HARDWARE = False` in `experiment.py`).
 
+Reference docs: [FINDINGS.md](FINDINGS.md) (where quantum wins and loses), [NOVELTIES.md](NOVELTIES.md) (what is new), [CITATIONS.md](CITATIONS.md) (every source).
+
 ## Verdict first
 
 We estimate one number: the probability, in a given year at today's sea level, that a
