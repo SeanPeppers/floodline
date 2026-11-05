@@ -60,6 +60,16 @@ def load_annual_maxima() -> tuple[np.ndarray, np.ndarray, float, dict[str, float
     return yrs.astype(int), amax + slope * (REF_YEAR - yrs), slope, thresholds
 
 
+def mhhw_above_navd88() -> float:
+    """MHHW minus NAVD88 (m) at this station, from NOAA's own published datums (0.013 m), so
+    drainage.py can put the City's NAVD88 street and stormwater elevations on this module's
+    MHHW-relative tide axis."""
+    meta = f"{API}/mdapi/prod/webapi/stations/{STATION}/datums.json"
+    datums = json.loads(_get(meta, {"units": "metric"}, DATA_DIR / "keywest_datums.json"))
+    val = {d["name"]: d["value"] for d in datums["datums"]}
+    return float(val["MHHW"] - val["NAVD88"])
+
+
 def fit_gev(amax: np.ndarray) -> tuple[float, float, float]:
     c, loc, scale = stats.genextreme.fit(amax)
     return float(c), float(loc), float(scale)

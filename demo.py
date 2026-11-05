@@ -1,5 +1,5 @@
 """Live demo: QAE vs plain Monte Carlo vs Sobol QMC converging on the Key West compound
-tide+rain flood tail probability, animated in real time. Judge-facing prop for the FGCU
+tide+rain flood probability (realistic low-street rule, drainage.py), animated in real time. Judge-facing prop for the FGCU
 Quantum Hackathon 2026 -- same estimators, same query accounting, same cached data and K_MAX
 as experiment.py; this just animates the convergence instead of plotting it once. Reuses
 `EPS_TARGETS[0]` (eps=1e-3 absolute, the first row of the matched_eps table already verified
@@ -38,9 +38,8 @@ def precompute() -> dict:
     """
     p = copula.problem()
     a = p["a_true"]
-    tide_probs, cond = p["tide"]["probs"], p["conditional_rain_probs"]
-    tide_t, rain_t = p["tide_threshold_bin"], p["rain_threshold_bin"]
-    a_circ = copula.state_prep(tide_probs, cond, tide_t, rain_t)
+    tide_probs, cond, mask = p["tide"]["probs"], p["conditional_rain_probs"], p["mask"]
+    a_circ = copula.state_prep(tide_probs, cond, p["a_tab"], p["b_tab"])
     q_circ = qae.grover(a_circ)
     ks = list(range(1, K_MAX + 1))
     q = np.array([qae.queries(SHOTS, qae.schedule(k)) for k in ks], dtype=float)
@@ -56,7 +55,7 @@ def precompute() -> dict:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", UserWarning)
             u = qmc.Sobol(d=2, scramble=True, seed=int(rng.integers(0, 2**31 - 1))).random(n)
-        est["qmc"][i] = copula.compound_hits(tide_probs, cond, tide_t, rain_t, u[:, 0], u[:, 1]).mean()
+        est["qmc"][i] = copula.compound_hits(tide_probs, cond, mask, u[:, 0], u[:, 1]).mean()
         est["mc"][i] = rng.binomial(n, a) / n
 
     matched = next(
@@ -75,11 +74,11 @@ def build_anim(data: dict) -> animation.FuncAnimation:
     ax.set_xscale("log")
     ax.set_xlim(q[0] * 0.8, q[-1] * 1.3)
     ax.set_ylim(0, max(est[n].max() for n in ARMS) * 1.3 + a)
-    ax.axhline(a, color="k", ls="--", lw=1, label=f"true P(tide>=minor AND rain>=10yr) = {a:.4f}")
+    ax.axhline(a, color="k", ls="--", lw=1, label=f"true P(low-street flood >= 6 in) = {a:.4f}")
     ax.axhspan(a - eps_band, a + eps_band, color="k", alpha=0.08, label=f"converged band (+/-{eps_band:.0e})")
     ax.set_xlabel("oracle queries so far (= classical draws, log scale)")
     ax.set_ylabel("running probability estimate")
-    ax.set_title("Key West compound tide+rain tail estimate: quantum vs. classical, live")
+    ax.set_title("Key West compound tide+rain flood probability: quantum vs. classical, live")
     ax.grid(True, which="both", alpha=0.25)
 
     lines = {
@@ -120,7 +119,7 @@ def build_anim(data: dict) -> animation.FuncAnimation:
 
 if __name__ == "__main__":
     data = precompute()
-    assert 0 < data["a"] < 0.3
+    assert 0 < data["a"] < 1
     # QAE and QMC must converge on-screen -- that's the demo's point. Plain MC's convergence
     # point (>100k queries, vs. ~13k animated here) is legitimately off-screen: it needing far
     # more queries than is practical to animate within K_MAX IS the visible result, not a bug.

@@ -2,16 +2,19 @@
 cell at 24.5557 N, 81.8079 W -- the same point as NOAA tide station 8724580 (flood.py), to
 within about 70 m. 24-hour duration, annual maximum series (AMS). NOAA's PFDS server already
 did the extreme-value fitting from the raw daily-rainfall record; it returns only the fitted
-return-period depths, not the underlying series. We re-fit a two-parameter Gumbel to those nine
-published (return period, depth) points -- a standard hydrology technique for working from a
-published frequency curve, not a fit to a raw series we don't have. flood.py's tide fit, by
-contrast, is a fit to the raw 110-year annual-maxima series. That's a real difference in how
-"real data" enters each marginal; see README.
+return-period depths, not the underlying series. We re-fit a three-parameter GEV to those nine
+published (return period, depth) points by least squares on the quantile curve -- a standard
+hydrology technique for working from a published frequency curve, not a fit to a raw series we
+don't have. flood.py's tide fit, by contrast, is a fit to the raw annual-maxima series.
 
-Threshold: there's no NWS/FEMA "heavy rain flood stage" analogous to flood.py's nws_major.
-RAIN_THRESHOLD_YEARS picks the 10-year 24-hour return period as a stand-in for "rain heavy
-enough to plausibly contribute to inland flooding" in flat, poorly-drained terrain like Key
-West -- a modeling choice, not a measured or official threshold.
+Why GEV and not the Gumbel an earlier build used: that two-parameter Gumbel (OLS on the reduced
+variate) missed NOAA's own 2-yr depth by 42% (2.57 in vs 4.40 in) and put the nominal "10-yr"
+depth at a ~8-yr exceedance. drainage.py's flood rule is decided by rain in exactly that 2-10 yr
+range, so the misfit had to go. The GEV is within 0.25 in of all nine published depths.
+
+Threshold (rectangle rule only): there's no NWS/FEMA "heavy rain flood stage" analogous to
+flood.py's thresholds. RAIN_THRESHOLD_YEARS picks the 10-year 24-hour return period -- a
+modeling choice, not an official threshold. The realistic rule (drainage.py) doesn't use it.
 """
 
 import ast
@@ -21,7 +24,7 @@ from pathlib import Path
 
 import numpy as np
 import requests
-from scipy import stats
+from scipy import optimize, stats
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
 LAT, LON = 24.5557, -81.8079  # NOAA tide station 8724580's own coordinates
@@ -31,8 +34,8 @@ DURATIONS = ["5m", "10m", "15m", "30m", "60m", "2h", "3h", "6h", "12h", "24h",
 AMS_RETURN_PERIODS = [2, 5, 10, 25, 50, 100, 200, 500, 1000]  # years; PFDS's AMS column order
 RAIN_THRESHOLD_YEARS = 10  # modeling choice -- see module docstring
 
-N_QUBITS = 3
-BIN_W = 1.865  # in; tuned so the 10-yr 24-hr depth (7.46 in) snaps to bin 4 of 8 exactly
+N_QUBITS = 5  # 32 bins: fine enough that drainage.py's curved boundary is a multi-step staircase
+BIN_W = 1.865 / 4  # in; the 10-yr 24-hr depth (7.46 in) snaps to edge 16 of 32 exactly
 GRID_LO = 0.0
 
 
@@ -53,22 +56,24 @@ def _fetch_ams_24h() -> np.ndarray:
     return np.array(json.loads(cache.read_text()), dtype=float)
 
 
-def fit_gumbel(depths: np.ndarray) -> tuple[float, float]:
-    """Gumbel fit (x_T = loc + scale*y_T) to NOAA's own published return-period depths, where
-    y_T = -ln(-ln(1 - 1/T)) is the Gumbel reduced variate for an annual-maximum series. OLS on
-    the 9 points NOAA already computed from the raw series."""
+def fit_gev(depths: np.ndarray) -> tuple[float, float, float]:
+    """GEV (scipy shape convention) whose 1/T exceedance quantiles best match NOAA's nine
+    published AMS depths, least squares in inches."""
     t = np.array(AMS_RETURN_PERIODS, dtype=float)
-    y = -np.log(-np.log(1 - 1 / t))
-    scale, loc = np.polyfit(y, depths, 1)
-    return float(loc), float(scale)
+    res = optimize.least_squares(lambda p: stats.genextreme.isf(1 / t, *p) - depths, [-0.1, 4.0, 1.5])
+    c, loc, scale = res.x
+    return float(c), float(loc), float(scale)
 
 
-def discretize(loc: float, scale: float) -> np.ndarray:
+def edges() -> np.ndarray:
+    """Interior bin edges (in), 2**N_QUBITS - 1 of them."""
+    return GRID_LO + BIN_W * np.arange(1, 2**N_QUBITS)
+
+
+def discretize(c: float, loc: float, scale: float) -> np.ndarray:
     """Bin probabilities on the 2**N_QUBITS grid, tail mass folded into the end bins (same
     convention as flood.discretize)."""
-    n = 2**N_QUBITS
-    edges = GRID_LO + BIN_W * np.arange(1, n)
-    cdf = np.concatenate([[0.0], stats.gumbel_r.cdf(edges, loc, scale), [1.0]])
+    cdf = np.concatenate([[0.0], stats.genextreme.cdf(edges(), c, loc, scale), [1.0]])
     return np.diff(cdf)
 
 
@@ -82,16 +87,17 @@ def threshold_index(level: float) -> int:
 def problem() -> dict:
     """Everything the joint model needs for the rain marginal."""
     depths = _fetch_ams_24h()
-    loc, scale = fit_gumbel(depths)
-    probs = discretize(loc, scale)
+    c, loc, scale = fit_gev(depths)
+    probs = discretize(c, loc, scale)
     level = float(np.interp(RAIN_THRESHOLD_YEARS, AMS_RETURN_PERIODS, depths))
     t = threshold_index(level)
+    fitted = stats.genextreme.isf(1 / np.array(AMS_RETURN_PERIODS, dtype=float), c, loc, scale)
     return {
         "station_latlon": [LAT, LON], "duration": "24h", "series": "ams",
         "return_periods_yr": AMS_RETURN_PERIODS, "depths_in": depths.tolist(),
-        "gumbel": {"loc": loc, "scale": scale}, "threshold_years": RAIN_THRESHOLD_YEARS,
-        "threshold_level_in": level, "threshold_snapped_in": GRID_LO + BIN_W * t,
-        "threshold_bin": t, "probs": probs,
+        "gev": {"c": c, "loc": loc, "scale": scale}, "gev_max_abs_misfit_in": float(np.abs(fitted - depths).max()),
+        "threshold_years": RAIN_THRESHOLD_YEARS, "threshold_level_in": level,
+        "threshold_snapped_in": GRID_LO + BIN_W * t, "threshold_bin": t, "probs": probs,
     }  # fmt: skip
 
 

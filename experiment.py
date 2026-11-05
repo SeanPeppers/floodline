@@ -1,9 +1,12 @@
 """Query-complexity benchmark: MLAE vs plain Monte Carlo vs Sobol QMC on the Key West
-compound tide+rain flood tail.
+compound tide+rain flood probability, under two flood rules on the same joint model.
 
 Protocol (fixed before running):
-  1. Truth a = P(tide >= NWS minor stage AND 24-hr rain >= its 10-yr return level), under the
-     discretized Gaussian-copula joint model (copula.py). All three methods estimate this same a.
+  1. Truth a = P(flood) under the discretized Gaussian-copula joint model (copula.py), for each
+     rule in copula.RULES: "rectangle" (tide >= NWS minor AND 24-h rain >= 10-yr depth, an
+     axis-aligned box -- Sobol QMC's best case) and "realistic" (drainage.py's low-street stage
+     model, a curved boundary). All three methods estimate the same a with the same integer
+     flood test; the rule is the only thing that changes between the two runs.
   2. Budgets: MLAE schedules K = 1..K_MAX (m in {0,1,2,...,2^(K-2)}, SHOTS shots each).
      Monte Carlo is run at exactly the same query budgets. One query = one call of A,
      the same unit as one classical draw from the joint model.
@@ -22,13 +25,13 @@ Protocol (fixed before running):
      Aer allocate a statevector sized to the whole chip for a circuit that only touches a
      fraction of it).
 
-Run: `uv run python experiment.py`   (~7 min; the compound circuit's controlled, regime-gated
-rain state prep is far more gate-dense per Grover step than the single-variable build was, so
-K_MAX and the noisy-run budget are both smaller here -- see K_MAX, NOISY_MS, NOISY_SHOTS below.)
+Run: `uv run python experiment.py`   (~1 h on 8 cores: ~15 min exact simulation of the 19-qubit
+realistic circuit, the rest is the noisy run -- see NOISY_MS, NOISY_SHOTS below.)
 """
 
 import json
 import os
+import time
 import warnings
 from pathlib import Path
 
@@ -45,6 +48,7 @@ from scipy.stats import qmc
 
 import copula
 import qae
+import rainfall
 
 load_dotenv()
 
@@ -61,8 +65,7 @@ if RUN_ON_HARDWARE or SAVE_ACCOUNT:
 ROOT = Path(__file__).resolve().parent
 SHOTS = 100
 K_MAX = 7  # max Grover power m=32; exact_hit_probs' single-circuit simulation cost grows with
-# total gates (~size(A) + m*size(Q)), and the compound circuit's Q is ~5x flood.py's -- K_MAX=11
-# (m up to 512) would take the better part of an hour here. See README for the tradeoff.
+# total gates (~size(A) + m*size(Q)); at 19 qubits and ~22k CZ per Q, m=32 already takes ~15 min.
 FIT_FROM_K = 3
 TRIALS = 500
 BOOT = 2000
@@ -72,9 +75,10 @@ ARMS = {
     "mc": ("plain Monte Carlo", "C1"),
     "qmc": ("Sobol QMC (classical, 2-D)", "C2"),
 }
-NOISY_MS = [0, 1]  # smaller than the single-variable build's [0,1,2,4]: at ~1.8s/shot (m=0) and
-# ~6s/shot (m=1) on this circuit's restricted-noise simulation, m=2 alone would cost ~20+ minutes.
-NOISY_SHOTS = 40
+NOISY_MS = [0, 1]  # realistic rule only. Measured ~72 s per noisy shot of A alone (19 qubits,
+# ~14k CZ after routing), ~3x that at m=1, so the budget is shots, not Grover powers. A's ideal
+# fidelity is already ~(1-0.0039)^11000 ~ 0, so more shots would only tighten a coin flip.
+NOISY_SHOTS = 8
 
 
 def fit_slope(q: np.ndarray, err: np.ndarray) -> tuple[float, float]:
@@ -99,7 +103,7 @@ def scaling(q: np.ndarray, est: np.ndarray, a: float, rng: np.random.Generator) 
     return {
         "slope": slope, "slope_ci": np.percentile(bs[:, 0], [2.5, 97.5]).tolist(),
         "alpha": -1 / slope, "alpha_ci": np.percentile(alpha, [2.5, 97.5]).tolist(),
-        "intercept": icpt, "_need_boot": need,
+        "intercept": icpt, "_need_boot": need, "_alpha_boot": alpha,
     }  # fmt: skip
 
 
@@ -189,22 +193,26 @@ def _json_problem(p: dict) -> dict:
     tide = {k: v for k, v in p["tide"].items() if k not in ("probs", "amax", "yrs")}
     rain = {k: v for k, v in p["rain"].items() if k != "probs"}
     return {
-        "tide": tide, "rain": rain, "tide_threshold_bin": p["tide_threshold_bin"],
+        "rule": p["rule"], "tide": tide, "rain": rain, "tide_threshold_bin": p["tide_threshold_bin"],
         "rain_threshold_bin": p["rain_threshold_bin"], "tau_assumed": p["tau_assumed"], "rho": p["rho"],
-        "n_regimes": p["n_regimes"], "a_true": p["a_true"],
+        "n_regimes": p["n_regimes"], "a_true": p["a_true"], "tide_alone_nws_minor": p["tide_alone"],
+        "a_table": p["a_tab"].tolist(), "b_table": p["b_tab"].tolist(), "unit_ft": p["unit_ft"],
+        "first_hit_rain_bin_per_tide_bin": [int(np.argmax(row)) if row.any() else None for row in p["mask"]],
         "conditional_rain_probs": p["conditional_rain_probs"].tolist(),
     }  # fmt: skip
 
 
-def run(k_max: int = K_MAX, trials: int = TRIALS, noisy: bool = True, out_name: str = "results") -> dict:
-    p = copula.problem()
+def run(rule: str = "realistic", k_max: int = K_MAX, trials: int = TRIALS, noisy: bool = True,
+        out_name: str = "results") -> dict:  # fmt: skip
+    p = copula.problem(rule)
     a = p["a_true"]
-    tide_probs, cond = p["tide"]["probs"], p["conditional_rain_probs"]
-    tide_t, rain_t = p["tide_threshold_bin"], p["rain_threshold_bin"]
-    a_circ = copula.state_prep(tide_probs, cond, tide_t, rain_t)
+    tide_probs, cond, mask = p["tide"]["probs"], p["conditional_rain_probs"], p["mask"]
+    a_circ = copula.state_prep(tide_probs, cond, p["a_tab"], p["b_tab"])
     q_circ = qae.grover(a_circ)
     full_ms = qae.schedule(k_max)
+    t0 = time.time()
     p_hit = dict(zip(full_ms, qae.exact_hit_probs(a_circ, q_circ, full_ms)))
+    exact_sim_s = time.time() - t0
     rng = np.random.default_rng(0)
 
     ks = list(range(1, k_max + 1))
@@ -219,8 +227,8 @@ def run(k_max: int = K_MAX, trials: int = TRIALS, noisy: bool = True, out_name: 
             with warnings.catch_warnings():  # Sobol warns when n isn't a power of 2; the budgets
                 warnings.simplefilter("ignore", UserWarning)  # here (2m+1 sums) never are.
                 u = qmc.Sobol(d=2, scramble=True, seed=int(rng.integers(0, 2**31 - 1))).random(n)
-            est["qmc"][i, t] = copula.compound_hits(tide_probs, cond, tide_t, rain_t, u[:, 0], u[:, 1]).mean()
-        # N iid draws from the binned joint model counted against both thresholds is exactly Binomial(N, a).
+            est["qmc"][i, t] = copula.compound_hits(tide_probs, cond, mask, u[:, 0], u[:, 1]).mean()
+        # N iid draws from the binned joint model counted against the flood test is exactly Binomial(N, a).
         est["mc"][i] = rng.binomial(n, a, size=trials) / n
 
     fit = slice(FIT_FROM_K - 1, None)
@@ -236,6 +244,7 @@ def run(k_max: int = K_MAX, trials: int = TRIALS, noisy: bool = True, out_name: 
             row[f"{name}_over_qae"] = float(np.median(ratio))
             row[f"{name}_over_qae_ci"] = np.percentile(ratio, [2.5, 97.5]).tolist()
         matched.append(row)
+    alpha_boot = {name: s.pop("_alpha_boot") for name, s in sc.items()}
     for s in sc.values():
         del s["_need_boot"]
 
@@ -247,38 +256,59 @@ def run(k_max: int = K_MAX, trials: int = TRIALS, noisy: bool = True, out_name: 
                      **{f"rmse_{name}": float(r[name][i]) for name in ARMS},
                      "rmse_mc_analytic": float(np.sqrt(a * (1 - a) / q[i]))} for i, k in enumerate(ks)],
         "scaling": sc, "matched_eps": matched,
-        "width_logical_qubits": a_circ.num_qubits,
+        "width_logical_qubits": a_circ.num_qubits, "adder_bits": a_circ.metadata["acc_bits"],
+        "exact_sim_seconds": exact_sim_s,
         "hardware": hardware_cost(a_circ, q_circ, full_ms),
+        "hardware_oracle_only": hardware_cost(copula.flood_oracle(p["a_tab"], p["b_tab"]), q_circ, [0])["A"],
     }  # fmt: skip
     if noisy:
         out["noisy_fakefez"] = noisy_run(a_circ, q_circ, np.array([p_hit[m] for m in NOISY_MS]), a)
     (ROOT / f"{out_name}.json").write_text(json.dumps(out, indent=2))
-    if out_name == "results":
-        plot(out, q, r, a)
+    out["_rmse"], out["_q"], out["_alpha_boot"], out["_mask"] = r, q, alpha_boot, mask
     return out
 
 
-def plot(out: dict, q: np.ndarray, r: dict[str, np.ndarray], a: float) -> None:
-    fig, (ax, bx) = plt.subplots(1, 2, figsize=(12, 4.8))
-    xs = q[FIT_FROM_K - 1 :]
-    for key, (label, col) in ARMS.items():
-        ax.loglog(q, r[key], "o", color=col, label=label)
-        s = out["scaling"][key]
-        ax.loglog(xs, np.exp(s["intercept"]) * xs ** s["slope"], "-", color=col, alpha=0.7,
-                  label=f"fit: queries ~ eps^-{s['alpha']:.2f} [{s['alpha_ci'][0]:.2f}, {s['alpha_ci'][1]:.2f}]")  # fmt: skip
-    ax.set_xlabel("oracle queries (calls of A)")
-    ax.set_ylabel(f"RMSE of estimated P(tide >= NWS minor AND rain >= 10yr), a = {a:.4f}")
-    ax.set_title(f"Key West compound tide+rain tail, {out['trials']} trials per point")
-    ax.legend(fontsize=8)
-    ax.grid(True, which="both", alpha=0.3)
+def plot(rect: dict, real: dict) -> None:
+    fig, axs = plt.subplots(2, 2, figsize=(13, 9.5))
+    p = copula.problem("realistic")
+    joint = (
+        p["tide"]["probs"][:, None]
+        * p["conditional_rain_probs"][copula.regimes(len(p["tide"]["probs"]), p["n_regimes"])]
+    )
+    ax = axs[0, 0]
+    ax.imshow(np.log10(joint.T + 1e-12), origin="lower", aspect="auto", cmap="Blues", vmin=-6)
+    for out, col, lab in ((rect, "C3", "rectangle rule"), (real, "k", "realistic rule (drainage.py)")):
+        first = out["problem"]["first_hit_rain_bin_per_tide_bin"]
+        ax.step(np.arange(len(first)) - 0.5, [f if f is not None else len(first) for f in first], where="post",
+                color=col, lw=2, label=lab)  # fmt: skip
+    ax.set_xlabel("tide bin (4 cm, annual max above MHHW)")
+    ax.set_ylabel(f"rain bin ({rainfall.BIN_W:.3f} in, annual-max 24-h)")
+    ax.set_title("joint probability (log10) and flood boundary: flood = above/right of line")
+    ax.legend(fontsize=8, loc="upper right")
 
-    hw = out["hardware"]["per_m"]
-    ms = [h["m"] for h in hw]
-    bx.semilogy(ms[1:], [h["cz"] for h in hw][1:], "s-", color="C3", label="CZ gates in Q^m A (FakeFez)")
+    for ax, out in ((axs[0, 1], real), (axs[1, 0], rect)):
+        q, r, a = out["_q"], out["_rmse"], out["problem"]["a_true"]
+        xs = q[FIT_FROM_K - 1 :]
+        for key, (label, col) in ARMS.items():
+            ax.loglog(q, r[key], "o", color=col, label=label)
+            s = out["scaling"][key]
+            ax.loglog(xs, np.exp(s["intercept"]) * xs ** s["slope"], "-", color=col, alpha=0.7,
+                      label=f"fit: queries ~ eps^-{s['alpha']:.2f} [{s['alpha_ci'][0]:.2f}, {s['alpha_ci'][1]:.2f}]")  # fmt: skip
+        ax.set_xlabel("oracle queries (calls of A)")
+        ax.set_ylabel("RMSE of estimated P(flood)")
+        ax.set_title(f"{out['problem']['rule']} rule, a = {a:.4f}, {out['trials']} trials per point")
+        ax.legend(fontsize=8)
+        ax.grid(True, which="both", alpha=0.3)
+
+    bx = axs[1, 1]
+    for out, col in ((rect, "C3"), (real, "k")):
+        hw = out["hardware"]["per_m"]
+        bx.semilogy([h["m"] for h in hw][1:], [h["cz"] for h in hw][1:], "s-", color=col,
+                    label=f"{out['problem']['rule']}: CZ in Q^m A (FakeFez)")  # fmt: skip
     bx.set_xscale("log", base=2)
     bx.set_xlabel("Grover power m")
     bx.set_ylabel("CZ count")
-    bx.axhline(1 / out["hardware"]["cz_error_median"], ls="--", color="gray", label="1 / median CZ error")
+    bx.axhline(1 / real["hardware"]["cz_error_median"], ls="--", color="gray", label="1 / median CZ error")
     bx.set_title("Circuit cost per schedule step")
     bx.legend(fontsize=8)
     bx.grid(True, which="both", alpha=0.3)
@@ -286,8 +316,27 @@ def plot(out: dict, q: np.ndarray, r: dict[str, np.ndarray], a: float) -> None:
     fig.savefig(ROOT / "results.png", dpi=130)
 
 
+def alpha_delta(rect: dict, real: dict) -> dict:
+    """Realistic minus rectangle alpha per arm: median and 95% CI of the difference of the two
+    independent bootstrap distributions."""
+    out = {}
+    for name in ARMS:
+        d = real["_alpha_boot"][name] - rect["_alpha_boot"][name]
+        out[name] = {"delta_alpha": float(np.median(d)), "ci": np.percentile(d, [2.5, 97.5]).tolist()}
+    return out
+
+
 if __name__ == "__main__":
-    r = run()
-    print(json.dumps({k: r[k] for k in ("scaling", "matched_eps", "width_logical_qubits")}, indent=2))
-    print(json.dumps(r["hardware"], indent=2))
-    print(json.dumps(r.get("noisy_fakefez"), indent=2))
+    rect = run("rectangle", noisy=False, out_name="results_rectangle")
+    real = run("realistic")
+    plot(rect, real)
+    delta = alpha_delta(rect, real)
+    saved = json.loads((ROOT / "results.json").read_text())
+    saved["alpha_delta_vs_rectangle"] = delta
+    (ROOT / "results.json").write_text(json.dumps(saved, indent=2))
+    for out in (rect, real):
+        print(out["problem"]["rule"], json.dumps({k: out[k] for k in ("scaling", "matched_eps", "width_logical_qubits",
+                                                                       "exact_sim_seconds")}, indent=2))  # fmt: skip
+        print(json.dumps(out["hardware"], indent=2))
+    print(json.dumps(delta, indent=2))
+    print(json.dumps(real.get("noisy_fakefez"), indent=2))
