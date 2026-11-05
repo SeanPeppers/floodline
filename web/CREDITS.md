@@ -169,3 +169,10 @@ visitor is sent. The map behind it is the NAIP photo above.
 - NOAA NCEI Billion-Dollar Weather and Climate Disasters, events CSV 1980-2024: https://www.ncei.noaa.gov/access/billions/
 - NHC Tropical Cyclone Reports (Irma AL112017, Ian AL092022, Helene AL092024, Milton AL142024): https://www.nhc.noaa.gov/data/tcr/
 - OpenFEMA NFIP claims API v3, Florida claims summed by storm (as of 2026-09-08): https://www.fema.gov/api/open/v3/NfipClaims
+
+## Page textures (sand and rising water)
+
+| File | What it is | Source | License |
+|---|---|---|---|
+| `assets/textures/sand.webp` | Beach sand, downscaled to 768 px, washed light in CSS | Poly Haven "Aerial Beach 01" albedo map (reused from our turtle-light-check project) | CC0 |
+| `assets/textures/water-normals.webp` | Grayscale, low-contrast version of the three.js `waternormals.jpg` above, 512 px | three.js repository | MIT, © 2010–2026 three.js authors |

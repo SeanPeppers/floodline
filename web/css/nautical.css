@@ -19,15 +19,50 @@
   --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Consolas, monospace;
 }
 
-/* Paper with a faint lat/long graticule, like the grid on a printed chart. */
+/* Beach sand behind the page (Poly Haven "Aerial Beach 01", CC0), washed warm and light. */
 body {
   background-color: var(--bg);
   background-image:
-    linear-gradient(var(--hairline) 1px, transparent 1px),
-    linear-gradient(90deg, var(--hairline) 1px, transparent 1px);
-  background-size: 96px 96px;
+    linear-gradient(rgba(242, 234, 216, 0.55), rgba(242, 234, 216, 0.55)),
+    url("../assets/textures/sand.webp");
+  background-size: auto, 384px 384px;
 }
-.section { background: transparent; border-top: 3px double var(--border); }
+.section { background: transparent; border-top: 0; position: relative; z-index: 1; }
+
+/* Text never sits on the water: every section's text column is a paper sheet,
+   so ink-on-paper contrast holds whatever the water level behind it. */
+.section__content {
+  background: rgba(246, 240, 226, 0.96);
+  border: 1px solid var(--border);
+  padding: 2.2rem 2.4rem;
+}
+@media (max-width: 760px) { .section__content { padding: 1.4rem 1.1rem; } }
+.site-footer { position: relative; z-index: 1; background: rgba(246, 240, 226, 0.96); }
+
+/* Rising water (water.js): a fixed layer behind the sheets whose top climbs as
+   the page scrolls past the story. Only its transform changes, so the
+   compositor moves it without repainting the page. */
+.flood {
+  position: fixed; left: 0; right: 0; top: 0; height: 100vh; height: 100lvh;
+  z-index: 0; pointer-events: none;
+  transform: translateY(calc((1 - var(--flood, 0)) * 100%));
+  will-change: transform;
+}
+.flood__body {
+  position: absolute; inset: 18px 0 0;
+  background:
+    linear-gradient(180deg, rgba(64, 150, 165, 0.9), rgba(20, 78, 98, 0.95) 70%),
+    url("../assets/textures/water-normals.webp");
+  background-size: auto, 256px 256px;
+  background-blend-mode: multiply;
+}
+.flood__wave {
+  position: absolute; top: 0; left: 0; width: 200%; height: 20px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 20' preserveAspectRatio='none'%3E%3Cpath d='M0 12 Q15 2 30 12 T60 12 T90 12 T120 12 V20 H0Z' fill='%234096a5' fill-opacity='.88'/%3E%3Cpath d='M0 12 Q15 2 30 12 T60 12 T90 12 T120 12' fill='none' stroke='%23f6f0e2' stroke-opacity='.7' stroke-width='1.2'/%3E%3C/svg%3E") repeat-x;
+  background-size: 240px 20px;
+  animation: lap 7s linear infinite;
+}
+@keyframes lap { to { transform: translateX(-240px); } }
 
 h1, h2 { font-weight: 500; letter-spacing: -0.015em; }
 h1 { font-style: italic; }
