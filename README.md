@@ -71,8 +71,11 @@ afford, it doesn't. Do not pitch it as "quantum beats classical".
 2. **Correction to master's README.** It said the tide-alone probability at NWS minor stage
    was 0.0458. That number is the NWS *major* stage probability. Annual-max water level at
    Key West reaches minor stage in 96.3% of years (median annual max is 0.41 m above MHHW,
-   minor is 0.335 m). So the old "compound" event was almost entirely the rain condition. It
-   was close to a 1-D problem.
+   minor is 0.335 m). It also said the compound AND event was "2.4× more likely than the tide
+   threshold alone", which is impossible: an AND event can't be more likely than either of its
+   parts. On this branch's model, the rectangle event (a = 0.0959) sits just below both of its
+   parts: P(tide ≥ minor) = 0.963 and P(rain ≥ 10-yr) = 0.108. So the old "compound" event was
+   almost entirely the rain condition, close to a 1-D problem.
 3. **Rain marginal refit (GEV, not Gumbel).** master fit a two-parameter Gumbel by OLS to
    NOAA Atlas 14's nine published depths. That fit gave a 2-year depth of 2.57 in when NOAA
    publishes 4.40 in (42% low), and it placed the "10-year" depth at roughly an 8-year
@@ -119,7 +122,10 @@ put MHHW 0.013 m above NAVD88 (`flood.mhhw_above_navd88()`, cached NOAA data).
 
 Each (tide, rain) cell is judged at its midpoint. The flood boundary moves from rain ≥ 6.1 in
 at low tides to rain ≥ 2.3 in at a tide of 1.55 ft. From 1.68 ft up, tide alone floods the
-street. The boundary is drawn in `results.png`, top left.
+street. The boundary is drawn in `results.png`, top left. This rule is an OR, not an AND, so
+it can exceed its tide-only part. Tide alone floods the street (tide bins ≥ 1.68 ft) in 0.217
+of years. Adding rain that the tide-throttled drains can't clear raises that to a = 0.640,
+about 2.9× the tide-only figure.
 
 **Cross-checks against independent NOAA numbers.** NWS minor flood stage at this gauge,
 defined by observed street flooding, is 1.14 ft NAVD88. That is within 0.02 ft of N3210's low
