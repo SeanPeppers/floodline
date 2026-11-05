@@ -193,7 +193,9 @@
       return best;
     }
     plot.addEventListener("pointermove", (e) => show(nearest(e.clientX)));
-    plot.addEventListener("pointerleave", hide);
+    // A touch tap fires pointerleave on lift and focuses afterwards; keep the tapped point.
+    plot.addEventListener("pointerdown", (e) => show(nearest(e.clientX)));
+    plot.addEventListener("pointerleave", (e) => { if (e.pointerType !== "touch") hide(); });
     plot.addEventListener("focus", () => show(idx >= 0 ? idx : xs.length - 1));
     plot.addEventListener("blur", hide);
     plot.addEventListener("keydown", (e) => {
