@@ -1,5 +1,5 @@
 // Results charts and tables, drawn from FloodlineData (data.js). One small SVG
-// line-chart helper serves both charts: log axes, a legend, sparing end labels,
+// line-chart helper serves every chart: log axes, optional 95% CI bars, a legend, sparing end labels,
 // a crosshair + tooltip on hover and keyboard focus. The tables beside each
 // chart carry every value, so the tooltip only ever enhances.
 (function () {
@@ -50,7 +50,7 @@
     plot.appendChild(tip);
 
     const xs = [...new Set(cfg.series.flatMap((s) => s.points.map((p) => p.x)))].sort((a, b) => a - b);
-    const ys = cfg.series.flatMap((s) => s.points.map((p) => p.y)).concat(cfg.ref ? [cfg.ref.y] : []);
+    const ys = cfg.series.flatMap((s) => s.points.flatMap((p) => [p.y, p.lo, p.hi].filter((v) => v !== undefined))).concat(cfg.ref ? [cfg.ref.y] : []);
     const yLo = Math.min(...ys) / 1.4, yHi = Math.max(...ys) * 1.4;
     let paths = [], svg, X, Y, idx = -1;
 
@@ -67,7 +67,7 @@
       svg = el("svg", { width: W, height: H, viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": cfg.ariaLabel });
       plot.prepend(svg);
       const grid = el("g", { class: "chart__grid" }, svg);
-      for (const t of logTicks(yLo, yHi)) {
+      for (const t of cfg.yTicks ? cfg.yTicks.filter((v) => v >= yLo && v <= yHi).map((v) => ({ v })) : logTicks(yLo, yHi)) {
         el("line", { x1: pad.l, x2: W - pad.r, y1: Y(t.v), y2: Y(t.v) }, grid);
         el("text", { x: pad.l - 8, y: Y(t.v) + 4, "text-anchor": "end", class: "chart__tick" }, grid).textContent = cfg.yTick ? cfg.yTick(t.v) : t.label;
       }
@@ -90,15 +90,21 @@
       for (const s of cfg.series) {
         const g = el("g", {}, svg);
         const solid = s.points.filter((p) => !p.hollow);
-        const d = (pts) => pts.map((p, i) => `${i ? "L" : "M"}${X(p.x).toFixed(1)},${Y(p.y).toFixed(1)}`).join("");
+        // dx nudges a series sideways so CI bars at the same x don't overlap.
+        const sx = (p) => X(p.x) + (s.dx || 0);
+        const d = (pts) => pts.map((p, i) => `${i ? "L" : "M"}${sx(p).toFixed(1)},${Y(p.y).toFixed(1)}`).join("");
         paths.push(el("path", { d: d(solid), stroke: s.color, class: "chart__line" }, g));
         const firstHollow = s.points.findIndex((p) => p.hollow);
         if (firstHollow > 0) el("path", { d: d(s.points.slice(firstHollow - 1)), stroke: s.color, class: "chart__line chart__line--extrap" }, g);
         for (const p of s.points) {
-          el("circle", { cx: X(p.x), cy: Y(p.y), r: 4, fill: p.hollow ? "var(--chart-surface)" : s.color, stroke: p.hollow ? s.color : "var(--chart-surface)", "stroke-width": 2, class: "chart__dot" }, g);
+          if (p.lo !== undefined) {
+            el("line", { x1: sx(p), x2: sx(p), y1: Y(p.lo), y2: Y(p.hi), stroke: s.color, class: "chart__ci" }, g);
+            for (const v of [p.lo, p.hi]) el("line", { x1: sx(p) - 4, x2: sx(p) + 4, y1: Y(v), y2: Y(v), stroke: s.color, class: "chart__ci" }, g);
+          }
+          el("circle", { cx: sx(p), cy: Y(p.y), r: 4, fill: p.hollow ? "var(--chart-surface)" : s.color, stroke: p.hollow ? s.color : "var(--chart-surface)", "stroke-width": 2, class: "chart__dot" }, g);
         }
         const last = s.points[s.points.length - 1];
-        ends.push({ y: Y(last.y), x: X(last.x), name: s.short || s.name });
+        ends.push({ y: Y(last.y), x: sx(last), name: s.short || s.name });
       }
       // End labels only when they sit clear of each other; otherwise the legend carries identity.
       ends.sort((a, b) => a.y - b.y);
@@ -129,7 +135,7 @@
         key.className = "chart__tip-key";
         key.style.background = s.color;
         const val = document.createElement("strong");
-        val.textContent = cfg.yFmt(p.y) + (p.hollow ? " (extrap.)" : "");
+        val.textContent = cfg.yFmt(p.y) + (p.lo !== undefined ? ` [${cfg.yFmt(p.lo)}, ${cfg.yFmt(p.hi)}]` : "") + (p.hollow ? " (extrap.)" : "");
         const name = document.createElement("span");
         name.textContent = s.name;
         row.append(key, val, name);
@@ -275,6 +281,30 @@
     }
   }).catch(() => {
     document.getElementById("multi-chart").textContent = "Five-driver data unavailable.";
+  });
+
+  // Wins study: the best classical arm (CMC+QMC) against QAE as the model's own uncertain parameters are added.
+  FloodlineData.wins.then((w) => {
+    const ds = Object.keys(w.dim).map(Number).sort((a, b) => a - b);
+    const series = [["0.0001", "ε = 1e-4", EPS_RAMP[1], -5], ["0.0003", "ε = 3e-4", EPS_RAMP[0], 5]].map(([eps, name, color, dx]) => ({
+      name, short: name, color, dx,
+      points: ds.map((d) => { const r = w.dim[d].vs_qae.cmc_qmc[eps]; return { x: d, y: r.ratio, lo: r.ci[0], hi: r.ci[1] }; }),
+    }));
+    const top = series[0].points[series[0].points.length - 1];
+    lineChart(document.getElementById("wins-chart"), {
+      series,
+      xLog: false,
+      xLabel: "uncertain factors d (5 drivers + model parameters)",
+      yLabel: "CMC+QMC ÷ QAE queries (log)",
+      xName: (d) => `d = ${d} factors`,
+      yFmt: (v) => `${v.toPrecision(2)}×`,
+      yTicks: [0.25, 0.5, 1, 2, 4],
+      yTick: (v) => `${v}×`,
+      ref: { y: 1, above: "QAE cheaper ↑", below: "classical cheaper ↓" },
+      ariaLabel: `Line chart with 95% confidence bars: the best classical method's queries divided by ideal QAE's queries, by number of uncertain factors. At error 1e-4 the ratio rises from ${series[0].points[0].y.toFixed(2)} at d = ${ds[0]} to ${top.y.toFixed(1)} at d = ${top.x}, crossing 1 near d = 7.`,
+    });
+  }).catch(() => {
+    document.getElementById("wins-chart").textContent = "Wins data unavailable.";
   });
 
   FloodlineData.crossover.then((x) => {

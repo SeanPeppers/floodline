@@ -11,6 +11,7 @@
   const results = get("assets/data/results.json");
   const multi = get("assets/data/results_multi.json");
   const crossover = get("assets/data/crossover.json");
+  const wins = get("assets/data/results_wins.json");
   const cli = get("assets/data/cli-example.txt", "text");
 
   const round = (x, n) => Number(x.toFixed(n));
@@ -58,7 +59,6 @@
     const c5 = s.configs["5"];
     const at = (c, eps) => c.matched.find((x) => x.eps === eps);
     const e4 = at(c5, 0.0001);
-    const dStars = zs.flatMap((z) => Object.values(m.studies[z].crossover.qmc).map((v) => v.d_star)).filter((v) => v !== null);
     const cmcAt5 = zs.flatMap((z) => m.studies[z].configs["5"].matched.map((x) => x.cmc_qmc_over_qae));
     const cells = zs.flatMap((z) => Object.values(m.studies[z].configs).flatMap((c) => c.matched));
     const cmcAlways = cells.every((x) => x.cmc_qmc_over_qae < 1);
@@ -70,7 +70,6 @@
     const cx = circ.A.cx + mDeep * circ.Q.cx;
     const pNeed = Math.LN2 / cx;
     return {
-      dStar: range(dStars, 1),
       qmcOverQae5: e4.qmc_over_qae.toFixed(1),
       cmcAt5: range(cmcAt5, 2),
       nCells: cells.length,
@@ -85,6 +84,27 @@
       qubits5: circ.A.qubits,
       pNeed: sci(pNeed),
       czErr: r.czErr.toPrecision(2),
+    };
+  }
+
+  // Wins study, dimension axis: CMC+QMC queries ÷ QAE queries as epistemic inputs are added.
+  function deriveWins(w) {
+    const ds = Object.keys(w.dim).map(Number).sort((a, b) => a - b);
+    const r = (d, eps = "0.0001") => w.dim[d].vs_qae.cmc_qmc[eps];
+    const top = ds[ds.length - 1];
+    const alpha = (d, arm) => w.dim[d].arms[arm].alpha;
+    return {
+      winTopD: top,
+      winTop: r(top).ratio.toFixed(1),
+      winTopCi: `${r(top).ci[0].toFixed(1)}, ${r(top).ci[1].toFixed(1)}`,
+      winMid: [...new Set(ds.filter((d) => d > 7 && d < top).map((d) => r(d).ratio.toFixed(1)))].join("–"),
+      winTie: r(7).ratio.toFixed(1),
+      winLow: r(ds[0]).ratio.toFixed(2),
+      winTop3e4: r(top, "0.0003").ratio.toFixed(1),
+      winAlphaCmc: `${alpha(ds[0], "cmc_qmc").toFixed(2)} to ${alpha(top, "cmc_qmc").toFixed(2)}`,
+      winAlphaQae: range(ds.map((d) => alpha(d, "qae")), 2),
+      winQaeQ: sci(w.dim[top].arms.qae.queries["0.0001"]),
+      winCmcQ: sci(w.dim[top].arms.cmc_qmc.queries["0.0001"]),
     };
   }
 
@@ -118,6 +138,7 @@
   derived.then(bind).catch(warn);
   Promise.all([multi, derived]).then(([m, r]) => bind(deriveMulti(m, r))).catch(warn);
   crossover.then(deriveCrossover).then(bind).catch(warn);
+  wins.then(deriveWins).then(bind).catch(warn);
   cli.then((t) => {
     bind(deriveCli(t));
     const pre = document.getElementById("cli-output");
@@ -147,5 +168,5 @@
     }));
   }).catch(warn);
 
-  window.FloodlineData = { results, multi, crossover, derived, roads };
+  window.FloodlineData = { results, multi, wins, crossover, derived, roads };
 })();
