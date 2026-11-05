@@ -62,27 +62,6 @@ export function shareUnder(streets, levelM) {
 }
 export const pct = (x) => (x < 0.001 && x > 0 ? "<0.1" : (x * 100).toFixed(1));
 
-// ---------- chapter cards ----------
-(function annotateChapters() {
-  const cards = [...document.querySelectorAll('.chapter[data-scene="keywest"]')];
-  if (!cards.length) return;
-  const run = () => Promise.all([loadStreets(), window.FloodlineData.derived]).then(([streets, d]) => {
-    const mhhwM = streets.meta.mhhw_navd_m;
-    for (const c of cards) {
-      const lvl = c.dataset.levelM ? Number(c.dataset.levelM) : d.levels[c.dataset.level];
-      if (lvl === undefined || Number.isNaN(lvl)) continue;
-      const p = c.querySelector(".chapter__roads") || c.querySelector(".chapter__card").appendChild(document.createElement("p"));
-      p.className = "chapter__roads";
-      p.textContent = `${pct(shareUnder(streets, mhhwM + lvl))}% of ${streets.pieces.length.toLocaleString("en-US")} road points under water at this level (bathtub fill).`;
-    }
-  }).catch((e) => console.error("Floodline: road layer unavailable", e));
-  // Lazy: only once the reader is about a screen away from Key West.
-  const io = new IntersectionObserver((es) => {
-    if (es.some((e) => e.isIntersecting)) { io.disconnect(); run(); }
-  }, { rootMargin: "100% 0px" });
-  io.observe(cards[0]);
-})();
-
 // ---------- 3-D layer ----------
 const VERT = /* glsl */ `
   attribute float aH;          // road elevation, m NAVD88
