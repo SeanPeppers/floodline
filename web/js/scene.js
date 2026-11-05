@@ -82,7 +82,7 @@ const CLOUD_GLSL = /* glsl */ `
     ll = uEye + d;
     vec3 g = texture2D(uCloudG, vec2((ll.x + 180.0) / 360.0, (ll.y + 90.0) / 180.0)).rgb;
     vec2 ur = (ll - uRegion.xy) / (uRegion.zw - uRegion.xy);
-    float inR = smoothstep(0.0, 0.08, ur.x) * smoothstep(1.0, 0.92, ur.x) * smoothstep(0.0, 0.08, ur.y) * smoothstep(1.0, 0.92, ur.y);
+    float inR = smoothstep(0.0, 0.08, ur.x) * smoothstep(0.0, 0.08, 1.0 - ur.x) * smoothstep(0.0, 0.08, ur.y) * smoothstep(0.0, 0.08, 1.0 - ur.y);
     vec3 c = mix(g, texture2D(uCloudR, clamp(ur, 0.0, 1.0)).rgb, inR);
     return vec4(c, cloudiness(c));
   }
@@ -112,7 +112,7 @@ const EARTH_FRAG = /* glsl */ `
     // Inside the Irma frame, clear-sky VIIRS pixels are a sharper photo of the
     // same ground than the global Blue Marble; use them where there's no cloud.
     vec2 ur = (ll - uRegion.xy) / (uRegion.zw - uRegion.xy);
-    float inR = smoothstep(0.0, 0.05, ur.x) * smoothstep(1.0, 0.95, ur.x) * smoothstep(0.0, 0.05, ur.y) * smoothstep(1.0, 0.95, ur.y);
+    float inR = smoothstep(0.0, 0.05, ur.x) * smoothstep(0.0, 0.05, 1.0 - ur.x) * smoothstep(0.0, 0.05, ur.y) * smoothstep(0.0, 0.05, 1.0 - ur.y);
     vec3 vi = texture2D(uCloudR, clamp(ur, 0.0, 1.0)).rgb;
     day = mix(day, pow(vi, vec3(2.2)) * 1.15, inR * (1.0 - smoothstep(0.03, 0.2, cloudiness(vi))) * 0.85);
     float ndl = dot(n, uSun);
@@ -210,7 +210,7 @@ const TERRAIN_FRAG = /* glsl */ `
   }
 
   void main() {
-    float inTile = (1.0 - uOuter) * smoothstep(0.0, 0.07, vUv.x) * smoothstep(1.0, 0.93, vUv.x) * smoothstep(0.0, 0.1, vUv.y) * smoothstep(1.0, 0.9, vUv.y);
+    float inTile = (1.0 - uOuter) * smoothstep(0.0, 0.07, vUv.x) * smoothstep(0.0, 0.07, 1.0 - vUv.x) * smoothstep(0.0, 0.1, vUv.y) * smoothstep(0.0, 0.1, 1.0 - vUv.y);
     float h = uOuter > 0.5 ? -10.0 : decode(texture2D(uDem, vUv).r * 255.0);
     // Outside the data tile: sea stays sea, land fades to a neutral "no data" tone.
     // Open sea deepens away from the tile (the reef line and the Straits lie south).

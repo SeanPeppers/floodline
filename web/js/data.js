@@ -67,8 +67,9 @@
   }
 
   const derived = results.then(derive);
-  derived.then(bind).catch(() => {}); // fallback text in the HTML stays
-  crossover.then(deriveCrossover).then(bind).catch(() => {});
+  const warn = (e) => console.error("Floodline: data unavailable, showing built-in fallback values", e);
+  derived.then(bind).catch(warn); // fallback text in the HTML stays
+  crossover.then(deriveCrossover).then(bind).catch(warn);
 
   window.FloodlineData = { results, crossover, derived };
 })();

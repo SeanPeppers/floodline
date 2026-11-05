@@ -253,7 +253,11 @@
       yFmt: (v) => `${v.toPrecision(2)}×`,
       yTick: (v) => `${v}×`,
       ref: { y: 1, above: "QAE cheaper ↑", below: "QMC cheaper ↓" },
-      ariaLabel: "Line chart of the ratio of Sobol QMC queries to MLAE queries against the number of drivers d, one line per target error. Every line starts well below 1 at d = 1 and crosses 1 between about 2 and 3.5 drivers, rising to between 3 and 18 by d = 12.",
+      ariaLabel: (() => {
+        const dStars = epsKeys.map((e) => x.crossover.qae_fit[e].d_star_median);
+        const ends = series.map((s) => s.points[s.points.length - 1].y);
+        return `Line chart of the ratio of Sobol QMC queries to MLAE queries against the number of drivers d, one line per target error. The lines cross 1 between d = ${Math.min(...dStars).toFixed(1)} and ${Math.max(...dStars).toFixed(1)} and reach ${Math.min(...ends).toPrecision(2)} to ${Math.max(...ends).toPrecision(2)} at d = ${ds[ds.length - 1]}.`;
+      })(),
     });
     const head = document.querySelector("#xo-head tr");
     head.replaceChildren();

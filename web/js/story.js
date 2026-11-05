@@ -24,13 +24,15 @@
   // Shared with scene.js, which reads it every frame.
   const state = { u: 0, N, firstKeyWest, level: 0, rain: 0, visible: true, exaggeration: EXAGGERATION, reduceMotion };
   if (/[?&]debug\b/.test(location.search)) window.floodlineState = state; // QA hook: debugU, debugCam
-  let levels = chapters.map((c) => (c.dataset.levelM ? Number(c.dataset.levelM) : null));
+  // Until results.json supplies the thresholds, hold the water at MHHW rather
+  // than easing toward the one level the HTML knows on its own.
+  let levels = chapters.map(() => null);
   const rains = chapters.map((c) => Number(c.dataset.rain || 0));
 
   FloodlineData.derived.then((d) => {
-    levels = chapters.map((c) => (c.dataset.levelM ? Number(c.dataset.levelM) : c.dataset.level ? d.levels[c.dataset.level] : null));
+    levels = chapters.map((c) => (c.dataset.levelM ? Number(c.dataset.levelM) : c.dataset.level ? d.levels[c.dataset.level] ?? null : null));
     update();
-  });
+  }).catch((e) => console.error("Floodline: thresholds unavailable, water held at MHHW", e));
 
   let tops = [], heights = [];
   function measure() {

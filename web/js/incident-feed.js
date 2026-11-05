@@ -36,7 +36,7 @@
     const eps = data.matched_eps[0];
     lines.push({
       delay: lines.length * (reduceMotion ? 0 : 260) + 300,
-      text: `[ALERT] matched ε=${eps.eps}: MLAE needs ${fmt(eps.qae_queries)} q, QMC needs ${fmt(eps.qmc_queries)} q: QMC wins this one`,
+      text: `[ALERT] matched ε=${eps.eps}: MLAE needs ${fmt(eps.qae_queries)} q, QMC needs ${fmt(eps.qmc_queries)} q: ${eps.qmc_queries < eps.qae_queries ? "QMC" : "MLAE"} wins this one`,
       cls: "feed-line--alert",
     });
 
