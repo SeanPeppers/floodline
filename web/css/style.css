@@ -77,7 +77,7 @@ code { font-family: var(--font-mono); font-size: 0.92em; }
 }
 
 /* ---------- journey ---------- */
-.journey { position: relative; }
+.journey { position: relative; z-index: 2; background: var(--bg); }
 .journey__stage {
   position: sticky; top: 0;
   height: 100vh; height: 100svh;
@@ -167,9 +167,9 @@ code { font-family: var(--font-mono); font-size: 0.92em; }
 
 /* ---------- regular sections ---------- */
 .section {
-  position: relative; padding: 6rem 1.5rem;
+  position: relative; z-index: 1; padding: 6rem 1.5rem;
   border-top: 1px solid var(--border);
-  background: var(--bg);
+  background: transparent;
 }
 .section--compact { padding: 4rem 1.5rem; }
 .section__content { max-width: var(--max-w); margin: 0 auto; width: 100%; }
@@ -308,3 +308,63 @@ table.table--fit { min-width: 0; }
 .benefit-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; margin: 2rem 0; }
 .benefit-grid h3 { margin-bottom: 0.8rem; }
 @media (max-width: 720px) { .benefit-grid { grid-template-columns: 1fr; } }
+
+/* ---------- rising tide (decorative background below the journey) ---------- */
+/* Height and opacity come from js/tide.js as --tide-h and --tide-o. Kept faint so
+   text over it stays far above AA: --text-muted over the brightest tint is > 7:1. */
+.site-footer { position: relative; z-index: 1; }
+.tide {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 0; pointer-events: none;
+  height: var(--tide-h, 0vh); opacity: var(--tide-o, 0);
+  transition: opacity 0.6s ease;
+}
+.tide__body { position: absolute; inset: 3.5rem 0 0 0;
+  background: linear-gradient(180deg, rgba(124, 199, 232, 0.13) 0%, rgba(124, 199, 232, 0.05) 45%, rgba(124, 199, 232, 0.025) 100%); }
+.tide__wave { position: absolute; left: 0; top: 0; width: 200%; height: 3.5rem; }
+.tide__wave path { fill: rgba(124, 199, 232, 0.07); }
+.tide__wave--back { animation: tide-drift 26s linear infinite; }
+.tide__wave--front { top: 0.15rem; height: 3.35rem; animation: tide-drift 16s linear infinite reverse; }
+.tide__wave--front path { fill: rgba(124, 199, 232, 0.06); }
+.tide__wave .tide__crest { fill: none; stroke: rgba(124, 199, 232, 0.45); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+@keyframes tide-drift { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* ---------- how it works: animated circuit ---------- */
+.qviz { margin: 2rem 0 1.5rem; padding: 1.25rem 1rem 0.5rem; background: var(--chart-surface); border: 1px solid var(--border); border-radius: 0.75rem; }
+.qviz__svg { display: block; width: 100%; height: auto; overflow: visible; }
+.qviz__wires line { stroke: #3a4658; stroke-width: 2; }
+.qviz__wires .qviz__wire--flood { stroke: rgba(245, 177, 61, 0.55); }
+.qviz__labels text { fill: #98a3b3; font: 12px var(--font-mono); }
+.qviz__labels .qviz__flood-label { fill: var(--amber); }
+.qviz__stage rect { fill: rgba(124, 199, 232, 0.08); stroke: var(--accent); stroke-width: 1.5; }
+.qviz__gate { fill: var(--text); font: 600 30px var(--font-head); }
+.qviz__step { fill: var(--text-muted); font: 600 14px var(--font-head); }
+.qviz__ctrl { stroke: var(--accent); stroke-width: 2; }
+.qviz__dot { fill: var(--accent); }
+.qviz__target { fill: none; stroke: var(--amber); stroke-width: 2.5; }
+.qviz__meter { fill: none; stroke: var(--amber); stroke-width: 2.5; stroke-linecap: round; }
+.qviz__stage { animation: qstage 8s ease-in-out infinite; }
+.qviz__stage--1 { animation-delay: 0s; }
+.qviz__stage--2 { animation-delay: 1.6s; }
+.qviz__stage--3 { animation-delay: 3.2s; }
+.qviz__stage--4 { animation-delay: 4.8s; }
+@keyframes qstage { 0%, 30%, 100% { opacity: 0.55; } 8%, 18% { opacity: 1; } }
+.qviz__pulse { fill: #cdeefb; animation: qpulse 8s cubic-bezier(.45,0,.55,1) infinite; }
+.qviz__pulse:nth-child(2) { animation-delay: 0.12s; }
+.qviz__pulse:nth-child(3) { animation-delay: 0.24s; }
+.qviz__pulse:nth-child(4) { animation-delay: 0.36s; }
+.qviz__pulse--flood { fill: var(--amber); animation-delay: 0.48s; }
+@keyframes qpulse {
+  0% { transform: translateX(30px); opacity: 0; }
+  4% { opacity: 1; }
+  70% { transform: translateX(850px); opacity: 1; }
+  76%, 100% { transform: translateX(850px); opacity: 0; }
+}
+.steps { color: var(--text-muted); padding-left: 1.3rem; }
+.steps li { margin-bottom: 0.8rem; }
+@media (max-width: 760px) { .qviz { padding: 0.75rem 0.5rem 0.25rem; } }
+@media (max-width: 600px) { .qviz__step { font-size: 26px; } .qviz__labels text { font-size: 20px; } .qviz__gate { font-size: 40px; } }
+@media (max-width: 400px) { .site-header nav { overflow-x: auto; } }
+@media (prefers-reduced-motion: reduce) {
+  .qviz__stage { opacity: 1; }
+  .qviz__pulse { opacity: 0; }
+}

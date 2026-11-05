@@ -27,6 +27,7 @@
   <div class="site-header__inner">
     <span class="brand"><span class="brand__dot" aria-hidden="true"></span>Floodline</span>
     <nav aria-label="Section navigation">
+      <a href="#how">How it works</a>
       <a href="#results">Results</a>
       <a href="#tool">Road ranking</a>
       <a href="#tonight">Live map</a>
@@ -36,6 +37,12 @@
     </nav>
   </div>
 </header>
+
+<div class="tide" aria-hidden="true">
+  <svg class="tide__wave tide__wave--back" viewBox="0 0 1440 120" preserveAspectRatio="none"><path d="M0 60 Q 90 20 180 60 T 360 60 T 540 60 T 720 60 T 900 60 T 1080 60 T 1260 60 T 1440 60 V120 H0 Z"/></svg>
+  <svg class="tide__wave tide__wave--front" viewBox="0 0 1440 120" preserveAspectRatio="none"><path d="M0 72 Q 60 46 120 72 T 240 72 T 360 72 T 480 72 T 600 72 T 720 72 T 840 72 T 960 72 T 1080 72 T 1200 72 T 1320 72 T 1440 72 V120 H0 Z"/><path class="tide__crest" d="M0 72 Q 60 46 120 72 T 240 72 T 360 72 T 480 72 T 600 72 T 720 72 T 840 72 T 960 72 T 1080 72 T 1200 72 T 1320 72 T 1440 72"/></svg>
+  <div class="tide__body"></div>
+</div>
 
 <main id="main">
 
@@ -154,6 +161,98 @@
           <p class="chapter__source">Still-water level at the gauge, not a flood map. <a href="#results">Results</a>.</p>
         </div>
       </article>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS: the four QAE steps. The SVG is decorative; the ordered list carries the content. -->
+  <section class="section" id="how" aria-labelledby="how-title">
+    <div class="section__content section__content--wide">
+      <p class="eyebrow">How it works</p>
+      <h2 id="how-title">Four steps on a quantum computer.</h2>
+      <p>
+        A flood probability is a fraction: of all the years that could happen,
+        how many flood the street? Quantum amplitude estimation turns that
+        fraction into a rotation on a qubit, then measures how fast it turns.
+      </p>
+
+      <figure class="qviz" aria-hidden="true">
+        <svg viewBox="0 0 880 270" class="qviz__svg" focusable="false">
+          <defs>
+            <filter id="qglow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <g class="qviz__wires">
+            <line x1="30" y1="45" x2="850" y2="45"/>
+            <line x1="30" y1="85" x2="850" y2="85"/>
+            <line x1="30" y1="125" x2="850" y2="125"/>
+            <line x1="30" y1="165" x2="850" y2="165"/>
+            <line class="qviz__wire--flood" x1="30" y1="215" x2="850" y2="215"/>
+          </g>
+          <g class="qviz__labels">
+            <text x="22" y="49" text-anchor="end">tide</text>
+            <text x="22" y="89" text-anchor="end">tide</text>
+            <text x="22" y="129" text-anchor="end">rain</text>
+            <text x="22" y="169" text-anchor="end">rain</text>
+            <text x="22" y="219" text-anchor="end" class="qviz__flood-label">flood</text>
+          </g>
+          <!-- 1 load -->
+          <g class="qviz__stage qviz__stage--1">
+            <rect x="110" y="28" width="90" height="154" rx="10"/>
+            <text x="155" y="111" text-anchor="middle" class="qviz__gate">A</text>
+            <text x="155" y="258" text-anchor="middle" class="qviz__step">1 · Load</text>
+          </g>
+          <!-- 2 mark -->
+          <g class="qviz__stage qviz__stage--2">
+            <line x1="335" y1="45" x2="335" y2="215" class="qviz__ctrl"/>
+            <circle cx="335" cy="45" r="7" class="qviz__dot"/>
+            <circle cx="335" cy="85" r="7" class="qviz__dot"/>
+            <circle cx="335" cy="125" r="7" class="qviz__dot"/>
+            <circle cx="335" cy="165" r="7" class="qviz__dot"/>
+            <circle cx="335" cy="215" r="15" class="qviz__target"/>
+            <line x1="320" y1="215" x2="350" y2="215" class="qviz__ctrl"/>
+            <text x="335" y="258" text-anchor="middle" class="qviz__step">2 · Mark floods</text>
+          </g>
+          <!-- 3 amplify -->
+          <g class="qviz__stage qviz__stage--3">
+            <rect x="480" y="28" width="110" height="204" rx="10"/>
+            <text x="535" y="137" text-anchor="middle" class="qviz__gate">Q<tspan dy="-12" font-size="18">m</tspan></text>
+            <text x="535" y="258" text-anchor="middle" class="qviz__step">3 · Amplify</text>
+          </g>
+          <!-- 4 estimate -->
+          <g class="qviz__stage qviz__stage--4">
+            <rect x="720" y="190" width="70" height="50" rx="8"/>
+            <path d="M733 228 A22 22 0 0 1 777 228" class="qviz__meter"/>
+            <line x1="755" y1="228" x2="770" y2="206" class="qviz__meter"/>
+            <text x="755" y="258" text-anchor="middle" class="qviz__step">4 · Estimate</text>
+          </g>
+          <g class="qviz__pulses" filter="url(#qglow)">
+            <circle class="qviz__pulse" cx="0" cy="45" r="5"/>
+            <circle class="qviz__pulse" cx="0" cy="85" r="5"/>
+            <circle class="qviz__pulse" cx="0" cy="125" r="5"/>
+            <circle class="qviz__pulse" cx="0" cy="165" r="5"/>
+            <circle class="qviz__pulse qviz__pulse--flood" cx="0" cy="215" r="6"/>
+          </g>
+        </svg>
+      </figure>
+
+      <ol class="steps">
+        <li><strong>Load.</strong> Qubits hold every combination of tide and rain at once, each weighted by how likely it is (110 years of Key West tide data, NOAA rainfall).</li>
+        <li><strong>Mark floods.</strong> A comparator flips a "flood" qubit for every combination where the street ends up under 6 inches of water. The chance of reading that qubit as 1 <em>is</em> the flood probability.</li>
+        <li><strong>Amplify.</strong> Grover steps rotate that probability. Repeating them makes small differences in the answer easy to see.</li>
+        <li><strong>Estimate.</strong> Maximum-likelihood amplitude estimation measures at several depths and works out the probability, with about 10&times; the work for 10&times; the precision, where classical sampling needs 100&times;.</li>
+      </ol>
+
+      <details class="more">
+        <summary>The Qiskit code behind steps 1&ndash;3</summary>
+        <pre class="code-block" tabindex="0" role="region" aria-label="Qiskit state preparation code, scrollable"><code>qc = QuantumCircuit(2 * n, name="A")
+qc.append(StatePreparation(np.sqrt(probs)), range(n))        # 1. load
+qc.append(IntegerComparatorGate(n, threshold_bin, geq=True),  # 2. mark floods
+          range(n + 1))
+Q = grover_operator(oracle, state_preparation=qc)            # 3. amplify</code></pre>
+        <p class="caption-note">Simplified from <code>qae.py</code>. Step 4 is <code>mlae()</code> in the same file.</p>
+      </details>
     </div>
   </section>
 
@@ -648,6 +747,7 @@ uv run python floodline_cli.py --year 2050 --elevation 3.0 --exposure</code></pr
 <script src="js/data.js"></script>
 <script src="js/charts.js" defer></script>
 <script src="js/main.js" defer></script>
+<script src="js/tide.js" defer></script>
 <script src="js/story.js" defer></script>
 <script type="module" src="js/streets.js"></script>
 <script type="module" src="js/tonight.js"></script>
