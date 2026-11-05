@@ -28,6 +28,7 @@
     <span class="brand"><span class="brand__dot" aria-hidden="true"></span>Floodline</span>
     <nav aria-label="Section navigation">
       <a href="#results">Results</a>
+      <a href="#savings">Savings</a>
       <a href="#tool">Tool</a>
       <a href="#tonight">Tonight</a>
       <a href="#verdict">Verdict</a>
@@ -66,16 +67,16 @@
             We built a compound-flood risk tool for Key West and found where
             quantum helps. It beats standard sampling at 4+ flood drivers and
             loses to the best classical method unless the simulator is a black
-            box. That case needs hardware
-            <span data-bind="cleaner">100,000&times;</span> cleaner than today's.
+            box. That case needs hardware about a million times cleaner than
+            today's (two-qubit error 1e-8&ndash;1e-9 vs 4e-3).
           </p>
           <ul class="hero__stats" aria-label="Headline results">
             <li class="stat">
-              <span class="stat__value">d &asymp; <span data-bind="dStar">3.7&ndash;4.9</span></span>
+              <span class="stat__value">d &asymp; <span data-bind="dStar">3.5&ndash;4.9</span></span>
               <span class="stat__label">drivers where QAE starts beating Sobol QMC</span>
             </li>
             <li class="stat stat--warn">
-              <span class="stat__value"><span data-bind="cmcAt5">0.12&ndash;0.34</span>&times;</span>
+              <span class="stat__value"><span data-bind="cmcAt5">0.18&ndash;0.55</span>&times;</span>
               <span class="stat__label">best classical method's queries relative to QAE, 5 drivers</span>
             </li>
             <li class="stat stat--warn">
@@ -210,11 +211,12 @@
       <p class="eyebrow eyebrow--gap">Result 2 &middot; five drivers</p>
       <h2>With five drivers, QAE passes Sobol QMC but never the best classical method.</h2>
       <p>Drivers: tide, 24-hour rain, 3-hour burst, sea-level rise, groundwater.</p>
-            <ul class="findings">
-        <li><strong>Sobol QMC falls behind from d&nbsp;&asymp;&nbsp;4.</strong> At 5 drivers, &epsilon;&nbsp;=&nbsp;1e-4, it needs <span data-bind="qmcOverQae5">2.7</span>&times; QAE's queries.</li>
-        <li><strong>Conditional MC + Sobol beats QAE in <span data-bind="cmcAlways">every</span> one of <span data-bind="nCells">24</span> cells</strong>, at <span data-bind="cmcAt5">0.12&ndash;0.34</span>&times; QAE's queries with 5 drivers.</li>
-        <li><strong>Exact enumeration wins on total work:</strong> <span data-bind="enumEvals">2.6e5</span> evaluations, no sampling error. QAE needs <span data-bind="qaeQueries4">9.2e4</span> queries of <span data-bind="aCx">1.5e5</span> CX gates each.</li>
-        <li><strong>QAE leads only if the simulator is a black box</strong>, needing <span data-bind="bbWin">1.4&ndash;2.0</span>&times; fewer runs. That takes a two-qubit error near <span data-bind="pNeed">9.1e-9</span>; today's is <span data-bind="czErr">0.0039</span>.</li>
+      <p class="claim">We found no published head-to-head of quantum amplitude estimation vs quasi-Monte Carlo on a real risk model; we measured the crossover at ~4 drivers.</p>
+      <ul class="findings">
+        <li><strong>Sobol QMC falls behind from d&nbsp;&asymp;&nbsp;4.</strong> At 5 drivers, &epsilon;&nbsp;=&nbsp;1e-4, it needs <span data-bind="qmcOverQae5">3.5</span>&times; QAE's queries.</li>
+        <li><strong>Conditional MC + Sobol beats QAE in <span data-bind="cmcAlways">every</span> one of <span data-bind="nCells">24</span> cells</strong>, at <span data-bind="cmcAt5">0.18&ndash;0.55</span>&times; QAE's queries with 5 drivers.</li>
+        <li><strong>Exact enumeration wins on total work:</strong> <span data-bind="enumEvals">2.6e5</span> evaluations, no sampling error. QAE needs <span data-bind="qaeQueries4">9.6e4</span> queries of <span data-bind="aCx">1.5e5</span> CX gates each.</li>
+        <li><strong>QAE leads only if the simulator is a black box</strong>, needing <span data-bind="bbWin">1.6 / 2.3 / 3.3</span>&times; fewer runs at &epsilon;&nbsp;=&nbsp;1e-3 / 3e-4 / 1e-4. That takes a two-qubit error near <span data-bind="pNeed">9.1e-9</span>; today's is <span data-bind="czErr">0.0039</span>.</li>
       </ul>
 
       <figure class="chart-figure">
@@ -235,20 +237,111 @@
     </div>
   </section>
 
+  <!-- SAVINGS: inputs and assumptions from the black-box savings study; ratios from results_multi.json -->
+  <section class="section" id="savings" aria-labelledby="savings-title">
+    <div class="section__content section__content--wide">
+      <p class="eyebrow">Where the quantum result applies</p>
+      <h2 id="savings-title">Real flood models are black boxes.</h2>
+      <ul class="hero__stats" aria-label="Black-box flood models">
+        <li class="stat">
+          <span class="stat__value">~630</span>
+          <span class="stat__label">SLOSH runs per NOAA P-Surge advisory, due within 1 hour</span>
+        </li>
+        <li class="stat">
+          <span class="stat__value">~2,000</span>
+          <span class="stat__label">core-hours per ADCIRC storm-surge run</span>
+        </li>
+        <li class="stat">
+          <span class="stat__value"><span data-bind="bbWin">1.6 / 2.3 / 3.3</span>&times;</span>
+          <span class="stat__label">fewer simulator runs for quantum than the best classical method, &epsilon;&nbsp;=&nbsp;1e-3 / 3e-4 / 1e-4</span>
+        </li>
+      </ul>
+      <p>Inside a black box, our best classical method has to bisect for each sample: <span data-bind="bisect">6</span> simulator runs. That is where QAE wins.</p>
+
+      <h3 class="eyebrow--gap">What it could save</h3>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Compute savings table, scrollable on narrow screens">
+        <table class="table--fit">
+          <caption>Compute dollars saved per study, on hardware that does not exist yet</caption>
+          <thead><tr><th scope="col">Study</th><th scope="col">Low</th><th scope="col">Central</th><th scope="col">High</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">FEMA-style study, 446 storms</th><td>$15.8k</td><td>$23.8k</td><td>$42.0k</td></tr>
+            <tr><th scope="row">Louisiana 2017 suite, 7,712 runs</th><td>$177k</td><td>$267k</td><td>$330k</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>One P-Surge advisory: $11&ndash;$21. Its real limit is the 1-hour deadline, not money.</p>
+      <p><strong>We don't estimate lives saved: no source links forecast speed to casualties.</strong></p>
+
+      <details class="more">
+        <summary>How we calculated this</summary>
+        <p>
+          <code>runs saved = N &times; (1 &minus; 1/r)</code>, then
+          <code>$ = runs saved &times; CPU-hours per run &times; $0.0473</code>.
+          Low / central / high use r&nbsp;=&nbsp;1.6 / 2.3 / 3.3, our measured
+          black-box ratios at &epsilon;&nbsp;=&nbsp;1e-3 / 3e-4 / 1e-4 (5 drivers, 3.0&nbsp;ft street).
+        </p>
+        <p>Inputs:</p>
+        <ul>
+          <li>P-Surge: ~630 SLOSH runs per advisory, results due within an hour. <a href="https://slosh.nws.noaa.gov/docs/data/SLOSH_MPI_AMS-2020.pdf">NOAA SLOSH MPI paper (AMS 2020)</a></li>
+          <li>FEMA Louisiana study: 446 synthetic storms. Louisiana 2017 suite: 7,712 simulations, ~10M CPU-hours. <a href="https://hpcuserforum.com/presentations/colorado-sept2015/LouisianaCoastalMasterPlan.pdf">Louisiana Coastal Master Plan slides</a></li>
+          <li>ADCIRC+SWAN: ~2,000 core-hours per run. <a href="https://arxiv.org/abs/1909.01836">arXiv 1909.01836</a></li>
+          <li>Hurricane Ike run: 1,064 cores &times; 2.683&nbsp;h = 2,855 core-hours (FEMA high case). <a href="https://arxiv.org/abs/2310.06199">arXiv 2310.06199</a></li>
+          <li>Price: AWS hpc7a.96xlarge, $9.0793/h &divide; 192 vCPU = $0.0473 per CPU-hour (region unstated). <a href="https://instances.vantage.sh/aws/ec2/hpc7a.96xlarge">Vantage</a></li>
+        </ul>
+        <p>Assumptions:</p>
+        <ol>
+          <li>Our 5-driver ratios carry over to SLOSH and ADCIRC. Untested.</li>
+          <li>The classical method finds each threshold by bisection. Smarter search shrinks the win.</li>
+          <li>Fault-tolerant hardware about a million times cleaner than today's: two-qubit error 1e-8&ndash;1e-9 vs ~4e-3, with the simulator compiled to a reversible circuit.</li>
+          <li>Quantum machine cost is not counted. It is likely larger than the savings.</li>
+          <li>QAE queries run one after another; P-Surge's 630 runs run in parallel. QAE may lose on wall-clock time.</li>
+        </ol>
+      </details>
+    </div>
+  </section>
+
   <!-- TOOL -->
   <section class="section" id="tool" aria-label="The flood tool">
     <div class="section__content section__content--wide">
       <p class="eyebrow">Result 3 &middot; the tool</p>
       <h2>P(flood) for any Key West street, by year, scenario and elevation.</h2>
       <p>
-        A 3.0&nbsp;ft street in 2050: <strong><span data-bind="cliP">0.3249</span></strong>
-        a year, about 1 in <span data-bind="cliYears">3.1</span>. City-wide,
-        <strong><span data-bind="cliExposure">36.9%</span></strong> of
+        A 3.0&nbsp;ft street in 2050: <strong><span data-bind="cliP">0.6149</span></strong>
+        a year, about 1 in <span data-bind="cliYears">1.6</span>. City-wide,
+        <strong><span data-bind="cliExposure">55.8%</span></strong> of
         <span data-bind="cliPoints">6,054</span> road points flood in an average year.
       </p>
       <pre class="code-block cli" id="cli-output" tabindex="0" role="region" aria-label="Recorded floodline_cli.py output, scrollable">$ uv run python floodline_cli.py --year 2050 --scenario intermediate --elevation 3.0 --exposure
-  P(flood > 6 in, any given year) = 0.3249</pre>
+  P(flood > 6 in, any given year) = 0.6149</pre>
       <p class="caption-note">Recorded run (<code>README_multidriver.md</code>). A ranking tool under flagged assumptions, not a forecast.</p>
+
+      <p class="eyebrow eyebrow--gap">Money the tool saves today &middot; classical engine</p>
+      <h2>Which road to raise first, in dollars.</h2>
+      <p>
+        <strong>Flagler Ave is first:</strong> 4.7&nbsp;mi, and its low point has
+        a 99% chance of flooding in 2050. Raising it 1&nbsp;ft costs <strong>$7.0M&ndash;$17.5M per
+        flood-year avoided</strong> (2026&ndash;2050).
+      </p>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Road-raising priority table, scrollable on narrow screens">
+        <table>
+          <caption>Top 5 streets by flooded road-miles a year, 2050 Intermediate sea-level rise</caption>
+          <thead><tr><th scope="col">#</th><th scope="col">Street</th><th scope="col">$ per flood-year avoided</th><th scope="col">P(flood) 2050</th><th scope="col">Flood-years avoided per ft</th><th scope="col">Miles</th></tr></thead>
+          <tbody id="road-rows">
+            <tr><td>1</td><th scope="row">Flagler Avenue</th><td>$7.0M&ndash;$17.5M</td><td>0.99</td><td>6.4</td><td>4.7</td></tr>
+            <tr><td>2</td><th scope="row">South Roosevelt Boulevard</th><td>$3.6M&ndash;$9.0M</td><td>0.80</td><td>7.7</td><td>2.9</td></tr>
+            <tr><td>3</td><th scope="row">North Roosevelt Boulevard</th><td>$3.5M&ndash;$8.7M</td><td>0.67</td><td>7.1</td><td>2.6</td></tr>
+            <tr><td>4</td><th scope="row">Front Street</th><td>$4.4M&ndash;$10.9M</td><td>1.00</td><td>3.0</td><td>1.4</td></tr>
+            <tr><td>5</td><th scope="row">College Road</th><td>$2.2M&ndash;$5.5M</td><td>0.76</td><td>7.7</td><td>1.8</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="caption-note">
+        Assumes a 1-ft raise. Cost per mile: $9.6M
+        (<a href="https://floridaspecifier.com/issues/v44n6/monroe-county-caps-roads-plan-with-1-6-billion-in-projects/">Monroe County roads plan</a>)
+        to $23.9M (<a href="https://keysweekly.com/?p=84561">Twin Lakes pilot</a>, drainage included).
+        Neither states a raise height, so read the dollars as an order of
+        magnitude. Conditional MC + Sobol on a laptop, ~8&nbsp;min for 6,054 road points.
+      </p>
     </div>
   </section>
 

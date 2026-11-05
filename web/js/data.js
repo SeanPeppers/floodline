@@ -63,13 +63,12 @@
     const cells = zs.flatMap((z) => Object.values(m.studies[z].configs).flatMap((c) => c.matched));
     const cmcAlways = cells.every((x) => x.cmc_qmc_over_qae < 1);
     // Black box: conditional MC must bisect for each rain threshold, bisection_evals runs per sample.
-    const bb = c5.matched.filter((x) => x.eps <= 3e-4).map((x) => (x.cmc_qmc_queries * c5.bisection_evals) / x.qae_queries);
+    const bb = c5.matched.map((x) => (x.cmc_qmc_queries * c5.bisection_evals) / x.qae_queries);
     // Gate error at which the deepest ε = 1e-4 circuit, Q^m A, succeeds half the time.
     const circ = m.circuits["5"];
     const mDeep = c5.arms.qae.m_needed["0.0001"];
     const cx = circ.A.cx + mDeep * circ.Q.cx;
     const pNeed = Math.LN2 / cx;
-    const factor = r.czErr / pNeed;
     return {
       dStar: range(dStars, 1),
       qmcOverQae5: e4.qmc_over_qae.toFixed(1),
@@ -80,13 +79,12 @@
       qaeQueries4: sci(e4.qae_queries),
       aCx: sci(circ.A.cx),
       bisect: c5.bisection_evals,
-      bbWin: range(bb, 1),
+      bbWin: bb.map((x) => x.toFixed(1)).join(" / "),
       mDeep,
       deepCx: sci(cx),
       qubits5: circ.A.qubits,
       pNeed: sci(pNeed),
       czErr: r.czErr.toPrecision(2),
-      cleaner: `${(10 ** Math.floor(Math.log10(factor))).toLocaleString("en-US")}×`,
     };
   }
 
@@ -126,5 +124,28 @@
     if (pre) pre.textContent = t.trimEnd();
   }).catch(warn);
 
-  window.FloodlineData = { results, multi, crossover, derived };
+  // Road-raising priority (road_priority.py writes the top 100, ranked by flooded miles a year in 2050).
+  const roads = get("assets/data/road_priority.json");
+  roads.then((d) => {
+    const tbody = document.getElementById("road-rows");
+    if (!tbody) return;
+    const usd = (x) => `$${(x / 1e6).toFixed(1)}M`;
+    tbody.replaceChildren(...d.streets.slice(0, 5).map((s, i) => {
+      const tr = document.createElement("tr");
+      const cells = [
+        i + 1, s.street,
+        `${usd(s["usd_per_flood_year_avoided_monroe_plan_9.6M_per_mile"])}–${usd(s["usd_per_flood_year_avoided_twin_lakes_23.9M_per_mile"])}`,
+        s.p_2050_intermediate.toFixed(2), s.flood_years_avoided_2026_2050_per_ft.toFixed(1), s.length_mi.toFixed(1),
+      ];
+      cells.forEach((v, j) => {
+        const td = document.createElement(j === 1 ? "th" : "td");
+        if (j === 1) td.scope = "row";
+        td.textContent = v;
+        tr.append(td);
+      });
+      return tr;
+    }));
+  }).catch(warn);
+
+  window.FloodlineData = { results, multi, crossover, derived, roads };
 })();

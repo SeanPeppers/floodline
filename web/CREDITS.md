@@ -109,6 +109,26 @@ prefers reduced motion.
 CLI's road points come from OpenStreetMap (© OpenStreetMap contributors,
 ODbL) with USGS 3DEP elevations (public domain).
 
+`road_priority.json` (top 100 streets, with the two road-cost sources in
+`meta.costs`) is written by `uv run python road_priority.py`.
+
+## "What it could save" and road-raising costs
+
+Opened and checked 2026-11-05. Savings = runs × (1 − 1/r) × CPU-hours per
+run × $0.0473, with r the measured black-box ratio (1.6 / 2.3 / 3.3).
+
+| Figure on the page | Source |
+|---|---|
+| ~630 SLOSH runs per P-Surge advisory; results due within an hour | NOAA, SLOSH MPI paper (AMS 2020), <https://slosh.nws.noaa.gov/docs/data/SLOSH_MPI_AMS-2020.pdf> |
+| FEMA Louisiana study, 446 synthetic storms; Louisiana 2017 suite, 7,712 simulations, ~10M CPU-hours | Louisiana Coastal Master Plan, HPC User Forum 2015, <https://hpcuserforum.com/presentations/colorado-sept2015/LouisianaCoastalMasterPlan.pdf> |
+| ~2,000 core-hours per ADCIRC+SWAN run | arXiv 1909.01836, <https://arxiv.org/abs/1909.01836> |
+| Hurricane Ike ADCIRC+SWAN, 1,064 cores × 2.683 h = 2,855 core-hours | arXiv 2310.06199, <https://arxiv.org/abs/2310.06199> |
+| $9.0793/h ÷ 192 vCPU = $0.0473 per CPU-hour (AWS hpc7a.96xlarge, region unstated) | Vantage, <https://instances.vantage.sh/aws/ec2/hpc7a.96xlarge> |
+| $9.6M per road mile | Florida Specifier, 2023-03-04, <https://floridaspecifier.com/issues/v44n6/monroe-county-caps-roads-plan-with-1-6-billion-in-projects/> |
+| $21M for 4,633 ft of road (Twin Lakes pilot), $23.9M per mile | Keys Weekly, 2024-08-22, <https://keysweekly.com/?p=84561> |
+
+The 1-ft raise height paired with those road costs is our assumption.
+
 ## Road flood layer and "Tonight in Key West"
 
 | File | What it is | Source | License |
