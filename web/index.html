@@ -31,7 +31,6 @@
       <a href="#results">Results</a>
       <a href="#savings">Savings</a>
       <a href="#tool">Tool</a>
-      <a href="#tonight">Tonight</a>
       <a href="#verdict">Verdict</a>
       <a href="#methods">Methods</a>
     </nav>
@@ -442,70 +441,6 @@
     </div>
   </section>
 
-  <!-- TONIGHT: live street flood view (js/tonight.js, css/tonight.css) -->
-  <section class="section" id="tonight" aria-labelledby="tonight-title">
-    <div class="section__content section__content--wide">
-      <p class="eyebrow">Live &middot; Tonight in Key West</p>
-      <h2 id="tonight-title">Which streets could flood at the next high tide?</h2>
-      <p class="tonight__disclaimer" role="note">
-        <strong>Research prototype. Not an official warning.</strong>
-        Check <a href="https://www.weather.gov/key/">NWS Key West</a> and City of Key West alerts.
-        This model has not been validated against observed flood reports.
-      </p>
-      <p>
-        NOAA's tide forecast for gauge 8724580, the gap between observed and
-        predicted water over the last day, and the NWS rain forecast, run
-        through the five-driver street model for 6,054 road points.
-      </p>
-      <div class="tonight__controls">
-        <fieldset class="tonight__group">
-          <legend>View</legend>
-          <div class="tonight__choices">
-            <label><input type="radio" name="tonight-mode" value="live" checked> Next high tides</label>
-            <label><input type="radio" name="tonight-mode" value="plan"> 2050 planning</label>
-          </div>
-        </fieldset>
-        <fieldset class="tonight__group" id="tonight-tides" hidden>
-          <legend>High tide (Key West time)</legend>
-          <div class="tonight__choices"></div>
-        </fieldset>
-        <div class="tonight__group" id="tonight-scenario-wrap" hidden>
-          <label for="tonight-scenario">NOAA 2022 sea-level scenario</label>
-          <select id="tonight-scenario">
-            <option value="low">Low</option>
-            <option value="intermediate-low">Intermediate-Low</option>
-            <option value="intermediate" selected>Intermediate</option>
-            <option value="intermediate-high">Intermediate-High</option>
-            <option value="high">High</option>
-          </select>
-        </div>
-      </div>
-      <p class="tonight__status" id="tonight-status" role="status">Live data loads when you reach this section.</p>
-      <div class="tonight__map">
-        <canvas id="tonight-map" role="img" aria-label="Key West road map, loading."></canvas>
-      </div>
-      <ul class="tonight__legend" id="tonight-legend"></ul>
-      <p class="tonight__summary" id="tonight-summary" aria-live="polite"></p>
-      <div class="table-wrap" tabindex="0" role="region" aria-label="Streets most at risk, scrollable on narrow screens">
-        <table>
-          <caption>Named streets with at least one road point at risk (top 10)</caption>
-          <thead><tr><th scope="col">Street</th><th scope="col">Lowest point (NAVD88)</th><th scope="col" id="tonight-col">Flood likelihood</th><th scope="col">Points</th></tr></thead>
-          <tbody id="tonight-rows"><tr><td colspan="4">Loading&hellip;</td></tr></tbody>
-        </table>
-      </div>
-      <details class="more">
-        <summary>Inputs, method and limits</summary>
-        <dl class="tonight__inputs" id="tonight-inputs"></dl>
-        <ul>
-          <li>Each road point is the street's centreline elevation (USGS 3DEP lidar) every ~30&nbsp;m. Gutters sit lower, so real ponding starts earlier.</li>
-          <li>The rule is multidriver.py's: water from the sea, groundwater 0.5&ndash;1.5&nbsp;ft above high tide (City of Key West 2024 Stormwater Master Plan) and rain the drains can't take; a street floods past 6&nbsp;inches of water.</li>
-          <li>Absolute probabilities depend on the drainage calibration, an assumption: the five-driver and two-driver calibrations disagree at Patterson Ave (about 0.97 vs 0.64 a year).</li>
-          <li>Simplified: no waves, wind setup, tidal lag in groundwater, or blocked drains. Rain spread &times;0.5&ndash;&times;2 is our assumption, not an NWS figure.</li>
-          <li>Data: NOAA CO-OPS and NWS api.weather.gov, fetched by your browser, no account and no data about you sent. Roads &copy; OpenStreetMap contributors (ODbL).</li>
-        </ul>
-      </details>
-    </div>
-  </section>
 
   <!-- TOY -->
   <section class="section section--compact" id="toy" aria-label="Superseded toy crossover model">
@@ -675,6 +610,5 @@ uv run python hw_demo.py dry       # 3-qubit demo, noisy sim; "run" uses a real 
 <script src="js/main.js" defer></script>
 <script src="js/story.js" defer></script>
 <script type="module" src="js/streets.js"></script>
-<script type="module" src="js/tonight.js"></script>
 </body>
 </html>
