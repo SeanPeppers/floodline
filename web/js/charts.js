@@ -30,6 +30,7 @@
   }
 
   function lineChart(root, cfg) {
+    if (!root) return null; // chart archived off the page
     const legend = document.createElement("ul");
     legend.className = "chart__legend";
     for (const s of cfg.series) {
@@ -230,6 +231,7 @@
   // Grouped "× fewer queries" bars on a log axis whose floor is the 1× tie line,
   // so bar length is the size of the quantum edge. Hollow bars are extrapolated.
   function barChart(root, cfg) {
+    if (!root) return null;
     const nodes = [];
     if (cfg.series.length > 1) {
       const legend = document.createElement("ul");
@@ -302,6 +304,8 @@
   const sci = (v) => v.toExponential(1).replace("e-", "e−");
   const fmtQ = (n) => compact(n);
 
+  const say = (id, msg) => { const el = document.getElementById(id); if (el) el.textContent = msg; };
+
   function cells(tr, values, header) {
     values.forEach((v, i) => {
       const c = document.createElement(i === 0 && header ? "th" : "td");
@@ -312,6 +316,7 @@
   }
 
   FloodlineData.results.then((d) => {
+    if (!document.getElementById("convergence-chart")) return;
     const b = d.budgets;
     const series = [
       { key: "mc", name: "Plain Monte Carlo", short: "MC" },
@@ -346,7 +351,7 @@
       ], true);
     }
   }).catch(() => {
-    document.getElementById("convergence-chart").textContent = "Convergence data unavailable. The tables below hold the same numbers.";
+    say("convergence-chart", "Convergence data unavailable. The tables below hold the same numbers.");
   });
 
   // Five-driver study: every classical arm as a multiple of QAE's queries.
@@ -410,6 +415,7 @@
     });
 
     const rows = document.getElementById("multi-rows");
+    if (!rows) return;
     rows.replaceChildren();
     for (const z of zs) {
       const s = m.studies[z];
@@ -422,7 +428,7 @@
       }
     }
   }).catch(() => {
-    for (const id of ["multi-chart", "qmc-chart", "bb-chart"]) document.getElementById(id).textContent = "Five-driver data unavailable.";
+    for (const id of ["multi-chart", "qmc-chart", "bb-chart"]) say(id, "Five-driver data unavailable.");
   });
 
   // Win 2: plain Monte Carlo ÷ QAE, two-driver street vs the five-driver model (benchmark street, d = 5).
@@ -447,7 +453,7 @@
       ariaLabel: `Bar chart with 95% confidence bars: how many times fewer queries QAE needs than plain Monte Carlo. ${series.map((s) => `${s.name}: ${s.values.map((v, i) => `${v.text}${v.hollow ? " (extrapolated)" : ""} at error ${r.matched_eps[i].eps.toExponential(0)}`).join(", ")}`).join(". ")}.`,
     });
   }).catch(() => {
-    document.getElementById("mc-chart").textContent = "Monte Carlo data unavailable.";
+    say("mc-chart", "Monte Carlo data unavailable.");
   });
 
   // Wins study: the best classical arm (CMC+QMC) against QAE as the model's own uncertain parameters are added.
@@ -474,7 +480,7 @@
       ariaLabel: `Line chart with 95% confidence bars: how many times fewer queries ideal QAE needs than the best classical method, by number of uncertain factors. At error 1e-4: ${series[0].points.map((p) => `${p.y.toFixed(2)} at d = ${p.x}`).join(", ")}; the top value is ${top.y.toFixed(1)} [${top.lo.toFixed(1)}, ${top.hi.toFixed(1)}]. At error 3e-4: ${series[1].points.map((p) => `${p.y.toFixed(2)} at d = ${p.x}`).join(", ")}.`,
     });
   }).catch(() => {
-    document.getElementById("wins-chart").textContent = "Wins data unavailable.";
+    say("wins-chart", "Wins data unavailable.");
   });
 
   // Real ibm_fez run: P(flood qubit = 1) after Q^m A. Ideal law sin²((2m+1)θ), a = sin²θ.
@@ -503,10 +509,11 @@
       ariaLabel: `Chart of P(flood qubit = 1) against Grover depth m from ${h.ms[0]} to ${mMax}. ${series.map((s) => `${s.name}: ${s.points.map((p) => f2(p.y)).join(", ")}`).join(". ")}.`,
     });
   }).catch(() => {
-    document.getElementById("hw-chart").textContent = "Hardware data unavailable.";
+    say("hw-chart", "Hardware data unavailable.");
   });
 
   FloodlineData.crossover.then((x) => {
+    if (!document.getElementById("crossover-chart")) return;
     const epsKeys = Object.keys(x.crossover.qae_fit).sort((a, b) => b - a);
     const ds = x.setup.ds;
     const series = epsKeys.map((eps, i) => ({
@@ -548,6 +555,6 @@
       return `${c.d_star_median.toFixed(1)} [${c.d_star_ci95[0].toFixed(1)}, ${c.d_star_ci95[1].toFixed(1)}]`;
     })], true);
   }).catch(() => {
-    document.getElementById("crossover-chart").textContent = "Crossover data unavailable.";
+    say("crossover-chart", "Crossover data unavailable.");
   });
 })();

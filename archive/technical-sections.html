@@ -1,0 +1,140 @@
+<!-- Removed from web/index.html on 2026-11-05 to cut technical detail from the site. Kept verbatim for reference.
+     To restore a block, paste it back into its section. js/charts.js still renders every chart whose container is present. -->
+
+<!-- ===== Results: chart 2, vs plain Monte Carlo ===== -->
+      <figure class="chart-figure">
+        <figcaption class="chart-figure__title" id="mc-title"><span class="chart-figure__num">2</span> vs plain Monte Carlo</figcaption>
+        <div class="chart" id="mc-chart" aria-describedby="mc-note"></div>
+        <p class="chart-figure__note" id="mc-note">
+          Two drivers: <strong><span data-bind="mcOverQae">27.7 / 105 / 351</span>&times;</strong> fewer at &epsilon;&nbsp;=&nbsp;1e-3 / 3e-4 / 1e-4. Five-driver model, every d: <span data-bind="mcMulti">76&ndash;246</span>&times; at &epsilon;&nbsp;&le;&nbsp;3e-4. Query count, ideal hardware.
+        </p>
+      </figure>
+
+<!-- ===== Results: chart 3, vs Sobol QMC by drivers ===== -->
+      <figure class="chart-figure">
+        <figcaption class="chart-figure__title" id="qmc-title"><span class="chart-figure__num">3</span> vs Sobol quasi-Monte Carlo, by number of drivers</figcaption>
+        <div class="chart" id="qmc-chart" aria-describedby="qmc-note"></div>
+        <p class="chart-figure__note" id="qmc-note">
+          QAE overtakes Sobol at d&nbsp;&asymp;&nbsp;<span data-bind="qmcDStar">3.5&ndash;4.9</span> (shaded, both streets); <strong><span data-bind="qmcOverQae5">3.5</span>&times;</strong> at d&nbsp;=&nbsp;5, &epsilon;&nbsp;=&nbsp;1e-4. Query count, ideal hardware, 3.0&nbsp;ft street.
+        </p>
+      </figure>
+
+<!-- ===== Results: collapsed deep-dive, error vs queries ===== -->
+        <details class="more">
+          <summary>Error vs. queries, two drivers</summary>
+          <figure class="chart-figure">
+            <figcaption class="chart-figure__title" id="conv-title">Error vs. queries, two-driver street model (log&ndash;log)</figcaption>
+            <div class="chart" id="convergence-chart" aria-describedby="conv-note"></div>
+            <p class="chart-figure__note" id="conv-note">
+              <span data-bind="trials">500</span> trials per point. Steeper is faster. Patterson Ave, 2024 Stormwater Master Plan drains.
+              <button id="simulate-btn" class="button button--ghost button--small" type="button">Replay</button>
+            </p>
+          </figure>
+          <p class="caption-note">
+            The curved drainage boundary left QMC's exponent unchanged:
+            &Delta;&alpha;&nbsp;=&nbsp;<span data-bind="dAlphaQmc">&minus;0.04 [&minus;0.09, +0.02]</span>.
+          </p>
+          <div class="table-wrap" tabindex="0" role="region" aria-label="Fitted scaling exponent table, scrollable on narrow screens">
+            <table>
+              <caption>Fitted exponent &alpha; (queries &prop; &epsilon;<sup>-&alpha;</sup>), 95% bootstrap CI</caption>
+              <thead>
+                <tr><th scope="col">Arm</th><th scope="col">&alpha;</th><th scope="col">95% CI</th><th scope="col">Textbook</th></tr>
+              </thead>
+              <tbody id="alpha-rows"><tr><td colspan="4">Loading&hellip;</td></tr></tbody>
+            </table>
+          </div>
+          <div class="table-wrap" tabindex="0" role="region" aria-label="Queries at matched error table, scrollable on narrow screens">
+            <table>
+              <caption>Queries to reach error &epsilon; (median of bootstrap fits)</caption>
+              <thead>
+                <tr><th scope="col">&epsilon;</th><th scope="col">QAE</th><th scope="col">Plain MC</th><th scope="col">MC &divide; QAE</th><th scope="col">Sobol QMC</th></tr>
+              </thead>
+              <tbody id="eps-rows"><tr><td colspan="5">Loading&hellip;</td></tr></tbody>
+            </table>
+          </div>
+          <p class="caption-note">QAE's 3e-4 and 1e-4 rows extrapolate past its smallest measured error.</p>
+        </details>
+
+<!-- ===== Results: collapsed deep-dive, every classical method ===== -->
+        <details class="more">
+          <summary>Every classical method vs QAE, five-driver model</summary>
+          <figure class="chart-figure">
+            <figcaption class="chart-figure__title" id="multi-title">Classical queries &divide; QAE queries at &epsilon;&nbsp;=&nbsp;1e-4, by number of drivers</figcaption>
+            <div class="chart" id="multi-chart" aria-describedby="multi-note"></div>
+            <p class="chart-figure__note" id="multi-note">Above 1, QAE is cheaper. 3.0&nbsp;ft street, 2050. Drivers: tide, 24-hour rain, 3-hour burst, sea-level rise, groundwater.</p>
+          </figure>
+          <div class="table-wrap" tabindex="0" role="region" aria-label="Five-driver ratio table, scrollable on narrow screens">
+            <table>
+              <caption>Classical &divide; QAE queries at matched &epsilon; (below 1: classical cheaper)</caption>
+              <thead><tr><th scope="col">Street, d</th><th scope="col">&epsilon;</th><th scope="col">Sobol QMC</th><th scope="col">Cond. MC + Sobol</th><th scope="col">Same, black box</th><th scope="col">Plain MC</th></tr></thead>
+              <tbody id="multi-rows"><tr><td colspan="6">Loading&hellip;</td></tr></tbody>
+            </table>
+          </div>
+        </details>
+
+<!-- ===== Tool: P(flood) for any street (CLI output) ===== -->
+      <p class="eyebrow">Result 3 &middot; the tool</p>
+      <h2>P(flood) for any Key West street, by year, scenario and elevation.</h2>
+      <p>
+        A 3.0&nbsp;ft street in 2050: <strong><span data-bind="cliP">0.6149</span></strong>
+        a year, about 1 in <span data-bind="cliYears">1.6</span>. City-wide,
+        <strong><span data-bind="cliExposure">55.8%</span></strong> of
+        <span data-bind="cliPoints">6,054</span> road points flood in an average year.
+      </p>
+      <pre class="code-block cli" id="cli-output" tabindex="0" role="region" aria-label="Recorded floodline_cli.py output, scrollable">$ uv run python floodline_cli.py --year 2050 --scenario intermediate --elevation 3.0 --exposure
+  P(flood > 6 in, any given year) = 0.6149</pre>
+      <p class="caption-note">Recorded run (<code>README_multidriver.md</code>). A ranking tool under flagged assumptions, not a forecast.</p>
+
+<!-- ===== Toy crossover section (superseded) ===== -->
+  <!-- TOY -->
+  <section class="section section--compact" id="toy" aria-label="Superseded toy crossover model">
+    <div class="section__content section__content--wide">
+      <p class="eyebrow eyebrow--warn">Superseded by win 3</p>
+      <h2>The toy crossover that led to win 3.</h2>
+      <p>
+        With <em>d</em> Gaussian drivers, QAE passed Sobol QMC near
+        <em>d</em>&nbsp;=&nbsp;<span data-bind="xo.dStar.0.001">3.4</span> /
+        <span data-bind="xo.dStar.0.0003">2.7</span> /
+        <span data-bind="xo.dStar.0.0001">2.4</span> at
+        &epsilon;&nbsp;=&nbsp;1e-3 / 3e-4 / 1e-4. The real model puts it near 4.
+      </p>
+      <figure class="chart-figure">
+        <figcaption class="chart-figure__title" id="xo-title">Toy model: Sobol QMC queries &divide; QAE queries, by drivers <em>d</em></figcaption>
+        <div class="chart" id="crossover-chart" aria-describedby="xo-note"></div>
+        <p class="chart-figure__note" id="xo-note">Toy model, superseded. Hollow points are extrapolated.</p>
+      </figure>
+      <details class="more">
+        <summary>Toy table and caveats</summary>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Toy crossover ratio table, scrollable on narrow screens">
+          <table>
+            <caption>Toy: QMC &divide; QAE queries (&ldquo;extrap.&rdquo; = extrapolated)</caption>
+            <thead id="xo-head"><tr><th scope="col">Drivers d</th><th scope="col">&epsilon; = 1e-3</th><th scope="col">&epsilon; = 3e-4</th><th scope="col">&epsilon; = 1e-4</th></tr></thead>
+            <tbody id="xo-rows"><tr><td colspan="4">Loading&hellip;</td></tr></tbody>
+          </table>
+        </div>
+        <ul>
+          <li>A weighted-sum event, which a classical method can reduce to one dimension.</li>
+          <li>At &epsilon;&nbsp;=&nbsp;1e-4, QMC costs for <em>d</em>&nbsp;&ge;&nbsp;7 are extrapolated.</li>
+          <li>Query counts ignore circuit size and noise.</li>
+        </ul>
+      </details>
+    </div>
+  </section>
+
+<!-- ===== Run it yourself section ===== -->
+  <!-- RUN -->
+  <section class="section section--compact" id="run" aria-label="Run it yourself">
+    <div class="section__content">
+      <p class="eyebrow">Run it</p>
+      <h2>Everything runs on a simulator; only the hardware demo needs an IBM account.</h2>
+      <pre class="code-block" tabindex="0" role="region" aria-label="Run commands, scrollable on narrow screens"><code>uv sync
+uv run python experiment.py        # two-driver benchmark
+uv run python experiment_multi.py  # five-driver benchmark
+uv run python experiment_wins.py dim  # 5-13 uncertain factors
+uv run python floodline_cli.py --year 2050 --elevation 3.0 --exposure
+uv run python hw_demo.py dry       # 3-qubit demo, noisy sim; "run" uses a real IBM QPU</code></pre>
+      <p>
+        Source: <a href="https://github.com/SeanPeppers/floodline">github.com/SeanPeppers/floodline</a>.
+      </p>
+    </div>
+  </section>
