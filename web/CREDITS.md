@@ -5,7 +5,17 @@ people. Nothing in the 3-D scene is hand-modelled: the clouds, ground, seabed
 and aerial photo are rasters downloaded once (no accounts, no API keys) and
 re-encoded for the web. The only things drawn by our own code are shader
 effects on top of that data (lighting, the slow cyclonic turn of the cloud
-field, the flat water level, rain streaks, the amber ring at the tide gauge).
+field, the flat water level, rain streaks, the amber ring at the tide gauge,
+and the cloud layers the camera falls through above Key West).
+
+**Cloud pass and rain (illustration).** Between the globe and the island the
+camera drops through a stack of horizontal cloud layers 8–15 km above the
+tile. Their coverage and tone are sampled from the same MODIS Terra tile at
+that spot; the finer structure is fbm noise, because Terra's ~380 m pixels
+are a smooth grey at that range. The layer heights, the grey fog inside them
+and the overcast lighting at the island are artistic choices, not a
+cloud-base or visibility measurement. The rain is a particle effect (wind
+lean and density grow with scroll); it does not show Irma's measured rainfall.
 
 Licenses were checked on the providers' own pages on 2026-11-04 (Natural
 Earth, GIBS layers and HURDAT2 rechecked 2026-11-05).
@@ -45,9 +55,11 @@ about 35 km (22 mi) west-southwest of the first.
 | `irma-track.json` | NHC best-track fixes for Irma (AL112017), 8–11 Sep 2017, with landfall flags | NOAA NHC HURDAT2 Atlantic file `hurdat2-1851-2025-092326.txt`, <https://www.nhc.noaa.gov/data/hurdat/> | US Government work, public domain |
 | `coast-ne10m.json` | 1:10m coastline cropped to 14–34° N, 98–66° W, rounded to 0.01° | [Natural Earth](https://www.naturalearthdata.com/), `ne_10m_coastline` via the `nvkelso/natural-earth-vector` repository | Public domain |
 
-The track is drawn on the globe just above the cloud tops, with a dot at
-every fix, labels at the three Irma landfalls on Cuba and Florida, and a
-label at the track position for the photo time.
+The track is drawn on the globe just above the cloud tops as a plain line,
+with place-name labels only (Key West and the Cudjoe Key, Marco Island and
+Cuba landfalls; a label hides when it would cover a higher-priority one or
+leave the screen). No times are drawn on the globe; the image time versus
+landfall time is stated in the chapter text.
 
 ## Key West (`assets/keywest/`)
 
@@ -83,8 +95,8 @@ NAVD 88 at gauge 8724580 (1.941 − 1.928 m, NOAA datum sheet cached in
 ## Still frames (`assets/stills/`)
 
 `s0`–`s7` are screenshots of this site's own 3-D scene at each chapter,
-rendered from the assets above (`s0`–`s2` re-rendered 2026-11-05 with the
-Terra imagery, track and coastline). `s0` is the first-paint poster; all of them
+rendered from the assets above (all re-rendered 2026-11-05 with the
+decluttered track, the cloud descent and the overcast, rainy island). `s0` is the first-paint poster; all of them
 are the fallback when WebGL is unavailable, data saving is on, or the visitor
 prefers reduced motion.
 

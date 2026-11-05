@@ -7,6 +7,12 @@
 //   keywest - NOAA CUDEM topobathy with USGS/USDA NAIP imagery draped on it,
 //             flooded "bathtub" style to the level story.js derives from the
 //             model's NWS thresholds (results.json).
+// One descent joins them: the globe camera sinks into the MODIS cloud field,
+// a cloud-grey veil takes over at the hand-off, and the Key West camera starts
+// inside a stack of cloud layers (shaded from the same Terra tile, broken up
+// with fbm noise) and breaks out under the base into an overcast storm. Rain
+// is a camera-centred overlay drawn over whichever scene is live, so it runs
+// unbroken from cloud entry to the last chapter.
 // Only the imagery and terrain are assets; everything else is shader code.
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.187.0/+esm";
 
@@ -20,8 +26,6 @@ const GAUGE = { lat: 24.5557, lon: -81.8079 };
 const KW_BBOX = { w: -81.82, s: 24.535, e: -81.72, n: 24.59 };
 const IRMA_BBOX = { w: -96, s: 12, e: -64, n: 38 };
 const KEYS_BBOX = { w: -85, s: 22, e: -78, n: 28 }; // the sharper Terra tile
-// Terra's descending pass crossed the Florida Straits at about 15:50 UTC.
-const IMAGE_TIME = "2017-09-10T15:50Z";
 // MHHW - NAVD88 at the gauge, from data/keywest_datums.json (1.941 - 1.928 m).
 const MHHW_NAVD88 = 0.013;
 // Must match the encoder in CREDITS.md: piecewise-linear 8-bit height code.
@@ -211,7 +215,7 @@ const TERRAIN_FRAG = /* glsl */ `
   uniform vec2 uFog;
   uniform vec3 uGauge;
   uniform float uOuter;        // 1 on the open-sea plane outside the tile
-  uniform float uGloom;        // storm overcast, 0..1 (follows the rain)
+  uniform float uMist;         // 1 while the camera is inside the cloud deck
   uniform vec3 uDeepColor;
   varying vec2 vUv;
   varying vec3 vWorld;
@@ -232,7 +236,8 @@ const TERRAIN_FRAG = /* glsl */ `
     vec3 sea = mix(uSeaColor, uDeepColor, smoothstep(0.5, 9.0, off));
     vec3 outside = mix(sea, vec3(0.05, 0.055, 0.06), step(uMhhw, h) * (1.0 - uOuter));
     vec3 base = mix(outside, texture2D(uOrtho, vUv).rgb, inTile);
-    float lam = 0.62 + 0.5 * max(dot(normalize(vNormal), uSun), 0.0);
+    // Overcast: diffuse sky light, only a faint directional term.
+    float lam = 0.8 + 0.25 * max(dot(normalize(vNormal), uSun), 0.0);
     vec3 col = base * lam;
 
     float depth = uLevel - h;
@@ -253,7 +258,7 @@ const TERRAIN_FRAG = /* glsl */ `
     float edge = newWater * (1.0 - smoothstep(0.0, 0.035, depth)) * (0.6 + 0.4 * n1.x);
     col += edge * vec3(0.55, 0.62, 0.62);
     col = mix(col, uSkyColor, wet * fres * 0.55);
-    col += wet * spec * vec3(0.9, 0.95, 1.0) * 0.6;
+    col += wet * spec * vec3(0.9, 0.95, 1.0) * 0.1;   // overcast: no sun glint
 
     // Tide gauge 8724580: a slow amber ring, the place the data comes from.
     float gd = length(vWorld.xz - uGauge.xz);
@@ -261,9 +266,10 @@ const TERRAIN_FRAG = /* glsl */ `
     float ring = (1.0 - smoothstep(0.0, 0.018, abs(gd - (0.05 + ph * 0.5)))) * (1.0 - ph);
     col = mix(col, vec3(1.0, 0.72, 0.1), clamp(ring * 0.9 + (1.0 - smoothstep(0.02, 0.035, gd)), 0.0, 1.0));
 
-    col = mix(col, vec3(dot(col, vec3(0.3, 0.55, 0.15))), uGloom * 0.35) * (1.0 - uGloom * 0.3);
+    // Storm overcast: desaturated and dimmed under the cloud deck.
+    col = mix(col, vec3(dot(col, vec3(0.3, 0.55, 0.15))), 0.6) * 0.43;
     float f = smoothstep(uFog.x, uFog.y, length(vWorld - cameraPosition));
-    col = mix(col, uFogColor, f);
+    col = mix(col, uFogColor, max(f, uMist));
     gl_FragColor = vec4(col, 1.0);
     ${OUTPUT}
   }
@@ -272,36 +278,112 @@ const TERRAIN_FRAG = /* glsl */ `
 const SKY_FRAG = /* glsl */ `
   uniform vec3 uTop;
   uniform vec3 uHorizon;
+  uniform vec3 uFogColor;
+  uniform float uMist;
   varying vec3 vN;
   varying vec3 vWorld;
   void main() {
     float y = normalize(vN).y;
-    gl_FragColor = vec4(mix(uHorizon, uTop, smoothstep(-0.02, 0.45, y)), 1.0);
+    gl_FragColor = vec4(mix(mix(uHorizon, uTop, smoothstep(-0.02, 0.45, y)), uFogColor, uMist), 1.0);
     ${OUTPUT}
   }
 `;
 
-const RAIN_VERT = /* glsl */ `
-  attribute vec3 aSeed;     // x, z in [0,1), phase
-  attribute float aEnd;     // 0 = streak head, 1 = tail
+// One horizontal layer of the cloud deck over Key West. Coverage and tone come
+// from the Terra tile at that spot; fbm adds the structure the 380 m pixels
+// can't. Layers fade out as the camera reaches them, so passing one never pops.
+const DECK_FRAG = /* glsl */ `
+  uniform vec4 uKw;            // w, s, e, n of the Key West tile, degrees
+  uniform vec2 uKwSize;        // its width and depth, km
+  uniform float uY;
+  uniform float uCamY;
   uniform float uTime;
-  uniform vec3 uCentre;
-  uniform vec3 uBox;
-  varying float vA;
+  uniform float uSeed;
+  uniform vec3 uLit;
+  uniform vec3 uShade;
+  uniform vec3 uFogColor;
+  varying vec3 vWorld;
+  ${CLOUD_GLSL}
+  float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+  float vnoise(vec2 p) {
+    vec2 i = floor(p), f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
+  }
+  float fbm(vec2 p) {
+    float s = 0.0, a = 0.5;
+    for (int i = 0; i < OCTAVES; i++) { s += a * vnoise(p); p = p * 2.03 + vec2(1.7, 9.2); a *= 0.5; }
+    return s;
+  }
   void main() {
-    vec3 wind = vec3(0.35, -1.0, 0.12);
-    float y = fract(aSeed.z - uTime * 0.55) * uBox.y;
-    vec3 p = uCentre + vec3((aSeed.x - 0.5) * uBox.x, y - uBox.y * 0.5, (aSeed.y - 0.5) * uBox.z);
-    p -= wind * aEnd * 0.035 * uBox.y;
-    vA = 1.0 - aEnd;
-    gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
+    vec2 q = vWorld.xz;
+    vec2 ll = vec2(mix(uKw.x, uKw.z, q.x / uKwSize.x + 0.5), mix(uKw.y, uKw.w, 0.5 - q.y / uKwSize.y));
+    float inR;
+    vec3 c = regional(ll, inR);
+    float cov = cloudiness(c);
+    float n = fbm(q * 0.9 + uSeed + uTime * vec2(0.08, 0.03));
+    float dens = smoothstep(0.3, 0.62, n) * mix(0.55, 1.0, cov);
+    float a = dens * smoothstep(0.08, 0.75, abs(uY - uCamY)) * 0.9;
+    if (a < 0.01) discard;
+    vec3 col = mix(uShade, uLit, smoothstep(0.3, 0.75, n) * (0.6 + 0.4 * dot(c, vec3(0.3, 0.55, 0.15))));
+    col = mix(col, uFogColor, 1.0 - exp(-length(vWorld - cameraPosition) * 0.06));
+    gl_FragColor = vec4(col, a);
+    ${OUTPUT}
+  }
+`;
+
+// Full-screen cloud veil for the hand-off between the two scenes.
+const VEIL_VERT = /* glsl */ `
+  varying float vY;
+  void main() { vY = position.y; gl_Position = vec4(position.xy, 0.0, 1.0); }
+`;
+const VEIL_FRAG = /* glsl */ `
+  uniform vec3 uColor;
+  uniform float uOpacity;
+  varying float vY;
+  void main() {
+    gl_FragColor = vec4(uColor * (0.9 + 0.1 * vY), uOpacity);
+    ${OUTPUT}
+  }
+`;
+
+// Rain: instanced screen-space quads, one per streak, in a box that travels
+// with the camera (local up = +y). Each streak is its drop's motion blur along
+// the wind-tilted velocity, a fixed pixel width wide, so near drops read as
+// long slanted lines rather than dots.
+const RAIN_VERT = /* glsl */ `
+  attribute vec4 aSeed;        // position in the box, speed jitter
+  uniform float uTime;
+  uniform float uBox;          // half-size
+  uniform float uLen;
+  uniform float uWidth;        // px
+  uniform vec3 uVel;
+  uniform vec2 uRes;
+  varying float vA;
+  varying float vT;
+  void main() {
+    float sp = 0.8 + 0.4 * aSeed.w;
+    vec3 p = mod((aSeed.xyz - 0.5) * 2.0 * uBox + uVel * sp * uTime + uBox, 2.0 * uBox) - uBox;
+    vec4 a = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+    vec4 b = projectionMatrix * modelViewMatrix * vec4(p - normalize(uVel) * uLen * sp, 1.0);
+    vT = position.y;
+    float d = length(p);
+    vA = smoothstep(0.7, 1.8, d) * (1.0 - smoothstep(0.7 * uBox, uBox, d)) * (0.45 + 0.55 * aSeed.w);
+    if (a.w < 0.05 || b.w < 0.05) { gl_Position = vec4(0.0, 0.0, 2.0, 1.0); return; }
+    vec2 dir = (b.xy / b.w - a.xy / a.w) * uRes;
+    dir = length(dir) > 1e-4 ? normalize(dir) : vec2(0.0, 1.0);
+    vec4 c = mix(a, b, position.y);
+    c.xy += vec2(-dir.y, dir.x) * position.x * uWidth / uRes * c.w;
+    gl_Position = c;
   }
 `;
 const RAIN_FRAG = /* glsl */ `
-  uniform float uRain;
+  uniform vec3 uColor;
+  uniform float uOpacity;
   varying float vA;
+  varying float vT;
   void main() {
-    gl_FragColor = vec4(vec3(0.78, 0.84, 0.9), (0.18 + 0.2 * vA) * uRain);
+    gl_FragColor = vec4(uColor, vA * uOpacity * smoothstep(0.0, 0.25, vT) * (1.0 - smoothstep(0.55, 1.0, vT)));
     ${OUTPUT}
   }
 `;
@@ -373,8 +455,8 @@ export function start(canvas, state, onReady, onUnavailable) {
     side: THREE.BackSide, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
   })));
 
-  // NHC best track: a line just above the cloud tops, a dot every synoptic
-  // fix, and labels at the landfalls, at the image time and at Key West.
+  // NHC best track: a line just above the cloud tops and place names only; the
+  // times live in the chapter text, where they don't clutter the storm.
   const trackGroup = new THREE.Group();
   globe.add(trackGroup);
   const TRACK_R = 1.0115;
@@ -400,6 +482,7 @@ export function start(canvas, state, onReady, onUnavailable) {
     const s = new THREE.Sprite(mat);
     s.center.set(align === "left" ? -0.04 : 1.04, 0.5);
     s.userData.aspect = c.width / c.height;
+    s.userData.left = align === "left";
     s.position.copy(latLon(lat, lon, TRACK_R + 0.001));
     trackGroup.add(s);
     return s;
@@ -412,25 +495,14 @@ export function start(canvas, state, onReady, onUnavailable) {
     lineMat.userData.base = 0.9;
     trackMats.push(lineMat);
     trackGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(new THREE.CatmullRomCurve3(pos).getPoints(pts.length * 8)), lineMat));
-    const dotMat = new THREE.PointsMaterial({ color: 0xffd27a, size: 5, sizeAttenuation: false, transparent: true, depthWrite: false });
-    trackMats.push(dotMat);
-    trackGroup.add(new THREE.Points(new THREE.BufferGeometry().setFromPoints(pos), dotMat));
-    const hhmm = (t) => t.slice(11, 16);
-    const day = (t) => `${Number(t.slice(8, 10))} Sep`;
-    const names = { "2017-09-09T03:00Z": "Cuba", "2017-09-10T13:00Z": "Cudjoe Key", "2017-09-10T19:30Z": "Marco Island" };
-    for (const p of pts.filter((q) => q.id === "L" && names[q.t])) {
-      labels.push(label(`${names[p.t]} landfall, ${p.t.startsWith(IMAGE_TIME.slice(0, 10)) ? `${hhmm(p.t)} UTC` : day(p.t)}`, p.lat, p.lon));
+    // In priority order: where two collide on screen, the later one hides.
+    labels.push(label("Key West", GAUGE.lat, GAUGE.lon, { color: "#ffffff", align: "right" }));
+    // Landfalls, keyed by best-track time so the names stay tied to the data.
+    const names = { "2017-09-10T13:00Z": "Cudjoe Key", "2017-09-10T19:30Z": "Marco Island", "2017-09-09T03:00Z": "Cuba" };
+    for (const [t, name] of Object.entries(names)) {
+      const p = pts.find((q) => q.id === "L" && q.t === t);
+      if (p) labels.push(label(name, p.lat, p.lon));
     }
-    // Interpolate the track to the image time: that is where the photographed eye should be.
-    const ti = Date.parse(IMAGE_TIME);
-    const k = pts.findIndex((p) => Date.parse(p.t) > ti);
-    const a = pts[k - 1], b = pts[k];
-    const f = (ti - Date.parse(a.t)) / (Date.parse(b.t) - Date.parse(a.t));
-    labels.push(label(`Track at photo time, ${hhmm(IMAGE_TIME)}`, lerp(a.lat, b.lat, f), lerp(a.lon, b.lon, f), { color: "#ffffff", align: "right" }));
-    // Key West sits too close to the photo-time label to show from far out.
-    const kwLabel = label("Key West", GAUGE.lat, GAUGE.lon, { color: "#ffffff", align: "right" });
-    kwLabel.userData.maxAlt = 0.22;
-    labels.push(kwLabel);
     const kwMat = new THREE.PointsMaterial({ color: 0xffffff, size: 7, sizeAttenuation: false, transparent: true, depthWrite: false });
     trackMats.push(kwMat);
     trackGroup.add(new THREE.Points(new THREE.BufferGeometry().setFromPoints([latLon(GAUGE.lat, GAUGE.lon, TRACK_R)]), kwMat));
@@ -456,10 +528,24 @@ export function start(canvas, state, onReady, onUnavailable) {
     const ol = o * smooth(0.75, 0.5, alt); // labels only once the region fills the view
     trackGroup.visible = o > 0.01;
     for (const m of trackMats) m.opacity = m.isSpriteMaterial ? ol : o * (m.userData.base ?? 1);
-    for (const s of labels) s.visible = ol > 0.01 && alt < (s.userData.maxAlt ?? Infinity);
-    const h = (2 * (W < 600 ? 22 : 26) / H) * Math.tan((camG.fov * D2R) / 2);
-    for (const s of labels) s.scale.set(h * s.userData.aspect, h, 1);
+    const px = W < 600 ? 22 : 26;
+    const h = (2 * px / H) * Math.tan((camG.fov * D2R) / 2);
+    const shown = [];
+    for (const s of labels) {
+      s.scale.set(h * s.userData.aspect, h, 1);
+      // Flip a label to the other side of its point if it would run off-screen,
+      // hide it if its point is off-screen or it would cover a higher-priority one.
+      tmpL.copy(s.position).project(camG);
+      const x = (tmpL.x * 0.5 + 0.5) * W, y = (0.5 - tmpL.y * 0.5) * H, wPx = px * s.userData.aspect * 1.04;
+      const left = s.userData.left ? x + wPx <= W - 6 : x - wPx < 6;
+      s.center.x = left ? -0.04 : 1.04;
+      const r = left ? [x, x + wPx] : [x - wPx, x];
+      s.visible = ol > 0.01 && x > 6 && x < W - 6 && y > 0 && y < H
+        && !shown.some((o) => r[0] < o[1] && r[1] > o[0] && Math.abs(y - o[2]) < px);
+      if (s.visible) shown.push([r[0], r[1], y]);
+    }
   }
+  const tmpL = new THREE.Vector3();
 
   const eyeN = latLon(EYE.lat, EYE.lon).normalize();
   const kwN = latLon(GAUGE.lat, GAUGE.lon).normalize();
@@ -497,7 +583,7 @@ export function start(canvas, state, onReady, onUnavailable) {
   // ---------- Key West ----------
   const kw = new THREE.Scene();
   const camK = new THREE.PerspectiveCamera(40, 1, 0.02, 80);
-  const skyTop = new THREE.Color(0x2b3644), skyHorizon = new THREE.Color(0x8a96a2);
+  const skyTop = new THREE.Color(0x232a33), skyHorizon = new THREE.Color(0x56606b);
   const sunKw = new THREE.Vector3(-0.35, 0.82, 0.45).normalize();
   const terrainUniforms = {
     uOrtho: { value: null }, uDem: { value: null }, uNormals: { value: null },
@@ -505,41 +591,89 @@ export function start(canvas, state, onReady, onUnavailable) {
     uScale: { value: state.exaggeration / 1000 }, uSun: { value: sunKw },
     uSeaColor: { value: new THREE.Color(0x3aaea8) },
     uFogColor: { value: skyHorizon.clone() },
-    uSkyColor: { value: new THREE.Color(0xb6c2cc) },
-    uFog: { value: new THREE.Vector2(7, 32) },
+    uSkyColor: { value: new THREE.Color(0x8a96a2) },
+    uFog: { value: new THREE.Vector2(6, 30) },
     uGauge: { value: kwLocal(GAUGE.lat, GAUGE.lon) },
     uOuter: { value: 0 },
-    uGloom: { value: 0 },
+    uMist: { value: 0 },
     uDeepColor: { value: new THREE.Color(0x1d5f78) },
   };
   kw.add(new THREE.Mesh(new THREE.SphereGeometry(60, 32, 16), new THREE.ShaderMaterial({
     vertexShader: SPHERE_VERT, fragmentShader: SKY_FRAG, side: THREE.BackSide, depthWrite: false,
-    uniforms: { uTop: { value: skyTop.clone() }, uHorizon: { value: skyHorizon.clone() } },
+    uniforms: { uTop: { value: skyTop }, uHorizon: { value: skyHorizon }, uFogColor: terrainUniforms.uFogColor, uMist: terrainUniforms.uMist },
   })));
-  const rainCount = coarse ? 1400 : 3500;
-  const rainGeo = new THREE.BufferGeometry();
-  const seeds = new Float32Array(rainCount * 6), ends = new Float32Array(rainCount * 2);
-  for (let i = 0; i < rainCount; i++) {
-    const s = [Math.random(), Math.random(), Math.random()];
-    seeds.set(s, i * 6);
-    seeds.set(s, i * 6 + 3);
-    ends[i * 2 + 1] = 1;
+
+  // Cloud deck (km above the tile, an illustration, not a cloud-base
+  // measurement): bright where the camera enters it from the globe, dark at
+  // the base, storm-grey below.
+  const DECK_BASE = 8, DECK_TOP = 15;
+  const cloudTop = new THREE.Color(0xc9cfd5), cloudBase = new THREE.Color(0x5b636d);
+  function deckColour(y, out) {
+    out.copy(cloudBase).lerp(cloudTop, Math.min(1, Math.max(0, (y - DECK_BASE) / (DECK_TOP - DECK_BASE))));
+    return out.lerp(skyHorizon, smooth(DECK_BASE, DECK_BASE - 1.2, y));
   }
-  rainGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(rainCount * 6), 3));
-  rainGeo.setAttribute("aSeed", new THREE.BufferAttribute(seeds, 3));
-  rainGeo.setAttribute("aEnd", new THREE.BufferAttribute(ends, 1));
-  const rainMat = new THREE.ShaderMaterial({
-    vertexShader: RAIN_VERT, fragmentShader: RAIN_FRAG, transparent: true, depthWrite: false,
-    uniforms: { uTime: { value: 0 }, uRain: { value: 0 }, uCentre: { value: new THREE.Vector3() }, uBox: { value: new THREE.Vector3(5, 3, 5) } },
+  const deck = new THREE.Group();
+  kw.add(deck);
+  const deckStep = coarse ? 1.5 : 1;
+  for (let y = DECK_BASE + 0.3; y < DECK_TOP; y += deckStep) {
+    const g = new THREE.PlaneGeometry(70, 70);
+    g.rotateX(-Math.PI / 2);
+    const m = new THREE.Mesh(g, new THREE.ShaderMaterial({
+      vertexShader: SPHERE_VERT, fragmentShader: DECK_FRAG, transparent: true, depthWrite: false, side: THREE.DoubleSide,
+      defines: { OCTAVES: coarse ? 3 : 4 },
+      uniforms: {
+        ...cloudUniforms,
+        uKw: { value: new THREE.Vector4(KW_BBOX.w, KW_BBOX.s, KW_BBOX.e, KW_BBOX.n) },
+        uKwSize: { value: new THREE.Vector2(KW_W, KW_D) },
+        uY: { value: y }, uCamY: { value: 0 }, uTime: terrainUniforms.uTime, uSeed: { value: y * 7.31 },
+        uLit: { value: deckColour(y + 3, new THREE.Color()).multiplyScalar(1.15) },
+        uShade: { value: deckColour(y - 3, new THREE.Color()).multiplyScalar(0.55) },
+        uFogColor: terrainUniforms.uFogColor,
+      },
+    }));
+    m.position.y = y;
+    deck.add(m);
+  }
+
+  // ---------- overlay: cloud veil and rain, drawn over either scene ----------
+  const overlay = new THREE.Scene();
+  const camO = new THREE.PerspectiveCamera();
+  const veilMat = new THREE.ShaderMaterial({
+    vertexShader: VEIL_VERT, fragmentShader: VEIL_FRAG, transparent: true, depthTest: false, depthWrite: false,
+    uniforms: { uColor: { value: cloudTop.clone() }, uOpacity: { value: 0 } },
   });
-  const rain = new THREE.LineSegments(rainGeo, rainMat);
+  const veil = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), veilMat);
+  veil.frustumCulled = false;
+  overlay.add(veil);
+  const RAIN_MAX = coarse ? 1800 : 6000;
+  const rainGeo = new THREE.InstancedBufferGeometry();
+  rainGeo.setAttribute("position", new THREE.Float32BufferAttribute([-1, 0, 0, 1, 0, 0, -1, 1, 0, 1, 1, 0], 3));
+  rainGeo.setIndex([0, 1, 2, 2, 1, 3]);
+  rainGeo.setAttribute("aSeed", new THREE.InstancedBufferAttribute(Float32Array.from({ length: RAIN_MAX * 4 }, Math.random), 4));
+  rainGeo.instanceCount = 0;
+  const rainMat = new THREE.ShaderMaterial({
+    // Double-sided: the screen-space quads wind either way depending on the streak.
+    vertexShader: RAIN_VERT, fragmentShader: RAIN_FRAG, transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide,
+    uniforms: {
+      uTime: { value: 0 }, uBox: { value: 10 }, uLen: { value: 1.3 }, uWidth: { value: 1.3 * renderer.getPixelRatio() },
+      uVel: { value: new THREE.Vector3() }, uRes: { value: new THREE.Vector2(1, 1) },
+      uColor: { value: new THREE.Color() }, uOpacity: { value: 0.6 },
+    },
+  });
+  const rain = new THREE.Mesh(rainGeo, rainMat);
   rain.frustumCulled = false;
-  kw.add(rain);
+  rain.renderOrder = 1;
+  overlay.add(rain);
+  const rainLight = new THREE.Color(0xc4ccd6), rainDark = new THREE.Color(0x59616b);
+  const Y_UP = new THREE.Vector3(0, 1, 0);
 
   const kwTarget = kwLocal(24.5565, -81.789);
+  // Starts inside the deck where the globe camera left off (north up, looking
+  // straight down), sinks through it and levels out just under the base.
   const kwKeys = [
-    { u: G, dist: 10, tilt: 6, az: 0 },
-    { u: G + 0.5, dist: 7.2, tilt: 50, az: -22 },
+    { u: G, dist: 16, tilt: 3, az: 0 },
+    { u: G + 0.32, dist: 8.6, tilt: 30, az: -14 },
+    { u: G + 0.62, dist: 7.2, tilt: 50, az: -22 },
     { u: G + 1.5, dist: 5.6, tilt: 58, az: -6 },
     { u: G + 2.5, dist: 5.2, tilt: 61, az: 10 },
     { u: G + 3.5, dist: 5.0, tilt: 63, az: 24 },
@@ -611,12 +745,12 @@ export function start(canvas, state, onReady, onUnavailable) {
       cam.setViewOffset(W, H, -shiftX * W, shiftY * H, W, H);
       cam.updateProjectionMatrix();
     }
+    renderer.getDrawingBufferSize(rainMat.uniforms.uRes.value);
   }
 
   let frames = 0, running = true, live = false, raf = 0;
   const setLive = (v) => { if (v !== live) { live = v; (v ? onReady : onUnavailable)(); } };
-  const whiteout = canvas.parentElement.querySelector(".journey__whiteout");
-  let lastWhite = -1;
+  renderer.autoClear = false;
 
   function frame() {
     raf = requestAnimationFrame(frame);
@@ -624,32 +758,59 @@ export function start(canvas, state, onReady, onUnavailable) {
     resize();
     const t = (performance.now() - t0) / 1000;
     const u = state.debugU ?? state.u;
-    const G0 = G;
-    const inKw = u >= G0 && kwReady;
+    const inKw = u >= G && kwReady;
     // Key West still loading: let the stills carry the story meanwhile.
-    if (frames >= 3) setLive(kwReady || u < G0);
-    const w = Math.round(Math.max(0, 1 - Math.abs(u - G0) / 0.32) * 100) / 100;
-    if (w !== lastWhite) { whiteout.style.opacity = String(w); lastWhite = w; }
+    if (frames >= 3) setLive(kwReady || u < G);
+    renderer.clear();
 
+    let cam, mist;
     if (inKw) {
+      cam = camK;
       placeKwCamera(u);
+      const y = camK.position.y;
+      deckColour(y, terrainUniforms.uFogColor.value);
+      mist = smooth(DECK_BASE - 0.7, DECK_BASE + 0.6, y);
+      terrainUniforms.uMist.value = mist;
       terrainUniforms.uTime.value = t;
       terrainUniforms.uLevel.value = MHHW_NAVD88 + state.level;
-      terrainUniforms.uGloom.value = state.rain;
-      rainMat.uniforms.uTime.value = t;
-      rainMat.uniforms.uRain.value = state.rain;
-      rain.visible = state.rain > 0.01;
-      rainMat.uniforms.uCentre.value.copy(camK.position).lerp(kwTarget, 0.35);
+      deck.visible = y > DECK_BASE - 1.5;
+      for (const m of deck.children) m.material.uniforms.uCamY.value = y;
+      veilMat.uniforms.uColor.value.copy(terrainUniforms.uFogColor.value);
+      veilMat.uniforms.uOpacity.value = 1 - smooth(G, G + 0.05, u);
+      rain.quaternion.identity();
       renderer.render(kw, camK);
     } else {
-      placeGlobeCamera(Math.min(u, G0));
+      cam = camG;
+      placeGlobeCamera(Math.min(u, G));
       // The storm turns with scroll and, slowly, with time (bounded so the
       // differential twist never smears the image).
-      cloudUniforms.uSpin.value = 0.1 * smooth(0, G0, u) + 0.05 * (1 - Math.exp(-t / 50));
+      cloudUniforms.uSpin.value = 0.1 * smooth(0, G, u) + 0.05 * (1 - Math.exp(-t / 50));
       const near = smooth(0.25, 0.02, camG.position.length() - 1);
       shells[2].material.uniforms.uOpacity.value = 0.3 * (1 - near * 0.6);
       placeTrack(camG.position.length() - 1);
+      // Into the cloud tops: the veil thickens to the colour the deck starts at.
+      mist = smooth(G - 0.12, G - 0.005, u);
+      veilMat.uniforms.uColor.value.copy(cloudTop);
+      veilMat.uniforms.uOpacity.value = mist;
+      rain.quaternion.setFromUnitVectors(Y_UP, tmpN);
       renderer.render(globe, camG);
+    }
+
+    // Rain from cloud entry on, heavier and more wind-driven toward Irma's peak.
+    const storm = smooth(G, state.N - 0.5, u);
+    const count = Math.round(RAIN_MAX * smooth(G - 0.13, G - 0.03, u) * lerp(0.75, 1, storm));
+    veil.visible = veilMat.uniforms.uOpacity.value > 0.003;
+    rain.visible = count > 0;
+    if (veil.visible || rain.visible) {
+      rainGeo.instanceCount = count;
+      const lean = lerp(20, 34, storm) * D2R;
+      rainMat.uniforms.uVel.value.set(-Math.sin(lean) * 0.9, -Math.cos(lean), Math.sin(lean) * 0.44).multiplyScalar(16);
+      rainMat.uniforms.uTime.value = t;
+      rainMat.uniforms.uColor.value.copy(rainLight).lerp(rainDark, Math.max(mist, veilMat.uniforms.uOpacity.value));
+      camO.projectionMatrix.copy(cam.projectionMatrix);
+      camO.projectionMatrixInverse.copy(cam.projectionMatrixInverse);
+      camO.quaternion.copy(cam.quaternion);
+      renderer.render(overlay, camO);
     }
     frames++;
   }

@@ -47,7 +47,6 @@
            srcset="assets/stills/s0-640.webp 640w, assets/stills/s0-1024.webp 1024w, assets/stills/s0-1600.webp 1600w"
            sizes="100vw" width="1600" height="900" alt="" fetchpriority="high">
       <canvas class="journey__canvas"></canvas>
-      <div class="journey__whiteout"></div>
       <div class="journey__shade"></div>
       <div class="journey__hud" hidden>
         <span class="journey__hud-label">Water level</span>
@@ -116,21 +115,21 @@
           <p>NOAA topobathy, USDA aerial photo, water at normal high tide.</p>
           <p class="chapter__source">
             Flat &ldquo;bathtub&rdquo; fill, no waves or drainage. Heights
-            &times;<span data-bind="exaggeration">25</span>.
+            &times;<span data-bind="exaggeration">25</span>. Rain and cloud
+            layers are illustration.
           </p>
         </div>
       </article>
 
-      <article class="chapter" data-scene="keywest" data-level="nws_minor" data-rain="1" data-still="4">
+      <article class="chapter" data-scene="keywest" data-level="nws_minor" data-still="4">
         <div class="chapter__card">
           <p class="eyebrow">NWS minor flood stage</p>
           <h2><span data-bind="minor">0.335</span>&nbsp;m above high tide.</h2>
           <p>Key West's yearly peak water level reaches it in <span data-bind="tideMinorPct">96</span>% of years.</p>
-          <p class="chapter__source">Rain is illustration.</p>
         </div>
       </article>
 
-      <article class="chapter" data-scene="keywest" data-level="nws_moderate" data-rain="1" data-still="5">
+      <article class="chapter" data-scene="keywest" data-level="nws_moderate" data-still="5">
         <div class="chapter__card">
           <p class="eyebrow">NWS moderate flood stage</p>
           <h2><span data-bind="moderate">0.488</span>&nbsp;m.</h2>
@@ -138,7 +137,7 @@
         </div>
       </article>
 
-      <article class="chapter" data-scene="keywest" data-level="nws_major" data-rain="1" data-still="6">
+      <article class="chapter" data-scene="keywest" data-level="nws_major" data-still="6">
         <div class="chapter__card">
           <p class="eyebrow">NWS major flood stage</p>
           <h2><span data-bind="major">0.64</span>&nbsp;m.</h2>
@@ -146,7 +145,7 @@
         </div>
       </article>
 
-      <article class="chapter" data-scene="keywest" data-level-m="0.823" data-rain="1" data-still="7">
+      <article class="chapter" data-scene="keywest" data-level-m="0.823" data-still="7">
         <div class="chapter__card">
           <p class="eyebrow">Irma at the gauge</p>
           <h2>2.7&nbsp;ft: where Irma put the water.</h2>
@@ -370,7 +369,9 @@
         <p>
           Clouds: NASA MODIS Terra, 10 Sep 2017, ~15:50 UTC, brightest tones
           stretched so the eye shows; VIIRS of the same day fills Terra's
-          swath gaps. The cloud turn on scroll is ours. Track: NHC HURDAT2.
+          swath gaps. The cloud turn on scroll, the cloud layers on the
+          descent (toned from the same Terra tile) and the rain are ours.
+          Track: NHC HURDAT2.
           Coastline: Natural Earth.
         </p>
         <p>

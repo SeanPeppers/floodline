@@ -95,11 +95,6 @@ code { font-family: var(--font-mono); font-size: 0.92em; }
 .journey__canvas { opacity: 0; transition: opacity 0.8s ease; }
 .journey__stage.is-3d .journey__canvas { opacity: 1; }
 .journey__stage.is-3d .journey__still { opacity: 0; }
-.journey__whiteout {
-  position: absolute; inset: 0; opacity: 0; pointer-events: none;
-  background: radial-gradient(ellipse at 60% 50%, #f4f6f8 0%, #d9dee3 55%, #b9c1c8 100%);
-}
-.journey__stage:not(.is-3d) .journey__whiteout { display: none; }
 /* Legibility gradient on the card side only. */
 .journey__shade {
   position: absolute; inset: 0; pointer-events: none;
