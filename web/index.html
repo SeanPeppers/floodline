@@ -73,13 +73,13 @@
               <span class="stat__value"><span data-bind="winTop">4.3</span>&times; <span class="stat__ci">[<span data-bind="winTopCi">3.5, 5.4</span>]</span></span>
               <span class="stat__label">fewer queries than the best classical method, <span data-bind="winTopD">13</span> uncertain factors, <span class="nowrap">&epsilon;&nbsp;=&nbsp;1e-4</span></span>
             </li>
-            <li class="stat">
-              <span class="stat__value">d &asymp; 7&ndash;8</span>
-              <span class="stat__label">factors where QAE overtakes it</span>
+            <li class="stat stat--win">
+              <span class="stat__value"><span data-bind="mcTop">351</span>&times;</span>
+              <span class="stat__label">fewer queries than plain Monte Carlo, <span class="nowrap">&epsilon;&nbsp;=&nbsp;1e-4</span></span>
             </li>
-            <li class="stat stat--warn">
-              <span class="stat__value"><span data-bind="winLow">0.65</span>&times;</span>
-              <span class="stat__label">same ratio at 5 factors: classical wins</span>
+            <li class="stat stat--win">
+              <span class="stat__value"><span data-bind="qmcOverQae5">3.5</span>&times;</span>
+              <span class="stat__label">fewer than Sobol QMC at 5 drivers</span>
             </li>
           </ul>
           <p class="hero__cta">
@@ -156,23 +156,19 @@
     </div>
   </section>
 
-  <!-- RESULTS -->
-  <section class="section" id="results" aria-label="Results">
+  <!-- RESULTS: wins first (classical queries ÷ QAE queries, above 1 = QAE cheaper), then the losses -->
+  <section class="section" id="results" aria-labelledby="results-title">
     <div class="section__content section__content--wide">
-      <p class="eyebrow">Headline &middot; model uncertainty included</p>
-      <h2>With <span data-bind="winTopD">13</span> uncertain factors, QAE needs <span data-bind="winTop">4.3</span>&times; fewer queries than the best classical method.</h2>
-      <ul class="findings">
-        <li><strong><span data-bind="winTop">4.3</span>&times; [<span data-bind="winTopCi">3.5, 5.4</span>]</strong> at 13 factors, <strong><span data-bind="winMid">3.0</span>&times;</strong> at 9&ndash;10, a tie at 7 (<span data-bind="winTie">1.1</span>&times;), a loss at 5 (<span data-bind="winLow">0.65</span>&times;). &epsilon;&nbsp;=&nbsp;1e-4.</li>
-        <li>Best classical: conditional MC on Sobol points (CMC+QMC). Its exponent climbs from <span data-bind="winAlphaCmc">1.31 to 1.68</span>; QAE's stays at <span data-bind="winAlphaQae">0.97&ndash;1.01</span>.</li>
-      </ul>
+      <p class="eyebrow">Results &middot; query count, ideal hardware</p>
+      <h2 id="results-title">Where quantum wins</h2>
 
-      <figure class="chart-figure">
-        <figcaption class="chart-figure__title" id="wins-title">CMC+QMC queries &divide; QAE queries, by number of uncertain factors (95% CI)</figcaption>
-        <div class="chart" id="wins-chart" aria-describedby="wins-note"></div>
-        <p class="chart-figure__note" id="wins-note">Above 1, QAE is cheaper. 3.0&nbsp;ft street, 2050.</p>
+      <figure class="chart-figure chart-figure--hero">
+        <figcaption class="chart-figure__title" id="wins-title"><span class="chart-figure__num">1</span> vs the best classical method, model uncertainty included</figcaption>
+        <div class="chart chart--hero" id="wins-chart" aria-describedby="wins-note"></div>
+        <p class="chart-figure__note" id="wins-note">
+          &times; fewer queries than CMC+QMC: <strong><span data-bind="winTop">4.3</span>&times; [<span data-bind="winTopCi">3.5, 5.4</span>]</strong> at <span data-bind="winTopD">13</span> factors, &epsilon;&nbsp;=&nbsp;1e-4. Query count, ideal hardware, 95% CI.
+        </p>
       </figure>
-      <p class="claim">Query count on ideal fault-tolerant hardware. Appears only at &epsilon;&nbsp;&le;&nbsp;3e-4, far tighter than the model's own uncertainty (&plusmn;0.016). The 8 extra parameters need a quantum circuit nobody has built, and 3 of their ranges are judgment calls.</p>
-
       <details class="more">
         <summary>Method: what the 13 factors are</summary>
         <div class="table-wrap" tabindex="0" role="region" aria-label="Uncertain factor table, scrollable on narrow screens">
@@ -180,7 +176,7 @@
             <caption>Factors added to the 5 flood drivers</caption>
             <thead><tr><th scope="col">d</th><th scope="col">Added</th><th scope="col">Range</th><th scope="col">Source</th></tr></thead>
             <tbody>
-              <tr><th scope="row">5</th><td>tide, 24-h rain, 3-h burst, sea-level rise, groundwater</td><td>as in Result 2</td><td>NOAA, Master Plan</td></tr>
+              <tr><th scope="row">5</th><td>tide, 24-h rain, 3-h burst, sea-level rise, groundwater</td><td>see five-driver model</td><td>NOAA, Master Plan</td></tr>
               <tr><th scope="row">7</th><td>curve number, soil depth</td><td>88&ndash;95, 3&ndash;5&nbsp;ft</td><td>Master Plan</td></tr>
               <tr><th scope="row">9</th><td>outfall share, catchment ratio</td><td>0.25&ndash;0.75, 2&ndash;4</td><td>our judgment</td></tr>
               <tr><th scope="row">10</th><td>gravity-well start</td><td>1.4&ndash;1.8&nbsp;ft</td><td>our judgment</td></tr>
@@ -189,88 +185,111 @@
           </table>
         </div>
         <ul>
-          <li>One query is one flood-rule run at one input vector, or one application of A or A&dagger;. Classical counted white-box (1 query per sample); a black box would cost it about 6.</li>
+          <li>Best classical: conditional MC on Sobol points (CMC+QMC). Its exponent climbs from <span data-bind="winAlphaCmc">1.31 to 1.68</span>; QAE's stays at <span data-bind="winAlphaQae">0.97&ndash;1.01</span>.</li>
+          <li>One query is one flood-rule run at one input vector, or one application of A or A&dagger;. Classical counted white-box (1 query per sample).</li>
           <li>QAE is ideal, fault-free MLAE. 64 replicates per arm, OLS fit of log error on log queries, 2,000 bootstrap resamples. A CI containing 1 is a tie.</li>
-          <li>Truth per d: 32 &times; 2<sup>21</sup> CMC+QMC samples. No CMC+QMC cell is extrapolated.</li>
-          <li>A control variate doesn't help CMC+QMC at 13 factors (RMSE 1.21e-4 vs 1.18e-4). Exact enumeration no longer applies: the new inputs are continuous.</li>
-          <li>At &epsilon;&nbsp;=&nbsp;1e-3 it is a tie or a loss at every d. At 3e-4, 13 factors: <span data-bind="winTop3e4">2.1</span>&times;.</li>
-          <li>Details: <code>README_wins.md</code>, <code>results_wins.json</code>.</li>
+          <li>Truth per d: 32 &times; 2<sup>21</sup> CMC+QMC samples. A control variate doesn't help CMC+QMC at 13 factors (RMSE 1.21e-4 vs 1.18e-4).</li>
+          <li>At 3e-4, 13 factors: <span data-bind="winTop3e4">2.1</span>&times;. Details: <code>README_wins.md</code>, <code>results_wins.json</code>.</li>
         </ul>
       </details>
 
-      <p class="eyebrow eyebrow--gap">Result 1 &middot; one street, two drivers</p>
-      <h2>Quantum beats plain Monte Carlo. Sobol QMC still beats quantum.</h2>
-      <p>
-        Street: Patterson Ave, drains from the city's 2024 Stormwater Master
-        Plan. Plain Monte Carlo needs
-        <strong><span data-bind="mcOverQae">28 / 105 / 351</span>&times;</strong>
-        the queries of quantum amplitude estimation (QAE) at
-        &epsilon;&nbsp;=&nbsp;1e-3 / 3e-4 / 1e-4. Sobol QMC needs
-        <strong><span data-bind="qmcWins">2.3&ndash;4.0</span>&times; fewer</strong>.
-      </p>
-
       <figure class="chart-figure">
-        <figcaption class="chart-figure__title" id="conv-title">Error vs. queries, two-driver street model (log&ndash;log)</figcaption>
-        <div class="chart" id="convergence-chart" aria-describedby="conv-note"></div>
-        <p class="chart-figure__note" id="conv-note">
-          <span data-bind="trials">500</span> trials per point. Steeper is faster.
-          <button id="simulate-btn" class="button button--ghost button--small" type="button">Replay</button>
+        <figcaption class="chart-figure__title" id="mc-title"><span class="chart-figure__num">2</span> vs plain Monte Carlo</figcaption>
+        <div class="chart" id="mc-chart" aria-describedby="mc-note"></div>
+        <p class="chart-figure__note" id="mc-note">
+          Two drivers: <strong><span data-bind="mcOverQae">27.7 / 105 / 351</span>&times;</strong> fewer at &epsilon;&nbsp;=&nbsp;1e-3 / 3e-4 / 1e-4. Five-driver model, every d: <span data-bind="mcMulti">76&ndash;246</span>&times; at &epsilon;&nbsp;&le;&nbsp;3e-4. Query count, ideal hardware.
         </p>
       </figure>
-      <p class="caption-note">
-        The curved drainage boundary left QMC's exponent unchanged:
-        &Delta;&alpha;&nbsp;=&nbsp;<span data-bind="dAlphaQmc">&minus;0.04 [&minus;0.09, +0.02]</span>.
-      </p>
-
-      <details class="more">
-        <summary>Exponents and matched-&epsilon; table</summary>
-        <div class="table-wrap" tabindex="0" role="region" aria-label="Fitted scaling exponent table, scrollable on narrow screens">
-          <table>
-            <caption>Fitted exponent &alpha; (queries &prop; &epsilon;<sup>-&alpha;</sup>), 95% bootstrap CI</caption>
-            <thead>
-              <tr><th scope="col">Arm</th><th scope="col">&alpha;</th><th scope="col">95% CI</th><th scope="col">Textbook</th></tr>
-            </thead>
-            <tbody id="alpha-rows"><tr><td colspan="4">Loading&hellip;</td></tr></tbody>
-          </table>
-        </div>
-        <div class="table-wrap" tabindex="0" role="region" aria-label="Queries at matched error table, scrollable on narrow screens">
-          <table>
-            <caption>Queries to reach error &epsilon; (median of bootstrap fits)</caption>
-            <thead>
-              <tr><th scope="col">&epsilon;</th><th scope="col">QAE</th><th scope="col">Plain MC</th><th scope="col">MC &divide; QAE</th><th scope="col">Sobol QMC</th></tr>
-            </thead>
-            <tbody id="eps-rows"><tr><td colspan="5">Loading&hellip;</td></tr></tbody>
-          </table>
-        </div>
-        <p class="caption-note">QAE's 3e-4 and 1e-4 rows extrapolate past its smallest measured error.</p>
-      </details>
-
-      <p class="eyebrow eyebrow--gap">Result 2 &middot; five drivers</p>
-      <h2>With five drivers, QAE passes Sobol QMC but not the best classical method.</h2>
-      <p>Drivers: tide, 24-hour rain, 3-hour burst, sea-level rise, groundwater.</p>
-      <p class="claim">We found no published head-to-head of quantum amplitude estimation vs quasi-Monte Carlo on a real risk model; we measured the crossover at ~4 drivers.</p>
-      <ul class="findings">
-        <li><strong>Sobol QMC falls behind from d&nbsp;&asymp;&nbsp;4.</strong> At 5 drivers, &epsilon;&nbsp;=&nbsp;1e-4, it needs <span data-bind="qmcOverQae5">3.5</span>&times; QAE's queries.</li>
-        <li><strong>Conditional MC + Sobol beats QAE in <span data-bind="cmcAlways">every</span> one of <span data-bind="nCells">24</span> cells up to five drivers</strong>, at <span data-bind="cmcAt5">0.18&ndash;0.55</span>&times; QAE's queries with 5 drivers.</li>
-        <li><strong>Exact enumeration wins on total work:</strong> <span data-bind="enumEvals">2.6e5</span> evaluations, no sampling error. QAE needs <span data-bind="qaeQueries4">9.6e4</span> queries of <span data-bind="aCx">1.5e5</span> CX gates each.</li>
-        <li><strong>At five drivers, QAE leads only if the simulator is a black box</strong>, needing <span data-bind="bbWin">1.6 / 2.3 / 3.3</span>&times; fewer runs at &epsilon;&nbsp;=&nbsp;1e-3 / 3e-4 / 1e-4. That takes a two-qubit error near <span data-bind="pNeed">9.1e-9</span>; today's is <span data-bind="czErr">0.0039</span>.</li>
-      </ul>
 
       <figure class="chart-figure">
-        <figcaption class="chart-figure__title" id="multi-title">Classical queries &divide; QAE queries at &epsilon;&nbsp;=&nbsp;1e-4, by number of drivers</figcaption>
-        <div class="chart" id="multi-chart" aria-describedby="multi-note"></div>
-        <p class="chart-figure__note" id="multi-note">Above 1, QAE is cheaper. 3.0&nbsp;ft street, 2050.</p>
+        <figcaption class="chart-figure__title" id="qmc-title"><span class="chart-figure__num">3</span> vs Sobol quasi-Monte Carlo, by number of drivers</figcaption>
+        <div class="chart" id="qmc-chart" aria-describedby="qmc-note"></div>
+        <p class="chart-figure__note" id="qmc-note">
+          QAE overtakes Sobol at d&nbsp;&asymp;&nbsp;<span data-bind="qmcDStar">3.5&ndash;4.9</span> (shaded, both streets); <strong><span data-bind="qmcOverQae5">3.5</span>&times;</strong> at d&nbsp;=&nbsp;5, &epsilon;&nbsp;=&nbsp;1e-4. Query count, ideal hardware, 3.0&nbsp;ft street.
+        </p>
       </figure>
-      <details class="more">
-        <summary>All ratios, both streets</summary>
-        <div class="table-wrap" tabindex="0" role="region" aria-label="Five-driver ratio table, scrollable on narrow screens">
-          <table>
-            <caption>Classical &divide; QAE queries at matched &epsilon; (below 1: classical cheaper)</caption>
-            <thead><tr><th scope="col">Street, d</th><th scope="col">&epsilon;</th><th scope="col">Sobol QMC</th><th scope="col">Cond. MC + Sobol</th><th scope="col">Same, black box</th><th scope="col">Plain MC</th></tr></thead>
-            <tbody id="multi-rows"><tr><td colspan="6">Loading&hellip;</td></tr></tbody>
+
+      <figure class="chart-figure">
+        <figcaption class="chart-figure__title" id="bb-title"><span class="chart-figure__num">4</span> vs a black-box simulator, the way NOAA and FEMA surge models run</figcaption>
+        <div class="chart chart--short" id="bb-chart" aria-describedby="bb-note"></div>
+        <p class="chart-figure__note" id="bb-note">
+          <strong><span data-bind="bbWin">1.6 / 2.3 / 3.3</span>&times;</strong> fewer simulator runs at &epsilon;&nbsp;=&nbsp;1e-3 / 3e-4 / 1e-4. Classical bisects each sample (<span data-bind="bisect">6</span> runs). Simulator runs, ideal hardware, 5 drivers.
+        </p>
+      </figure>
+
+      <div class="losses">
+        <h3 class="losses__title">Where classical still wins</h3>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Where classical still wins, scrollable on narrow screens">
+          <table class="table--compact table--fit">
+            <caption>Every loss we measured</caption>
+            <thead><tr><th scope="col">Against</th><th scope="col">Result</th><th scope="col">When</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">CMC+QMC, physical drivers only</th><td><span data-bind="cmcAt5">0.18&ndash;0.55</span>&times; at d&nbsp;=&nbsp;5</td><td><span data-bind="cmcAlways">every</span> one of <span data-bind="nCells">24</span> cells, d&nbsp;&le;&nbsp;5</td></tr>
+              <tr><th scope="row">CMC+QMC, &epsilon;&nbsp;=&nbsp;1e-3</th><td>tie or loss at every d</td><td>the precision the model's own uncertainty (&plusmn;0.016) supports</td></tr>
+              <tr><th scope="row">Sobol QMC, 2 drivers</th><td>QMC <span data-bind="qmcWins">2.3&ndash;4.0</span>&times; cheaper</td><td>all &epsilon;</td></tr>
+              <tr><th scope="row">Exact enumeration</th><td><span data-bind="enumEvals">2.6e5</span> evaluations, zero error</td><td>total work; QAE: <span data-bind="qaeQueries4">9.6e4</span> queries &times; <span data-bind="aCx">1.5e5</span> CX</td></tr>
+              <tr><th scope="row">Hybrid QAE vs CMC+QMC</th><td>CMC+QMC 2.0&ndash;16&times; less work</td><td>table reads, both streets</td></tr>
+              <tr><th scope="row">Today's hardware</th><td>needs gate error <span data-bind="pNeed">9.1e-9</span>; today <span data-bind="czErr">0.0039</span></td><td>about a million times cleaner</td></tr>
+              <tr><th scope="row">Wall clock</th><td>511.6 fault-tolerant hours vs 1.4&nbsp;s</td><td>any usable &epsilon;</td></tr>
+            </tbody>
           </table>
         </div>
-      </details>
+        <p class="caption-note">
+          Below 1&times;, classical is cheaper. The 13-factor win needs an oracle circuit nobody has built, and 3 of its 8 parameter ranges are judgment calls.
+          Full ledger: <a href="https://github.com/SeanPeppers/floodline">FINDINGS.md and FAILED.md in the repo</a>.
+        </p>
+
+        <details class="more">
+          <summary>Error vs. queries, two drivers</summary>
+          <figure class="chart-figure">
+            <figcaption class="chart-figure__title" id="conv-title">Error vs. queries, two-driver street model (log&ndash;log)</figcaption>
+            <div class="chart" id="convergence-chart" aria-describedby="conv-note"></div>
+            <p class="chart-figure__note" id="conv-note">
+              <span data-bind="trials">500</span> trials per point. Steeper is faster. Patterson Ave, 2024 Stormwater Master Plan drains.
+              <button id="simulate-btn" class="button button--ghost button--small" type="button">Replay</button>
+            </p>
+          </figure>
+          <p class="caption-note">
+            The curved drainage boundary left QMC's exponent unchanged:
+            &Delta;&alpha;&nbsp;=&nbsp;<span data-bind="dAlphaQmc">&minus;0.04 [&minus;0.09, +0.02]</span>.
+          </p>
+          <div class="table-wrap" tabindex="0" role="region" aria-label="Fitted scaling exponent table, scrollable on narrow screens">
+            <table>
+              <caption>Fitted exponent &alpha; (queries &prop; &epsilon;<sup>-&alpha;</sup>), 95% bootstrap CI</caption>
+              <thead>
+                <tr><th scope="col">Arm</th><th scope="col">&alpha;</th><th scope="col">95% CI</th><th scope="col">Textbook</th></tr>
+              </thead>
+              <tbody id="alpha-rows"><tr><td colspan="4">Loading&hellip;</td></tr></tbody>
+            </table>
+          </div>
+          <div class="table-wrap" tabindex="0" role="region" aria-label="Queries at matched error table, scrollable on narrow screens">
+            <table>
+              <caption>Queries to reach error &epsilon; (median of bootstrap fits)</caption>
+              <thead>
+                <tr><th scope="col">&epsilon;</th><th scope="col">QAE</th><th scope="col">Plain MC</th><th scope="col">MC &divide; QAE</th><th scope="col">Sobol QMC</th></tr>
+              </thead>
+              <tbody id="eps-rows"><tr><td colspan="5">Loading&hellip;</td></tr></tbody>
+            </table>
+          </div>
+          <p class="caption-note">QAE's 3e-4 and 1e-4 rows extrapolate past its smallest measured error.</p>
+        </details>
+
+        <details class="more">
+          <summary>Every classical method vs QAE, five-driver model</summary>
+          <figure class="chart-figure">
+            <figcaption class="chart-figure__title" id="multi-title">Classical queries &divide; QAE queries at &epsilon;&nbsp;=&nbsp;1e-4, by number of drivers</figcaption>
+            <div class="chart" id="multi-chart" aria-describedby="multi-note"></div>
+            <p class="chart-figure__note" id="multi-note">Above 1, QAE is cheaper. 3.0&nbsp;ft street, 2050. Drivers: tide, 24-hour rain, 3-hour burst, sea-level rise, groundwater.</p>
+          </figure>
+          <div class="table-wrap" tabindex="0" role="region" aria-label="Five-driver ratio table, scrollable on narrow screens">
+            <table>
+              <caption>Classical &divide; QAE queries at matched &epsilon; (below 1: classical cheaper)</caption>
+              <thead><tr><th scope="col">Street, d</th><th scope="col">&epsilon;</th><th scope="col">Sobol QMC</th><th scope="col">Cond. MC + Sobol</th><th scope="col">Same, black box</th><th scope="col">Plain MC</th></tr></thead>
+              <tbody id="multi-rows"><tr><td colspan="6">Loading&hellip;</td></tr></tbody>
+            </table>
+          </div>
+        </details>
+      </div>
     </div>
   </section>
 
@@ -476,8 +495,8 @@
   <!-- TOY -->
   <section class="section section--compact" id="toy" aria-label="Superseded toy crossover model">
     <div class="section__content section__content--wide">
-      <p class="eyebrow eyebrow--warn">Superseded by Result 2</p>
-      <h2>The toy crossover that led to Result 2.</h2>
+      <p class="eyebrow eyebrow--warn">Superseded by win 3</p>
+      <h2>The toy crossover that led to win 3.</h2>
       <p>
         With <em>d</em> Gaussian drivers, QAE passed Sobol QMC near
         <em>d</em>&nbsp;=&nbsp;<span data-bind="xo.dStar.0.001">3.4</span> /
@@ -512,7 +531,7 @@
   <section class="section" id="verdict" aria-label="Verdict">
     <div class="section__content">
       <p class="eyebrow">Verdict</p>
-      <h2>QAE loses to the best classical method at 5 factors and wins from 9, in query count.</h2>
+      <h2>QAE beats the best classical method from 9 factors, in query count. At 5 it loses.</h2>
       <div class="verdict-grid">
         <div class="verdict-card verdict-card--good">
           <h3>Shown</h3>

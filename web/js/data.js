@@ -38,7 +38,8 @@
       alphaQae: d.scaling.qae.alpha.toFixed(2),
       alphaMc: d.scaling.mc.alpha.toFixed(2),
       alphaQmc: d.scaling.qmc.alpha.toFixed(2),
-      mcOverQae: eps.map((e) => Math.round(e.mc_over_qae)).join(" / "),
+      mcOverQae: eps.map((e) => +e.mc_over_qae.toPrecision(3)).join(" / "),
+      mcTop: Math.round(eps[eps.length - 1].mc_over_qae),
       qmcWins: range(eps.map((e) => 1 / e.qmc_over_qae), 1),
       dAlphaQmc: (() => {
         const q = d.alpha_delta_vs_rectangle.qmc;
@@ -69,7 +70,11 @@
     const mDeep = c5.arms.qae.m_needed["0.0001"];
     const cx = circ.A.cx + mDeep * circ.Q.cx;
     const pNeed = Math.LN2 / cx;
+    // Plain MC ÷ QAE over every driver count at ε ≤ 3e-4, benchmark street.
+    const mcTight = Object.values(s.configs).flatMap((c) => c.matched.filter((x) => x.eps <= 0.0003).map((x) => x.mc_over_qae));
     return {
+      mcMulti: range(mcTight, 0),
+      qmcDStar: range(zs.flatMap((z) => Object.values(m.studies[z].crossover.qmc).map((c) => c.d_star)), 1),
       qmcOverQae5: e4.qmc_over_qae.toFixed(1),
       cmcAt5: range(cmcAt5, 2),
       nCells: cells.length,
