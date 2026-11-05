@@ -162,6 +162,60 @@
       <p class="eyebrow">Results &middot; query count, ideal hardware</p>
       <h2 id="results-title">Where quantum wins</h2>
 
+      <h3 id="race-title" class="race__title">Watch the race: same flood question, two methods</h3>
+      <p>Both sides run live in your browser. Monte Carlo throws random storms at a street; quantum amplitude estimation homes in on the same flood odds with far fewer tries.</p>
+      <div class="race" id="race" aria-labelledby="race-title">
+        <div class="race__panels">
+          <div class="race__panel race__panel--mc">
+            <div class="race__head"><h4>Monte Carlo</h4><span class="race__state" data-race="mc-state"></span></div>
+            <canvas class="race__mc" aria-hidden="true"></canvas>
+            <dl class="race__stats">
+              <div><dt>Tries</dt><dd data-race="mc-n">0</dd></div>
+              <div><dt>Estimate</dt><dd data-race="mc-est">&ndash;</dd></div>
+              <div><dt>How far off</dt><dd data-race="mc-err">&ndash;</dd></div>
+            </dl>
+            <p class="race__lock" data-race="mc-lock">&nbsp;</p>
+          </div>
+          <div class="race__panel race__panel--q">
+            <div class="race__head"><h4>Quantum (QAE)</h4><span class="race__state" data-race="q-state"></span></div>
+            <canvas class="race__qae" aria-hidden="true"></canvas>
+            <dl class="race__stats">
+              <div><dt>Tries</dt><dd data-race="q-n">0</dd></div>
+              <div><dt>Estimate</dt><dd data-race="q-est">&ndash;</dd></div>
+              <div><dt>How far off</dt><dd data-race="q-err">&ndash;</dd></div>
+            </dl>
+            <p class="race__lock" data-race="q-lock">&nbsp;</p>
+          </div>
+        </div>
+        <figure class="chart-figure race__figure">
+          <figcaption class="chart-figure__title">How far off each method is, as the tries pile up</figcaption>
+          <canvas class="race__chart" aria-label="Error versus tries for Monte Carlo and quantum amplitude estimation, updated live"></canvas>
+          <p class="chart-figure__note">
+            <button type="button" class="button button--small race__play" aria-pressed="false">&#9654; Play the race</button>
+            True share of flooding storms: <span data-race="truth">0.6391</span>. <span class="race__key race__key--mc">Monte Carlo</span> <span class="race__key race__key--q">quantum</span>. Runs live in your browser; quantum is an exact simulation of an ideal, error-free machine.
+          </p>
+        </figure>
+        <div class="race__verdict" hidden aria-live="polite">
+          <p class="eyebrow">This run&rsquo;s result</p>
+          <p class="race__headline" data-race="v-head"></p>
+          <div class="race__times">
+            <label class="race__per-try-label">If one try were a flood-model run taking
+              <select class="race__per-try">
+                <option value="0.1">0.1 second</option>
+                <option value="1" selected>1 second</option>
+                <option value="10">10 seconds</option>
+                <option value="60">1 minute</option>
+              </select>
+            </label>
+            <dl>
+              <div><dt class="race__key race__key--mc">Monte Carlo</dt><dd data-race="v-mc-time"></dd></div>
+              <div><dt class="race__key race__key--q">Quantum</dt><dd data-race="v-q-time"></dd></div>
+            </dl>
+          </div>
+          <p class="caption-note">Honest fine print: this counts tries on an ideal, error-free quantum computer that doesn&rsquo;t exist yet. Monte Carlo can also be split across many computers at once, and today&rsquo;s quantum chips are far too noisy to win. See <a href="#losses">where classical still wins</a>.</p>
+        </div>
+      </div>
+
       <figure class="chart-figure chart-figure--hero">
         <figcaption class="chart-figure__title" id="wins-title"><span class="chart-figure__num">1</span> vs the best classical method, model uncertainty included</figcaption>
         <div class="chart chart--hero" id="wins-chart" aria-describedby="wins-note"></div>
@@ -215,7 +269,7 @@
         </p>
       </div>
 
-      <div class="losses">
+      <div class="losses" id="losses">
         <h3 class="losses__title">Where classical still wins</h3>
         <div class="table-wrap" tabindex="0" role="region" aria-label="Where classical still wins, scrollable on narrow screens">
           <table class="table--compact table--fit">
@@ -476,6 +530,7 @@
 
 <script src="js/data.js"></script>
 <script src="js/charts.js" defer></script>
+<script src="js/race.js" defer></script>
 <script src="js/main.js" defer></script>
 <script src="js/story.js" defer></script>
 <script type="module" src="js/streets.js"></script>

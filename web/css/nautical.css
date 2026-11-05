@@ -92,3 +92,9 @@ thead th { color: var(--text); border-bottom: 1.5px solid var(--text); }
   .chapter__card--hero { background: rgba(246, 240, 226, 0.97); }
   .stat { padding: 0.5rem 0 0; }
 }
+
+/* The race (race.js) on paper. */
+.race__panel, .race__chart, .race__verdict, .race__per-try { border-radius: 0; }
+.race__panel { background: var(--chart-surface); }
+.race__lock-yes { color: #13805a; }
+.race__title { margin-top: 0.5rem; }

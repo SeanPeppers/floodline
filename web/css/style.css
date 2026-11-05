@@ -319,3 +319,45 @@ table.table--fit { min-width: 0; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
 }
+
+/* Live Monte Carlo vs QAE race (race.js). */
+.race { margin: 1.5rem 0 2.5rem; }
+.race__panels { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; }
+.race__panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 0.9rem 1rem 0.7rem; min-width: 0; }
+.race__head { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
+.race__head h4 { margin: 0 0 0.5rem; font-family: var(--font-head); font-size: 1rem; }
+.race__panel--mc h4 { color: var(--accent); }
+.race__panel--q h4 { color: var(--amber); }
+.race__state { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.race__mc, .race__qae { display: block; width: 100%; height: 230px; }
+.race__chart { display: block; width: 100%; height: 260px; background: var(--chart-surface); border-radius: 10px; }
+.race__stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin: 0.6rem 0 0; }
+.race__stats div { min-width: 0; }
+.race__stats dt { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.race__stats dd { margin: 0; font-family: var(--font-mono); font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+.race__figure { margin-top: 1.2rem; }
+.race__play { margin: 0 0.6rem 0 0; }
+.race__key::before { content: ""; display: inline-block; width: 0.9em; height: 3px; margin: 0 0.3em 0.2em 0.2em; vertical-align: middle; border-radius: 2px; }
+.race__key--mc::before { background: var(--accent); }
+.race__key--q::before { background: var(--amber); }
+@media (max-width: 760px) {
+  .race__panels { grid-template-columns: 1fr; }
+  .race__mc, .race__qae { height: 210px; }
+}
+.race__lock { margin: 0.45rem 0 0; font-size: 0.85rem; color: var(--text-muted); }
+.race__lock-yes { color: #7fd99a; font-weight: 600; }
+.race__verdict {
+  margin-top: 1.2rem; padding: 1.1rem 1.25rem; border: 1px solid var(--border); border-left: 3px solid var(--amber);
+  border-radius: 0 12px 12px 0; background: var(--surface);
+}
+.race__verdict[hidden] { display: none; }
+.race__headline { font-size: 1.15rem; line-height: 1.45; margin: 0.2rem 0 1rem; }
+.race__times { display: grid; gap: 0.6rem; margin-bottom: 1rem; }
+.race__per-try-label { font-size: 0.9rem; color: var(--text-muted); }
+.race__per-try { margin-left: 0.4rem; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 0.2rem 0.4rem; font: inherit; }
+.race__times dl { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin: 0; }
+.race__times dt { font-size: 0.8rem; color: var(--text-muted); }
+.race__times dd { margin: 0.15rem 0 0; font-size: 0.95rem; }
+.race__means-title { font-family: var(--font-head); font-weight: 600; margin: 0 0 0.4rem; }
+.race__means { margin: 0 0 0.8rem; padding-left: 1.1rem; display: grid; gap: 0.45rem; line-height: 1.5; }
+@media (max-width: 760px) { .race__times dl { grid-template-columns: 1fr; } }
