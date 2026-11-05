@@ -8,6 +8,7 @@
      through the model: plain sampling, conditional MC, importance sampling.
   4. The integer runoff table is monotone in the rain bins, which conditional MC's bisection needs.
   5. The gate counter used for grids too big to build (count_a) matches the built circuit.
+  6. The GEV rain marginals reproduce NOAA Atlas 14's published AMS depths (24 h and 3 h).
 
 Run: `uv run python test_multidriver.py`  (~2 min)
 """
@@ -60,6 +61,18 @@ def test_estimators_unbiased() -> None:
     print(f"estimators unbiased at a = {a:.5f}: MC {hit.mean():.5f}, CMC {c.mean():.5f}, IS {w.mean():.5f}")
 
 
+def test_rain_fit() -> None:
+    pf = md.pfds_ams()
+    t = 1 / np.array(md.rainfall.AMS_RETURN_PERIODS, dtype=float)
+    for dur in ("24h", "3h"):
+        depths = np.array(pf[dur])
+        rel = np.abs(md.stats.genextreme.isf(t, *md.rainfall.fit_gev(depths)) - depths) / depths
+        assert rel.max() < 0.06, (dur, rel)
+        print(
+            f"GEV {dur}: max relative error vs Atlas 14 AMS = {rel.max():.1%} (T = {md.rainfall.AMS_RETURN_PERIODS[rel.argmax()]} yr)"
+        )
+
+
 def test_runoff_monotone() -> None:
     m = md.Model(md.Config(), DRAIN)
     assert (np.diff(m.R, axis=0) >= 0).all() and (np.diff(m.R, axis=1) >= 0).all()
@@ -67,6 +80,7 @@ def test_runoff_monotone() -> None:
 
 
 if __name__ == "__main__":
+    test_rain_fit()
     test_runoff_monotone()
     test_estimators_unbiased()
     test_circuit_reduced_d2()
