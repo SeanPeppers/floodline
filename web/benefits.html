@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why it matters — Floodline</title>
+<meta name="description" content="Who Floodline helps: Key West homeowners, insurers, city planners and emergency managers, and where quantum amplitude estimation fits in.">
+<meta name="theme-color" content="#05080f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="css/style.css">
+<link rel="icon" href="data:,">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="site-header__inner">
+    <a class="brand brand--link" href="/"><span class="brand__dot" aria-hidden="true"></span>Floodline</a>
+    <nav aria-label="Site navigation">
+      <a href="/#results">Results</a>
+      <a href="/#tool">Road ranking</a>
+      <a href="/#tonight">Live map</a>
+      <a href="benefits" aria-current="page">Why it matters</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <section class="section" aria-labelledby="why-title">
+    <div class="section__content section__content--wide">
+      <p class="eyebrow">Why it matters</p>
+      <h1 id="why-title" class="page-title">Every hurricane season, Florida asks the same question: which streets flood first?</h1>
+      <p class="hero__lede">
+        Floodline answers it for Key West, street by street. And it's built
+        on a quantum algorithm that will answer it faster once the hardware
+        catches up.
+      </p>
+
+      <ul class="hero__stats" aria-label="Key numbers">
+        <li class="stat">
+          <span class="stat__value">$13.5B</span>
+          <span class="stat__label">federal flood insurance paid on Florida claims after Irma, Ian, Helene and Milton</span>
+        </li>
+        <li class="stat">
+          <span class="stat__value">6,054</span>
+          <span class="stat__label">Key West road points scored for flood risk</span>
+        </li>
+        <li class="stat stat--win">
+          <span class="stat__value">351&times;</span>
+          <span class="stat__label">fewer simulations than standard Monte Carlo, at high precision</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section section--compact" aria-labelledby="idea-title">
+    <div class="section__content section__content--wide">
+      <p class="eyebrow">The idea in one line</p>
+      <h2 id="idea-title">Classical risk models get 10&times; more accurate by running 100&times; more simulations. Quantum needs about 10&times;.</h2>
+      <p>
+        Flood risk is a counting problem: simulate thousands of possible
+        years and count how many flood. That's slow when you need precise
+        answers about rare events, which is exactly what insurers and
+        planners care about. Quantum amplitude estimation counts with
+        quadratically fewer samples.
+      </p>
+    </div>
+  </section>
+
+  <section class="section section--compact" aria-labelledby="who-title">
+    <div class="section__content section__content--wide">
+      <p class="eyebrow">Who it helps</p>
+      <h2 id="who-title">Built for the people who have to plan around flooding.</h2>
+
+      <div class="benefit-grid">
+        <article class="verdict-card verdict-card--good">
+          <h3>Homeowners &amp; buyers</h3>
+          <ul>
+            <li>See how often your street is expected to flood this year, and in 2050 under NOAA's sea-level scenarios.</li>
+            <li>Check the next high tides on the live map before you park or plan.</li>
+            <li>Know a street's risk before you buy or renovate, not after the first storm.</li>
+          </ul>
+        </article>
+
+        <article class="verdict-card verdict-card--good">
+          <h3>Insurance companies</h3>
+          <ul>
+            <li>Street-level annual flood probabilities instead of one number for a whole zone.</li>
+            <li>Pricing rare, expensive events is a sampling problem, and high-precision sampling is exactly where quantum amplitude estimation has a proven edge.</li>
+            <li>Our biggest measured win is at the tightest precision, the regime that matters for tail risk.</li>
+          </ul>
+        </article>
+
+        <article class="verdict-card verdict-card--good">
+          <h3>City planners</h3>
+          <ul>
+            <li>Key West has a limited budget to raise roads. Floodline ranks which ones to raise first.</li>
+            <li>Flagler Ave tops the list: 4.7 miles, with a 99% chance its low point floods in 2050.</li>
+            <li>Built on 110 years of real tide-gauge data and the city's own 2024 Stormwater Master Plan.</li>
+          </ul>
+        </article>
+
+        <article class="verdict-card verdict-card--good">
+          <h3>Emergency managers</h3>
+          <ul>
+            <li>NOAA's storm-surge forecast runs about 630 simulations per advisory, due within an hour.</li>
+            <li>Inside a black-box simulator like that, our quantum method needed 1.6&ndash;3.3&times; fewer runs than the best classical approach.</li>
+            <li>Fewer runs means more room to explore storm tracks inside the same deadline.</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--compact" aria-labelledby="quantum-title">
+    <div class="section__content section__content--wide">
+      <p class="eyebrow">Why quantum, honestly</p>
+      <h2 id="quantum-title">We didn't just ask whether quantum wins. We measured where it does, and where it doesn't.</h2>
+      <div class="verdict-grid">
+        <div class="verdict-card verdict-card--good">
+          <h3>Where it wins</h3>
+          <ul>
+            <li>Most quantum demos compare against a weak baseline. We tested against the strongest classical method we could find, and still saw a <strong>4.3&times;</strong> advantage once the model gets complex.</li>
+            <li>The advantage grows as the model adds more real-world uncertainty.</li>
+          </ul>
+        </div>
+        <div class="verdict-card verdict-card--warn">
+          <h3>Where it doesn't, yet</h3>
+          <ul>
+            <li>Today's IBM hardware is roughly a million times too noisy to win. We ran it on a real IBM quantum computer anyway to show the gap.</li>
+            <li>On simple models, classical methods still win.</li>
+            <li>Floodline is built so the quantum engine plugs straight in when fault-tolerant hardware arrives.</li>
+          </ul>
+        </div>
+      </div>
+      <p class="claim">Floodline is a research prototype and planning aid, not an official flood warning. For real-time alerts, follow <a href="https://www.weather.gov/key/">NWS Key West</a> and the City of Key West.</p>
+      <p><a class="button" href="/#results">See the results</a></p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <p>Floodline — FGCU &times; FAU Quantum Hackathon 2026. Built with Qiskit.</p>
+  <p class="site-footer__credit">Figures from OpenFEMA NFIP claims, NOAA, NHC and the City of Key West 2024 Stormwater Master Plan. <a href="/#methods">Methods &amp; sources</a>.</p>
+</footer>
+
+</body>
+</html>

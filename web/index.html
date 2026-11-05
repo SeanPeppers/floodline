@@ -3,16 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Floodline — Where quantum amplitude estimation helps Key West flood risk</title>
-<meta name="description" content="A compound-flood risk tool for Key West, and a measured answer to where quantum amplitude estimation beats classical sampling: with 13 uncertain factors, ideal QAE needs 4.3x fewer queries than the best classical method; with 5, it loses.">
+<title>Floodline — Key West flood risk, street by street</title>
+<meta name="description" content="Floodline estimates how often each Key West street floods, and tests where a quantum algorithm (amplitude estimation, built in Qiskit) beats the best classical methods.">
 <meta name="theme-color" content="#05080f">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- Non-render-blocking font load (media="print" swap); system fonts show until then. -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap"
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
       media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap"></noscript>
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"></noscript>
 
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/tonight.css">
@@ -28,10 +28,10 @@
     <span class="brand"><span class="brand__dot" aria-hidden="true"></span>Floodline</span>
     <nav aria-label="Section navigation">
       <a href="#results">Results</a>
-      <a href="#savings">Savings</a>
-      <a href="#tool">Tool</a>
-      <a href="#tonight">Tonight</a>
-      <a href="#verdict">Verdict</a>
+      <a href="#tool">Road ranking</a>
+      <a href="#tonight">Live map</a>
+      <a href="#verdict">Takeaways</a>
+      <a href="benefits">Why it matters</a>
       <a href="#methods">Methods</a>
     </nav>
   </div>
@@ -64,27 +64,28 @@
           <p class="eyebrow">FGCU Quantum Hackathon 2026 &middot; Key West</p>
           <h1>Floodline</h1>
           <p class="hero__lede">
-            A Key West flood-risk tool, and a measured quantum win over the
-            best classical method once the model's uncertain parameters are
-            sampled too. Query count on ideal hardware that doesn't exist yet.
+            How likely is your street to flood, and can a quantum computer
+            work that out faster? We built a street-level flood model for
+            Key West from 110 years of tide data, then raced a quantum
+            algorithm against the best classical methods we could find.
           </p>
           <ul class="hero__stats" aria-label="Headline results">
             <li class="stat stat--win">
               <span class="stat__value"><span data-bind="winTop">4.3</span>&times; <span class="stat__ci">[<span data-bind="winTopCi">3.5, 5.4</span>]</span></span>
-              <span class="stat__label">fewer queries than the best classical method, <span data-bind="winTopD">13</span> uncertain factors, <span class="nowrap">&epsilon;&nbsp;=&nbsp;1e-4</span></span>
+              <span class="stat__label">fewer simulations than the best classical method, on our most detailed model</span>
             </li>
             <li class="stat">
-              <span class="stat__value">d &asymp; 7&ndash;8</span>
-              <span class="stat__label">factors where QAE overtakes it</span>
+              <span class="stat__value">3 qubits</span>
+              <span class="stat__label">run on real IBM quantum hardware (ibm_fez)</span>
             </li>
             <li class="stat stat--warn">
               <span class="stat__value"><span data-bind="winLow">0.65</span>&times;</span>
-              <span class="stat__label">same ratio at 5 factors: classical wins</span>
+              <span class="stat__label">on simpler models, where classical still wins</span>
             </li>
           </ul>
           <p class="hero__cta">
             <span class="scroll-cue" aria-hidden="true"></span>
-            Scroll through Irma to Key West, or <a href="#results">skip to results</a>
+            Scroll to follow Hurricane Irma into Key West, or <a href="#results">jump to results</a>
           </p>
         </div>
       </article>
@@ -92,8 +93,8 @@
       <article class="chapter" data-scene="globe" data-still="1">
         <div class="chapter__card">
           <p class="eyebrow">10 Sep 2017 &middot; Hurricane Irma</p>
-          <h2>Irma hit Cudjoe Key at 13:00 UTC as a Category&nbsp;4.</h2>
-          <p>Key West sits about 20 miles west. Landfall two: Marco Island, 19:30 UTC.</p>
+          <h2>Irma made landfall in the Keys as a Category&nbsp;4.</h2>
+          <p>It hit Cudjoe Key, about 20 miles from Key West, then went on to Marco Island the same afternoon.</p>
           <p class="chapter__source">
             Clouds: NASA MODIS Terra, 15:50 UTC (landfall +3&nbsp;h). Line: NHC best track.
           </p>
@@ -103,8 +104,8 @@
       <article class="chapter" data-scene="globe" data-still="2">
         <div class="chapter__card">
           <p class="eyebrow">Tide gauge 8724580 &middot; Key West</p>
-          <h2>The gauge peaked 2.7&nbsp;ft above high tide.</h2>
-          <p>That is past NWS major flood stage (<span data-bind="major">0.64</span>&nbsp;m).</p>
+          <h2>The water rose 2.7&nbsp;ft above high tide.</h2>
+          <p>That's well past what the National Weather Service calls a major flood (<span data-bind="major">0.64</span>&nbsp;m).</p>
           <p class="chapter__source">Source: NHC Tropical Cyclone Report AL112017.</p>
         </div>
       </article>
@@ -112,8 +113,8 @@
       <article class="chapter" data-scene="keywest" data-level="mhhw" data-still="3">
         <div class="chapter__card">
           <p class="eyebrow">Key West &middot; 24.56&deg;&nbsp;N, 81.78&deg;&nbsp;W</p>
-          <h2>The island, measured.</h2>
-          <p>NOAA topobathy, USDA aerial photo, water at normal high tide.</p>
+          <h2>Here's Key West at a normal high tide.</h2>
+          <p>Real elevation data from NOAA, with an aerial photo laid on top. Watch what happens as the water comes up.</p>
           <p class="chapter__source">
             Flat &ldquo;bathtub&rdquo; fill, no waves or drainage. Heights
             &times;<span data-bind="exaggeration">25</span>. Rain and cloud
@@ -126,7 +127,7 @@
         <div class="chapter__card">
           <p class="eyebrow">NWS minor flood stage</p>
           <h2><span data-bind="minor">0.335</span>&nbsp;m above high tide.</h2>
-          <p>Key West's yearly peak water level reaches it in <span data-bind="tideMinorPct">96</span>% of years.</p>
+          <p>Minor flooding. Key West hits this level almost every year (<span data-bind="tideMinorPct">96</span>% of years).</p>
         </div>
       </article>
 
@@ -134,7 +135,7 @@
         <div class="chapter__card">
           <p class="eyebrow">NWS moderate flood stage</p>
           <h2><span data-bind="moderate">0.488</span>&nbsp;m.</h2>
-          <p>Low ground floods first, often far from the shore.</p>
+          <p>Moderate flooding. The lowest streets go under first, and they're often nowhere near the beach.</p>
         </div>
       </article>
 
@@ -142,14 +143,14 @@
         <div class="chapter__card">
           <p class="eyebrow">NWS major flood stage</p>
           <h2><span data-bind="major">0.64</span>&nbsp;m.</h2>
-          <p>Tide alone reaches major stage about 1 year in <span data-bind="tideMajorInv">22</span> (p&nbsp;=&nbsp;<span data-bind="tideMajorA">0.0458</span>).</p>
+          <p>Major flooding. The tide alone gets here about once every <span data-bind="tideMajorInv">22</span> years, before you add any rain.</p>
         </div>
       </article>
 
       <article class="chapter" data-scene="keywest" data-level-m="0.823" data-still="7">
         <div class="chapter__card">
           <p class="eyebrow">Irma at the gauge</p>
-          <h2>2.7&nbsp;ft: where Irma put the water.</h2>
+          <h2>And this is where Irma put the water.</h2>
           <p class="chapter__source">Still-water level at the gauge, not a flood map. <a href="#results">Results</a>.</p>
         </div>
       </article>
@@ -159,8 +160,16 @@
   <!-- RESULTS -->
   <section class="section" id="results" aria-label="Results">
     <div class="section__content section__content--wide">
-      <p class="eyebrow">Headline &middot; model uncertainty included</p>
-      <h2>With <span data-bind="winTopD">13</span> uncertain factors, QAE needs <span data-bind="winTop">4.3</span>&times; fewer queries than the best classical method.</h2>
+      <p class="eyebrow">The headline result</p>
+      <h2>On our most detailed model, quantum needs <span data-bind="winTop">4.3</span>&times; fewer simulations than the best classical method.</h2>
+      <p>
+        To get a flood probability, you simulate thousands of possible years
+        (tide, rain, sea-level rise, groundwater) and count how many flood.
+        Classically, getting 10&times; more precise takes about 100&times; more
+        simulations. Quantum amplitude estimation (QAE) needs only about 10&times;.
+        The more uncertain things the model has to account for, the bigger
+        quantum's lead gets.
+      </p>
       <ul class="findings">
         <li><strong><span data-bind="winTop">4.3</span>&times; [<span data-bind="winTopCi">3.5, 5.4</span>]</strong> at 13 factors, <strong><span data-bind="winMid">3.0</span>&times;</strong> at 9&ndash;10, a tie at 7 (<span data-bind="winTie">1.1</span>&times;), a loss at 5 (<span data-bind="winLow">0.65</span>&times;). &epsilon;&nbsp;=&nbsp;1e-4.</li>
         <li>Best classical: conditional MC on Sobol points (CMC+QMC). Its exponent climbs from <span data-bind="winAlphaCmc">1.31 to 1.68</span>; QAE's stays at <span data-bind="winAlphaQae">0.97&ndash;1.01</span>.</li>
@@ -199,7 +208,7 @@
       </details>
 
       <p class="eyebrow eyebrow--gap">Result 1 &middot; one street, two drivers</p>
-      <h2>Quantum beats plain Monte Carlo. Sobol QMC still beats quantum.</h2>
+      <h2>Quantum easily beats standard random sampling, but not every classical trick.</h2>
       <p>
         Street: Patterson Ave, drains from the city's 2024 Stormwater Master
         Plan. Plain Monte Carlo needs
@@ -246,7 +255,7 @@
       </details>
 
       <p class="eyebrow eyebrow--gap">Result 2 &middot; five drivers</p>
-      <h2>With five drivers, QAE passes Sobol QMC but not the best classical method.</h2>
+      <h2>Add more drivers, and quantum starts pulling ahead.</h2>
       <p>Drivers: tide, 24-hour rain, 3-hour burst, sea-level rise, groundwater.</p>
       <p class="claim">We found no published head-to-head of quantum amplitude estimation vs quasi-Monte Carlo on a real risk model; we measured the crossover at ~4 drivers.</p>
       <ul class="findings">
@@ -277,7 +286,7 @@
   <!-- SAVINGS: inputs and assumptions from the black-box savings study; ratios from results_multi.json -->
   <section class="section" id="savings" aria-labelledby="savings-title">
     <div class="section__content section__content--wide">
-      <p class="eyebrow">What's at stake</p>
+      <p class="eyebrow">Why this matters</p>
       <h2 id="stakes-title">Four Florida hurricanes, flood claims alone: $13.5B.</h2>
       <div class="table-wrap" tabindex="0" role="region" aria-label="Hurricane cost table, scrollable on narrow screens">
         <table class="table--fit">
@@ -367,7 +376,7 @@
   <section class="section" id="tool" aria-label="The flood tool">
     <div class="section__content section__content--wide">
       <p class="eyebrow">Result 3 &middot; the tool</p>
-      <h2>P(flood) for any Key West street, by year, scenario and elevation.</h2>
+      <h2>The chance any Key West street floods, now or in 2050.</h2>
       <p>
         A 3.0&nbsp;ft street in 2050: <strong><span data-bind="cliP">0.6149</span></strong>
         a year, about 1 in <span data-bind="cliYears">1.6</span>. City-wide,
@@ -379,7 +388,7 @@
       <p class="caption-note">Recorded run (<code>README_multidriver.md</code>). A ranking tool under flagged assumptions, not a forecast.</p>
 
       <p class="eyebrow eyebrow--gap">Money the tool saves today &middot; classical engine</p>
-      <h2>Which road to raise first, in dollars.</h2>
+      <h2>Which road should the city raise first?</h2>
       <p>
         <strong>Flagler Ave is first:</strong> 4.7&nbsp;mi, and its low point has
         a 99% chance of flooding in 2050. Raising it 1&nbsp;ft costs <strong>$7.0M&ndash;$17.5M per
@@ -511,11 +520,12 @@
   <!-- VERDICT -->
   <section class="section" id="verdict" aria-label="Verdict">
     <div class="section__content">
-      <p class="eyebrow">Verdict</p>
-      <h2>QAE loses to the best classical method at 5 factors and wins from 9, in query count.</h2>
+      <p class="eyebrow">Takeaways</p>
+      <h2>Quantum wins once the model gets complex, and loses when it's simple.</h2>
+      <p>Today's quantum hardware is still far too noisy to deliver this. We measured exactly where the advantage starts, so the quantum engine is ready to plug in when the hardware catches up.</p>
       <div class="verdict-grid">
         <div class="verdict-card verdict-card--good">
-          <h3>Shown</h3>
+          <h3>What we showed</h3>
           <ul>
             <li><span data-bind="winTop">4.3</span>&times; fewer queries than CMC+QMC at 13 factors, <span data-bind="winMid">3.0</span>&times; at 9&ndash;10 (&epsilon;&nbsp;=&nbsp;1e-4, ideal hardware).</li>
             <li>Quadratic edge over plain MC: &alpha;&nbsp;=&nbsp;<span data-bind="alphaQae">0.91</span> vs <span data-bind="alphaMc">2.01</span>.</li>
@@ -524,7 +534,7 @@
           </ul>
         </div>
         <div class="verdict-card verdict-card--warn">
-          <h3>Not shown</h3>
+          <h3>What we didn't show</h3>
           <ul>
             <li>A win at 5 factors (<span data-bind="winLow">0.65</span>&times;), or at &epsilon;&nbsp;=&nbsp;1e-3 at any d.</li>
             <li>A circuit for the 8 extra parameters.</li>
@@ -627,7 +637,7 @@ uv run python floodline_cli.py --year 2050 --elevation 3.0 --exposure</code></pr
 </main>
 
 <footer class="site-footer">
-  <p>Floodline — FGCU Quantum Hackathon 2026. Simulator only.</p>
+  <p>Floodline — FGCU &times; FAU Quantum Hackathon 2026. Built with Qiskit. <a href="benefits">Why it matters</a>.</p>
   <p class="site-footer__credit">
     Imagery: NASA GIBS (ESDIS). Track: NOAA NHC. Terrain: NOAA NCEI, USDA
     NAIP. Coastline: Natural Earth. Roads: &copy; OpenStreetMap contributors.

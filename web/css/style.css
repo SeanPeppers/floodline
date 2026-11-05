@@ -14,9 +14,9 @@
   --border: rgba(169, 180, 194, 0.18);
   --hairline: #232c3a;
 
-  --font-head: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
+  --font-head: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Consolas, monospace;
 
   --max-w: 46rem;
   --max-w-wide: 62rem;
@@ -301,3 +301,10 @@ table.table--fit { min-width: 0; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
 }
+
+/* ---------- benefits page ---------- */
+.page-title { font-size: clamp(1.9rem, 5vw, 3rem); font-weight: 700; }
+.brand--link { color: var(--text); text-decoration: none; }
+.benefit-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; margin: 2rem 0; }
+.benefit-grid h3 { margin-bottom: 0.8rem; }
+@media (max-width: 720px) { .benefit-grid { grid-template-columns: 1fr; } }
