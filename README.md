@@ -10,7 +10,7 @@ then Lighthouse, and fails below accessibility 95 / best practices 90 / SEO 90. 
 that touches `web/` (`.github/workflows/a11y.yml`); locally: `cd qa && npm ci && node qa.mjs <url>`
 (set `CHROME_PATH` on NixOS).
 
-Reference docs: [FINDINGS.md](FINDINGS.md) (where quantum wins and loses), [NOVELTIES.md](NOVELTIES.md) (what is new), [CITATIONS.md](CITATIONS.md) (every source), [PITCH.md](PITCH.md) (pitch and video brief), [FAILED.md](FAILED.md) (everything that failed or was dropped).
+Reference docs: [FINDINGS.md](FINDINGS.md) (where quantum wins and loses), [NOVELTIES.md](NOVELTIES.md) (what is new), [CITATIONS.md](CITATIONS.md) (every source), [PITCH.md](PITCH.md) (pitch and video brief), [SCRIPT.md](SCRIPT.md) (10-minute talk), [FAILED.md](FAILED.md) (everything that failed or was dropped).
 
 ## Verdict first
 
