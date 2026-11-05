@@ -5,6 +5,11 @@ FGCU Quantum Hackathon 2026 build. Live site: https://floodline-keywest.vercel.a
 The experiments run on a simulator (`RUN_ON_HARDWARE = False` in `experiment.py`); `hw_demo.py`
 ran a 3-qubit version on IBM's `ibm_fez` (results in `results_hw.json`).
 
+Accessibility: `qa/qa.mjs` runs axe-core (WCAG 2.1 A/AA) at 9 scroll positions on desktop and phone,
+then Lighthouse, and fails below accessibility 95 / best practices 90 / SEO 90. It runs on every push
+that touches `web/` (`.github/workflows/a11y.yml`); locally: `cd qa && npm ci && node qa.mjs <url>`
+(set `CHROME_PATH` on NixOS).
+
 Reference docs: [FINDINGS.md](FINDINGS.md) (where quantum wins and loses), [NOVELTIES.md](NOVELTIES.md) (what is new), [CITATIONS.md](CITATIONS.md) (every source), [PITCH.md](PITCH.md) (pitch and video brief), [FAILED.md](FAILED.md) (everything that failed or was dropped).
 
 ## Verdict first
