@@ -87,7 +87,7 @@
     state.level = easeBetween(levels, u);
 
     const inKeyWest = u > firstKeyWest - 0.05;
-    hud.hidden = !inKeyWest;
+    if (hud.hidden === inKeyWest) hud.hidden = !inKeyWest; // even a same-value write restyles
     if (inKeyWest) {
       const i = Math.min(N - 1, Math.floor(u));
       const c = chapters[i];
@@ -113,6 +113,11 @@
   new IntersectionObserver(([e]) => { state.visible = e.isIntersecting; }).observe(journey);
   measure();
   update();
+
+  // The hero's looping scroll cue restyles the page every frame, on screen or
+  // not; hold it while it is scrolled away.
+  const cue = document.querySelector(".scroll-cue");
+  if (cue) new IntersectionObserver(([e]) => { cue.classList.toggle("is-idle", !e.isIntersecting); }).observe(cue);
 
   // 3-D only with motion allowed, data not constrained, and a WebGL2 context.
   function webgl2() {
