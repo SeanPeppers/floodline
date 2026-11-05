@@ -28,7 +28,7 @@ Every one of these flood odds comes from running a model thousands of times with
 
 Real surge forecasting is that problem at full scale. For each advisory, NOAA runs about 630 surge simulations and has an hour to get them out. A full flood study runs hundreds of storms, and a single high-resolution ADCIRC storm-surge run takes about 2,000 core-hours.
 
-Here's the math for a storm with about two days of warning. A 446-storm study at 2,000 core-hours each is 892,000 core-hours. On a 20,000-core allocation, that's 44.6 hours, most of the two days gone. With our measured black-box ratio of 3.3 times fewer runs, the same answer takes 270,000 core-hours, or 13.5 hours on the same machine. With the middle ratio, 2.3 times, it's 19.4 hours. In dollars, our model puts the savings at $16,000 to $42,000 per study of that size and $177,000 to $330,000 for a Louisiana-size suite of 7,712 runs.
+Here's the math for a storm with about two days of warning. A 446-storm study at 2,000 core-hours each is 892,000 core-hours. On a 20,000-core allocation, that's 44.6 hours, most of the two days gone. Our measured black-box ratio is 3.3 times fewer simulator runs. That would cut the work to 270,000 core-hours, the equivalent of 13.5 hours of that cluster; with the middle ratio, 2.3 times, it's 19.4 hours. Those are counts of simulator runs on a future error-free quantum computer, not a stopwatch, and I'll come back to what that means for real time. In compute dollars, the runs saved come to $16,000 to $42,000 for a study that size, depending on how big each run is, and $177,000 to $330,000 for a Louisiana-size suite of 7,712 runs.
 
 Quantum amplitude estimation is a quantum algorithm with a proven speedup for exactly this kind of counting. So we asked a narrow question: on a real city's flood model, where does it actually beat the best classical method?
 
@@ -93,7 +93,7 @@ Classical runs the tool today. What we measured is the point where quantum takes
 | ADCIRC run cost | about 2,000 core-hours | arXiv 1909.01836 |
 | 446-storm study | FEMA-style Louisiana study | Louisiana Coastal Master Plan slides |
 | 44.6 h vs 13.5 h / 19.4 h | 892,000 core-hours, 20,000-core allocation (our assumption), divided by 3.3 or 2.3 | computed |
-| $15.8k to $42.0k; $177k to $330k per study | runs saved × CPU-hours per run × $0.0473 | site Savings section |
+| $15.8k to $42.0k; $177k to $330k per study | runs saved × CPU-hours per run × $0.0473; the $42.0k high case uses the 2,855 core-hour Hurricane Ike run (arXiv 2310.06199) with r = 3.3 | site Savings section |
 | 245,000 vs 8,800 runs, 28× | ε = 1e-3, two-driver street model | `results.json` matched_eps |
 | 351× | ε = 1e-4, QAE extrapolated | `results.json` |
 | 13 factors | QAE 96,595 vs CMC+QMC 416,364 queries, 4.31× [3.51, 5.38]; tie at d = 7 | `results_wins.json` dim 13 |
