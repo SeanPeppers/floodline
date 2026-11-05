@@ -323,6 +323,14 @@ then an animated window that needs a display).
   agreement, a tiny end-to-end run.
 - `demo.py`: live animated convergence demo.
 - `crossover.png`: the d-driver toy study's figure (the script lives outside this repo).
+- `multidriver.py` and friends: the separate five-driver model, documented in
+  `README_multidriver.md`. It shares this model's tide GEV (`flood.py`), the same Atlas 14 GEV
+  rain fit (`rainfall.fit_gev`, applied to the 24-h and 3-h series) and the same SMP sources. It
+  differs on purpose in three places: τ = 0.2 (prior 0.1-0.3) instead of 0.3, a drainage rule
+  calibrated to the SMP's 5-year level of service with groundwater and gravity wells instead of
+  the N3210 storage fit, and SLR and groundwater as random drivers. Both models let tide stand
+  in the street. Their tide-only probabilities at N3210 today agree (0.210 vs 0.217); their
+  full a does not (0.97 vs 0.640), because the two drainage calibrations differ.
 
 ## Run
 
