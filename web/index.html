@@ -3,16 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Floodline — Quantum Amplitude Estimation for Key West Flood Risk</title>
-<meta name="description" content="Floodline measures whether quantum amplitude estimation's proven quadratic query speedup actually shows up on a real Key West flood-risk problem, and what it costs against classical Monte Carlo.">
+<title>Floodline — Quantum Amplitude Estimation for Key West Compound Flood Risk</title>
+<meta name="description" content="Floodline measures whether quantum amplitude estimation's proven quadratic query speedup survives contact with a real, 2-D Key West tide+rainfall compound flood-risk problem, against a fair classical Sobol QMC control.">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://unpkg.com">
+<link rel="preconnect" href="https://tiles.openfreemap.org">
 <!-- Non-render-blocking font load: fetch during idle (media="print" trick),
-     swap to "all" on load. System sans/serif shows until then. -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap"
+     swap to "all" on load. System sans/serif/mono shows until then. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap"
       media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap"></noscript>
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap"></noscript>
 
 <link rel="stylesheet" href="css/style.css">
 <link rel="icon" href="data:,">
@@ -27,7 +29,7 @@
 
 <header class="site-header">
   <div class="site-header__inner">
-    <span class="brand">Floodline</span>
+    <span class="brand"><span class="brand__dot" aria-hidden="true"></span>Floodline</span>
     <nav aria-label="Section navigation">
       <a href="#problem">Problem</a>
       <a href="#method">Method</a>
@@ -43,34 +45,39 @@
   <section class="section hero" id="hero" aria-label="Introduction">
     <div class="hero-map">
       <div class="hero-map__decor" aria-hidden="true">
+        <!-- map.js lazy-mounts a live MapLibre layer here after idle; these
+             stills are the whole picture if that never happens, not a
+             fallback bolted on afterward. -->
         <img class="hero-map__img hero-map__img--wide" src="assets/map/region-wide.jpg" alt="" width="768" height="768" fetchpriority="high">
         <img class="hero-map__img hero-map__img--close" src="assets/map/keywest-close.jpg" alt="" width="768" height="768">
         <div class="hero-map__scrim"></div>
         <canvas class="flood-canvas"></canvas>
       </div>
-      <p class="map-credit">Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>, ODbL</p>
+      <p class="map-credit">Map &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ODbL &middot; tiles via <a href="https://openfreemap.org">OpenFreeMap</a></p>
     </div>
     <div class="section__content hero__content">
-      <p class="eyebrow">FGCU Quantum Hackathon 2026</p>
+      <p class="eyebrow">FGCU Quantum Hackathon 2026 &middot; Key West compound flood tail</p>
       <h1>Floodline</h1>
       <p class="hero__lede">
         Does quantum amplitude estimation's proven query-complexity edge over
-        Monte Carlo actually show up when you point it at a real flood-risk
-        number? We measured it on 110 years of Key West tide data instead of
-        assuming the answer.
+        Monte Carlo survive a real, two-dimensional flood-risk problem? We
+        built a tide&nbsp;+&nbsp;rainfall compound model from 110 years of
+        Key West data and raced it against a <em>fair</em> classical
+        control &mdash; 2-D Sobol quasi-Monte&nbsp;Carlo, not a method that
+        cheats with exact CDF knowledge &mdash; instead of assuming the answer.
       </p>
       <div class="hero__stats reveal-group" role="list">
         <div class="stat" role="listitem">
-          <span class="stat__value">11&ndash;94&times;</span>
+          <span class="stat__value">13&ndash;131&times;</span>
           <span class="stat__label">fewer queries than plain Monte&nbsp;Carlo, depending on target precision</span>
         </div>
         <div class="stat" role="listitem">
-          <span class="stat__value">1-in-22-yr</span>
-          <span class="stat__label">event: today's probability of a Key West major flood year</span>
+          <span class="stat__value">1-in-9-yr</span>
+          <span class="stat__label">compound event: Key West tide reaches minor-flood stage <em>and</em> that year's heaviest rain is a 10-yr event (a&nbsp;=&nbsp;0.109)</span>
         </div>
-        <div class="stat" role="listitem">
-          <span class="stat__value">0&times;</span>
-          <span class="stat__label">advantage over the best classical method, honestly reported</span>
+        <div class="stat stat--warn" role="listitem">
+          <span class="stat__value">3.7&ndash;4.6&times;</span>
+          <span class="stat__label">more queries than the best classical control &mdash; QAE still loses this race, reported honestly</span>
         </div>
       </div>
       <a class="button" href="#problem">See the real numbers &darr;</a>
@@ -81,23 +88,29 @@
   <section class="section" id="problem" aria-label="The problem">
     <div class="section__content">
       <p class="eyebrow">The question</p>
-      <h2>In a given year, at today's sea level, what's the odds Key West hits major flood stage?</h2>
+      <h2>In a given year, at today's sea level, what's the odds Key West sees a <em>compound</em> flood event?</h2>
       <p>
-        <strong>Data:</strong> NOAA CO-OPS station 8724580 (Key&nbsp;West, FL) — one of
-        the longest tide-gauge records in the US, 1913&ndash;2025. Annual peak water
-        levels, shifted to 2025 sea level using the measured trend
-        (2.65&nbsp;mm/yr), fitted to a GEV distribution.
+        <strong>Compound, not single-variable:</strong> the annual peak water
+        level reaches NOAA's published <strong>minor flood</strong> stage
+        <em>and</em> that year's heaviest 24-hour rainfall is at least a
+        10-year event. Tide comes from NOAA CO-OPS station 8724580 (Key West,
+        FL), 1913&ndash;2025, shifted to 2025 sea level (2.65&nbsp;mm/yr
+        trend) and GEV-fit. Rain comes from NOAA Atlas&nbsp;14's published
+        24-hour return-period depths for the same point, re-fit to a Gumbel
+        distribution. A discretized Gaussian copula links them, using the
+        sign and significance of tide&ndash;precipitation dependence that
+        Wahl&nbsp;et&nbsp;al. 2015 (<em>Nature Climate Change</em>) measured
+        directly at this Key West gauge &mdash; the exact correlation
+        magnitude they report is a figure, not a table value, so this build
+        uses a representative moderate positive &tau;&nbsp;=&nbsp;0.3 as an
+        explicit, flagged assumption, not their measured number.
       </p>
       <p>
-        <strong>Threshold:</strong> NOAA's published "major flood" stage, 0.64&nbsp;m
-        above the tidal datum used here. Five of the 110 detrended years
-        already reached it: 1944, 1965 (Betsy), 2005 (Wilma), 2017 (Irma), 2022 (Ian).
-      </p>
-      <p>
-        <strong>Target probability a = 0.0458</strong> &mdash; about a 1-in-22-year
-        event. Both the quantum and classical estimators below are racing to
-        pin down this exact same number. Whether the GEV model itself is
-        right is a separate question this project doesn't answer.
+        <strong>Target probability a = 0.1090</strong> &mdash; about a
+        1-in-9-year event, roughly 2.4&times; the tide threshold alone
+        (0.0458, 1-in-22-yr) because rain exceedance adds real probability
+        and the two are positively correlated. Every estimator below races
+        to pin down this exact same number.
       </p>
       <div class="callout callout--amber">
         <p>
@@ -117,23 +130,61 @@
       <p class="eyebrow">The claim with a proof behind it</p>
       <h2>Amplitude estimation needs O(1/&epsilon;) queries. Plain Monte Carlo needs O(1/&epsilon;&sup2;).</h2>
       <p>
-        A 10-logical-qubit circuit loads the binned flood distribution,
-        flips an objective qubit when the bin reaches major-flood stage, and
-        runs maximum-likelihood amplitude estimation (MLAE) at geometrically
-        increasing Grover depths. Three estimators were run at <em>exactly
-        matched query budgets</em>, 500 seeded trials each: quantum MLAE,
-        plain Monte Carlo, and stratified sampling &mdash; the "same
-        structural prior" classical control.
+        A 17-logical-qubit circuit loads the tide marginal, controlled-loads
+        one of 4 regime-conditional rain distributions, and flips an
+        objective qubit only when both thresholds hit &mdash; a discretized
+        Rosenblatt/copula construction, no closed-form 2-D CDF handed to
+        either estimator. Maximum-likelihood amplitude estimation (MLAE) runs
+        at geometrically increasing Grover depths. Three estimators, exactly
+        matched query budgets, 500 seeded trials each: quantum MLAE, plain
+        Monte Carlo, and <strong>2-D scrambled Sobol quasi-Monte&nbsp;Carlo</strong>
+        &mdash; the honest classical control for a joint 2-D distribution (the
+        single-variable build's 1-D stratified sampling trick doesn't
+        generalize to it).
       </p>
+
+      <!-- Command-center readout: real numbers only, re-animated by Simulate -->
+      <div class="ops-panel" role="group" aria-label="Live estimator readout">
+        <div class="ops-panel__header">
+          <span class="ops-panel__title">COMPOUND TAIL ESTIMATOR &mdash; READOUT</span>
+          <span class="ops-panel__status"><span class="ops-panel__status-dot" aria-hidden="true"></span>SIMULATOR ONLY</span>
+        </div>
+        <div class="ops-panel__body">
+          <div class="metric-row">
+            <div class="metric-chip">
+              <svg class="metric-chip__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12 12l5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              <span class="metric-chip__label">&epsilon; achieved (relative)</span>
+              <span class="metric-chip__value">1e-3</span>
+            </div>
+            <div class="metric-chip">
+              <svg class="metric-chip__icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              <span class="metric-chip__label">oracle queries, largest budget</span>
+              <span class="metric-chip__value" id="badge-queries-value" data-target="13300">13,300</span>
+            </div>
+            <div class="metric-chip">
+              <svg class="metric-chip__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l5-7 4 4 7-10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span class="metric-chip__label">MLAE scaling exponent &alpha;</span>
+              <span class="metric-chip__value">1.06</span>
+            </div>
+          </div>
+          <div class="ops-panel__feed-wrap">
+            <button id="simulate-btn" class="button button--ghost" type="button">Run simulation</button>
+            <div id="incident-feed-list" class="incident-feed" role="log" aria-live="off" tabindex="0" aria-label="Convergence replay log (replays this project's own benchmark data — not a live sensor feed)">
+              <div class="feed-line">awaiting replay of results.json&hellip;</div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <figure class="chart-figure">
         <canvas id="convergence-chart" width="900" height="480" role="img"
-          aria-label="Line chart of estimation error versus number of queries for three estimators: quantum MLAE, plain Monte Carlo, and stratified sampling. Both axes are log scale. Plain Monte Carlo's error falls the slowest; quantum MLAE falls faster; stratified sampling falls fastest of all.">
+          aria-label="Line chart of estimation error versus number of queries for three estimators: quantum MLAE, plain Monte Carlo, and Sobol quasi-Monte Carlo. Both axes are log scale. Plain Monte Carlo's error falls the slowest; quantum MLAE falls faster; Sobol QMC falls fastest of all.">
         </canvas>
         <figcaption>
           RMSE vs. query budget, log&ndash;log, real measured data from
           <code>results.json</code> (not simulated for this page). Steeper
-          downward slope = faster convergence per query.
+          downward slope = faster convergence per query. Press "Run
+          simulation" above to replay the draw-in.
         </figcaption>
       </figure>
 
@@ -144,9 +195,9 @@
             <tr><th scope="col">Arm</th><th scope="col">&alpha;</th><th scope="col">95% CI</th><th scope="col">Textbook</th></tr>
           </thead>
           <tbody>
-            <tr><th scope="row">MLAE (quantum)</th><td>1.02</td><td>[1.01, 1.03]</td><td>1</td></tr>
-            <tr><th scope="row">Plain Monte Carlo</th><td>1.93</td><td>[1.89, 1.98]</td><td>2</td></tr>
-            <tr><th scope="row">Stratified sampling</th><td>0.98</td><td>[0.97, 0.99]</td><td>1 (in 1-D)</td></tr>
+            <tr><th scope="row">MLAE (quantum)</th><td>1.06</td><td>[1.01, 1.12]</td><td>1</td></tr>
+            <tr><th scope="row">Plain Monte Carlo</th><td>2.06</td><td>[1.94, 2.20]</td><td>2</td></tr>
+            <tr><th scope="row">Sobol QMC (classical, 2-D)</th><td>1.16</td><td>[1.12, 1.20]</td><td>1 in 1-D; degrades with dimension</td></tr>
           </tbody>
         </table>
       </div>
@@ -155,22 +206,27 @@
         <table>
           <caption>Queries needed to reach matched error &epsilon; (median of bootstrap fits)</caption>
           <thead>
-            <tr><th scope="col">&epsilon;</th><th scope="col">MLAE</th><th scope="col">Plain MC</th><th scope="col">MC / MLAE</th><th scope="col">Stratified</th></tr>
+            <tr><th scope="col">&epsilon;</th><th scope="col">MLAE</th><th scope="col">Plain MC</th><th scope="col">MC / MLAE</th><th scope="col">Sobol QMC</th></tr>
           </thead>
           <tbody>
-            <tr><th scope="row">1e-3 (2.2%)</th><td>3.7k</td><td>42.6k</td><td>11.5&times;</td><td>489</td></tr>
-            <tr><th scope="row">3e-4 (0.65%)</th><td>12.7k</td><td>437k</td><td>34.5&times;</td><td>1.6k</td></tr>
-            <tr><th scope="row">1e-4 (0.22%)</th><td>38.9k</td><td>3.65M</td><td>94&times;</td><td>4.7k</td></tr>
+            <tr><th scope="row">1e-3 (0.92%)</th><td>8.2k</td><td>107k</td><td>13.1&times; [10.6, 16.5]</td><td>1.8k</td></tr>
+            <tr><th scope="row">3e-4 (0.28%)</th><td>29.2k</td><td>1.28M</td><td>43.6&times; [30.5, 65.2]</td><td>7.2k</td></tr>
+            <tr><th scope="row">1e-4 (0.09%)</th><td>93.4k</td><td>12.3M</td><td>131&times; [80, 231]</td><td>25.6k</td></tr>
           </tbody>
         </table>
       </div>
 
       <p class="caption-note">
-        Stratified sampling needs roughly 8&times; <em>fewer</em> queries than
-        quantum MLAE at every precision above &mdash; it also reaches
-        &alpha;&nbsp;&asymp;&nbsp;1 in this one-dimensional problem. The
-        quadratic speedup shown here is specifically over <em>plain</em> Monte
-        Carlo, not over the best classical method.
+        Sobol QMC needs roughly 3.7&ndash;4.6&times; <em>fewer</em> queries
+        than quantum MLAE across this range &mdash; a smarter classical
+        method still wins here. But that margin is narrower than the
+        single-variable build's 8&times; gap over 1-D stratified sampling:
+        QMC's own exponent (1.16) is visibly above 1 and above
+        stratified sampling's 1-D exponent (0.98), the expected signature of
+        quasi-Monte Carlo's discrepancy bound degrading with dimension.
+        <strong>QAE's disadvantage shrinks as the problem gains a
+        dimension</strong> &mdash; that narrowing is the finding here, not a
+        quantum win.
       </p>
     </div>
   </section>
@@ -179,31 +235,34 @@
   <section class="section" id="verdict" aria-label="Honest verdict">
     <div class="section__content">
       <p class="eyebrow">The honest verdict</p>
-      <h2>A real, measured speedup &mdash; over the wrong baseline to call it an advantage.</h2>
+      <h2>A real, measured speedup over plain Monte Carlo &mdash; still a loss against the best classical method.</h2>
 
       <div class="verdict-grid">
         <div class="verdict-card verdict-card--good">
           <h3>What this demonstrates</h3>
           <ul>
-            <li>The QAE vs. plain-MC quadratic query separation is real and measured on real flood data, not asserted: &alpha;=1.02 vs. &alpha;=1.93.</li>
-            <li>11&times; fewer queries than plain MC at 2% relative error; ~94&times; fewer at 0.2%.</li>
+            <li>The QAE vs. plain-MC quadratic query separation is real and measured on a real 2-D compound tide+rain problem, not asserted: &alpha;=1.06 vs. &alpha;=2.06.</li>
+            <li>13&times; fewer queries than plain MC at 0.92% relative error; ~131&times; fewer at 0.09%.</li>
+            <li>Against a fair 2-D classical control (Sobol QMC, not a method that cheats with exact CDF knowledge), QAE's gap narrows from the single-variable build's 8&times; to 3.7&ndash;4.6&times; &mdash; the direction the "QAE matters in higher dimensions" argument predicts.</li>
             <li>Simulator-only, ideal-circuit result &mdash; stated plainly, not hidden.</li>
           </ul>
         </div>
         <div class="verdict-card verdict-card--warn">
           <h3>What it doesn't demonstrate</h3>
           <ul>
-            <li><strong>No advantage over the best classical method here.</strong> Stratified sampling (or just evaluating the fitted CDF) also reaches &alpha;&asymp;1 in one dimension, needing ~8&times; fewer queries than MLAE at every &epsilon;.</li>
-            <li><strong>No hardware speedup today.</strong> On IBM Heron's noise model (FakeFez), the signal is washed to a coin flip by Grover depth m=2.</li>
+            <li><strong>No advantage over the best classical method here.</strong> Sobol QMC still needs 3.7&ndash;4.6&times; fewer queries than MLAE at every &epsilon; tested.</li>
+            <li><strong>No hardware speedup today.</strong> On IBM Heron's noise model (FakeFez), the readout is swamped by noise before any Grover step even runs: ideal P=0.109 at m=0 reads back as 0.425 noisy, on a circuit already 5.6&times; over its CZ-error budget.</li>
             <li><strong>Query count &ne; wall-clock time.</strong> One quantum query costs far more than one classical draw.</li>
-            <li><strong>The flood model itself has uncertainty</strong> larger than the precision being chased &mdash; a sharper estimator of a doesn't make the real-world flood probability better known.</li>
+            <li><strong>The flood model itself has uncertainty</strong> larger than the precision being chased &mdash; a sharper estimator of a doesn't make the real-world flood probability better known, and the &tau;=0.3 tide&ndash;rain correlation is an assumption, not Key West's measured value.</li>
           </ul>
         </div>
       </div>
 
       <blockquote class="bottom-line">
-        Pitch it as <em>"we measured the provable part and identified exactly
-        what is missing,"</em> not as <em>"quantum beats classical."</em>
+        Pitch it as <em>"we measured the provable part, against a fair
+        classical control, on a real 2-D problem &mdash; and found the gap
+        narrows with dimension,"</em> not as <em>"quantum beats
+        classical."</em>
       </blockquote>
     </div>
   </section>
@@ -214,8 +273,8 @@
       <p class="eyebrow">Run it yourself</p>
       <h2>Simulator-only. No quantum hardware account needed.</h2>
       <pre class="code-block" tabindex="0" role="region" aria-label="Run commands, scrollable on narrow screens"><code>uv sync
-uv run python smoke_test.py   # ~3 min — circuit vs closed form vs sampler
-uv run python experiment.py   # ~6 min — writes results.json and results.png
+uv run python smoke_test.py   # circuit vs closed form vs sampler
+uv run python experiment.py   # writes results.json and results.png
 uv run python demo.py         # live animated convergence demo (needs a display)</code></pre>
       <p>
         Source: <a href="https://github.com/SeanPeppers/floodline">github.com/SeanPeppers/floodline</a>.
@@ -231,6 +290,8 @@ uv run python demo.py         # live animated convergence demo (needs a display)
 </footer>
 
 <script src="js/chart.js" defer></script>
+<script src="js/incident-feed.js" defer></script>
 <script src="js/main.js" defer></script>
+<script src="js/map.js" defer></script>
 </body>
 </html>

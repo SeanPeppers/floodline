@@ -1,17 +1,20 @@
 // Floodline hero: a scroll-free "intro" that crossfades a wide Gulf-of-
 // Mexico/Florida still into a close Key West still (two static images
-// stitched from downloaded OpenStreetMap tiles — see CREDITS.md; this is
-// pure CSS opacity/transform, no live map library and no runtime tile
-// requests), then an animated canvas overlay suggests flood water rising
-// across the island. Everything here is progressive enhancement: if it
-// fails or is skipped, the <noscript> fallback and the reduced-motion CSS
-// rule in style.css both already make the page fully readable without it.
+// stitched from downloaded OpenStreetMap tiles — see CREDITS.md), then an
+// animated canvas overlay suggests flood water rising across the island.
+// map.js lazy-loads a live MapLibre layer on top of these once idle; if
+// that fails for any reason, these stills are the whole picture, not a
+// fallback bolted on after the fact. Everything here is progressive
+// enhancement: if it fails or is skipped, the <noscript> fallback and the
+// reduced-motion CSS rule in style.css both already make the page fully
+// readable without it.
 
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const saveData = navigator.connection && navigator.connection.saveData;
 
 initHeroStats();
 initHeroMap();
+initSimulate();
 
 // Hero stat cards stagger in on load (CSS transition-delay does the
 // staggering; this just flips the trigger class). The hero is always above
@@ -33,10 +36,6 @@ function initHeroMap() {
     return;
   }
 
-  // Trigger the region -> Key West crossfade once, shortly after first
-  // paint so the wide establishing shot actually registers before it zooms.
-  // Under reduced motion the CSS transition is forced to ~0ms anyway
-  // (global rule in style.css), so this still lands on the right end state.
   const zoomDelay = reduceMotion ? 0 : 900;
   setTimeout(() => heroMap.classList.add("is-zoomed"), zoomDelay);
 
@@ -53,11 +52,11 @@ function initHeroMap() {
   resize();
   new ResizeObserver(resize).observe(canvas);
 
-  const restLevel = 0.34; // fraction of canvas height the water rests at
+  const restLevel = 0.34;
   let running = false;
   let raf = null;
   const start = performance.now();
-  const riseDelay = zoomDelay + 1600; // let the zoom read before water rises
+  const riseDelay = zoomDelay + 1600;
   const riseDuration = reduceMotion ? 1 : 2400;
 
   function easeOutCubic(x) { return 1 - Math.pow(1 - x, 3); }
@@ -70,8 +69,8 @@ function initHeroMap() {
     const baseY = h * (1 - level);
 
     ctx.clearRect(0, 0, w, h);
-    drawWaveLayer(ctx, w, h, baseY, t * 0.5, 14, "rgba(45, 212, 191, 0.34)");
-    drawWaveLayer(ctx, w, h, baseY + h * 0.012, -t * 0.35, 20, "rgba(94, 184, 255, 0.24)");
+    drawWaveLayer(ctx, w, h, baseY, t * 0.5, 14, "rgba(0, 245, 255, 0.28)");
+    drawWaveLayer(ctx, w, h, baseY + h * 0.012, -t * 0.35, 20, "rgba(255, 183, 3, 0.16)");
 
     if (running) raf = requestAnimationFrame(draw);
   }
@@ -92,7 +91,7 @@ function initHeroMap() {
   }
 
   if (reduceMotion) {
-    draw(performance.now() + riseDelay + riseDuration); // single static end-state frame
+    draw(performance.now() + riseDelay + riseDuration);
     return;
   }
 
@@ -112,4 +111,48 @@ function initHeroMap() {
     { threshold: 0.05 }
   );
   io.observe(section);
+}
+
+// --- "Simulate" toggle: replays the chart draw-in, the incident feed, and
+// counts the oracle-queries badge up to its real measured value. No fake
+// data is introduced — it just re-plays assets/data/results.json. ---
+function initSimulate() {
+  const btn = document.getElementById("simulate-btn");
+  if (!btn) return;
+  let running = false;
+
+  btn.addEventListener("click", () => {
+    if (running) return;
+    running = true;
+    btn.textContent = "Simulating…";
+    btn.setAttribute("aria-busy", "true");
+
+    if (window.FloodlineChart) window.FloodlineChart.replay();
+    if (window.FloodlineFeed) window.FloodlineFeed.replay();
+    tickQueryBadge();
+
+    const done = () => {
+      running = false;
+      btn.textContent = "Run simulation again";
+      btn.removeAttribute("aria-busy");
+      window.removeEventListener("floodline:chart-done", done);
+    };
+    window.addEventListener("floodline:chart-done", done);
+    if (reduceMotion) done(); // chart draws instantly; nothing to wait on
+  });
+}
+
+function tickQueryBadge() {
+  const el = document.getElementById("badge-queries-value");
+  if (!el) return;
+  const target = Number(el.dataset.target || 0);
+  if (reduceMotion || !target) { el.textContent = target.toLocaleString(); return; }
+  const duration = 1400;
+  const start = performance.now();
+  function step(now) {
+    const f = Math.min(1, (now - start) / duration);
+    el.textContent = Math.round(target * f).toLocaleString();
+    if (f < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
 }
