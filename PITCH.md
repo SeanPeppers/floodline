@@ -32,6 +32,8 @@ Who would use it: City of Key West and Monroe County public works and emergency 
 - It beats the smarter standard method (Sobol quasi-Monte Carlo) once flooding depends on about 4 or more factors.
 - **Headline:** once the model's own uncertain settings are included (13 uncertain factors), ideal quantum needs **4.3× fewer queries** than the best classical method we know (95% CI 3.5-5.4×). The crossover is at about 7-8 factors.
 - Real surge forecasting runs black-box simulators (NOAA P-Surge runs about 630 per advisory under a 1-hour deadline). There, quantum needs 1.6-3.3× fewer simulator runs. At study scale that is roughly $16k-$330k of computing per study, on hardware that doesn't exist yet.
+- **Real hardware run:** we ran a 3-qubit version of the Key West tide-and-rain flood circuit on IBM's `ibm_fez` quantum computer (7 circuits, 4,000 shots each, 10 s of machine time). The up-and-down Grover signal that quantum amplitude estimation relies on shows up on the real chip, and noise flattens it as the circuits get deeper (peak 0.84 measured against 1.00 ideal).
+- The hardware estimate of the flood probability is 0.074 against the model's exact 0.096: noise biases it, and plain sampling does better. This shows the method runs on a real device, not that it wins there.
 
 Required honesty, in the video too:
 - These are query counts on ideal, error-free quantum hardware. Today's hardware is about a million times too noisy.
@@ -49,6 +51,7 @@ Suggested beats:
 2. **The place (10-20 s):** Key West from above; "Floodline: compound-flood risk, street by street."
 3. **The product (20-45 s):** screen recording of the real site: the hurricane-to-island scroll, Tonight's street map, the road-raising table with Flagler Ave at #1.
 4. **The quantum result (45-70 s):** the site's "quantum advantage vs factors" chart; "4.3× fewer queries at 13 factors, on ideal hardware."
+   Then a few seconds of screen recording of the site's hardware chart: "We ran it on a real IBM quantum computer. The signal is there; noise blurs it."
 5. **Honest close (70-90 s):** "Classical runs the tool today. We measured exactly where quantum takes over." Team names, FGCU Quantum Hackathon 2026.
 
 Rules for AI-generated footage (Higgsfield or similar):

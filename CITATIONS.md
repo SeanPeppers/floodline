@@ -68,6 +68,7 @@ standard methods; the project files cite no specific paper for them.
 | Babbush et al., early fault-tolerant cost of quadratic speedups (topic, no title in project docs) | 2020 | arXiv:2011.04149 | 170 µs per Toffoli (surface code, d = 30, 1 µs cycles); quadratic speedups rarely pay on early fault-tolerant machines | from project docs |
 | Chakrabarti et al., threshold for quantum advantage in derivative pricing | 2020 | arXiv:2012.03819 | ~8k logical qubits and T-depth 54 million as a reference resource bar | verified (abstract) |
 | IBM `FakeFez` calibration snapshot (qiskit-ibm-runtime) | | none | Median CZ error 3.9e-3 and noisy simulation. A recorded snapshot, not a live device spec | from project docs |
+| IBM Quantum `ibm_fez` via Qiskit Runtime `SamplerV2` | 2026 | none | Real-hardware run of the 3-qubit QAE circuit, job `dbmbikl8mdtc73d7m170`, 2026-11-05 (`hw_demo.py`, `results_hw.json`) | run by the team |
 | NVIDIA L4 on Google Colab (cuStateVec, Aer) | | none | GPU statevector validation up to 30 qubits | from project docs |
 
 ## Flood, drainage and Key West data
