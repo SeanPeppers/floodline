@@ -204,7 +204,7 @@
         <figcaption class="chart-figure__title" id="wins-title"><span class="chart-figure__num">1</span> vs the best classical method, model uncertainty included</figcaption>
         <div class="chart chart--hero" id="wins-chart" aria-describedby="wins-note"></div>
         <p class="chart-figure__note" id="wins-note">
-          &times; fewer queries than CMC+QMC: <strong><span data-bind="winTop">4.3</span>&times; [<span data-bind="winTopCi">3.5, 5.4</span>]</strong> at <span data-bind="winTopD">13</span> factors, &epsilon;&nbsp;=&nbsp;1e-4. Query count, ideal hardware, 95% CI.
+          &times; fewer queries than CMC+QMC: <strong><span data-bind="winTop">4.3</span>&times; [<span data-bind="winTopCi">3.5, 5.4</span>]</strong> at <span data-bind="winTopD">13</span> factors, &epsilon;&nbsp;=&nbsp;1e-4. Query count, ideal hardware, 95% CI. That is 96,600 quantum queries against 416,000 for the best classical method.
         </p>
       </figure>
       <details class="more">
@@ -247,7 +247,7 @@
           <p class="chart-figure__note" id="hw-note">Key West compound flood, 3 qubits, IBM ibm_fez, 2026-11-05, 4,000 shots per depth, 10&nbsp;s of QPU time.</p>
         </figure>
         <p>
-          The hardware follows the Grover oscillation that QAE relies on, and noise damps it as circuits deepen
+          The hardware follows the Grover oscillation that QAE relies on, and noise damps it as circuits deepen: its peak reaches 0.84 where the ideal is 1.00
           (<span data-bind="hwGates">12 to 192</span> two-qubit gates); the noisy estimate is
           <span data-bind="hwA">0.074</span> vs exact <span data-bind="hwExact">0.096</span>, which is why today's hardware can't beat classical.
         </p>
@@ -348,6 +348,10 @@
         </table>
       </div>
       <p>One P-Surge advisory: $11&ndash;$21. Its real limit is the 1-hour deadline, not money.</p>
+      <p><strong>Two days of warning, in numbers.</strong> A 446-storm study at 2,000 core-hours a run is 892,000 core-hours:
+        44.6 hours on a 20,000-core cluster (our example size). At 3.3&times; fewer runs that is 270,000 core-hours, the
+        equivalent of 13.5 hours; at 2.3&times;, 19.4 hours. These count simulator runs on a future error-free quantum computer,
+        not wall-clock time: its steps run one after another, so on real time classical still wins today.</p>
       <p><strong>We don't estimate lives saved: no source links forecast speed to casualties.</strong></p>
 
       <details class="more">

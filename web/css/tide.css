@@ -261,3 +261,12 @@ body:not(.page-sub) .site-header { background: rgba(255, 255, 255, 0.96); }
 .hl-aqua { color: #0a9cad; }
 .band--sea .hl-aqua { color: var(--aqua); }
 @media (min-width: 1180px) { .margin-note { width: 14rem; } }
+
+/* Main page: sand behind the white sheets so they read as cards and the rising
+   water has a beach to climb (sand: Poly Haven "Aerial Beach 01", CC0). */
+body {
+  background-color: #efe6d2;
+  background-image: linear-gradient(rgba(246, 238, 220, 0.5), rgba(246, 238, 220, 0.5)), url("../assets/textures/sand.webp");
+  background-size: auto, 384px 384px;
+}
+.section__content, .site-footer { background: #ffffff; border: 1px solid var(--border); box-shadow: 0 18px 40px -28px rgba(12, 27, 38, 0.45); }
